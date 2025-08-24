@@ -1,6 +1,6 @@
 // REPLACED FILE: day view calendar, not week view
 "use client";
-import { useEffect, useMemo, useState, useRef, Suspense } from "react";
+import { useEffect, useMemo, useState, useRef, Suspense, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 
@@ -93,8 +93,9 @@ function formatCenterAmount(hoursFloat){
   const h = Math.max(0, Number(hoursFloat) || 0);
   if (h < 1) {
     const mins = Math.round(h * 60);
-    const unit = mins === 1 ? 'min' : 'mins';
-    return `${mins} ${unit}`; // matches Dashboard wording
+    // Use shorter text to fit better in the ring
+    const unit = mins === 1 ? 'min' : 'min';
+    return `${mins}${unit}`; // "0min", "30min" instead of "0 mins", "30 mins"
   }
   return `${fmt1(h)}${hrUnit(h)}`;
 }
@@ -344,7 +345,7 @@ function CalendarContent() {
 
   // Events persisted locally (versioned) + cross-tab/route sync (compat with older keys)
   const PRIMARY_EVENTS_KEY = "hourglassEvents:v1";
-  const COMPAT_EVENT_KEYS = ["hourglassEvents:v1", "calendarEvents", "calendar-items", "events"]; // read from any, write to primary+legacy
+  const COMPAT_EVENT_KEYS = useMemo(() => ["hourglassEvents:v1", "calendarEvents", "calendar-items", "events"], []); // read from any, write to primary+legacy
   const [events, setEvents] = useState([]);
   const [eventsLoaded, setEventsLoaded] = useState(false);
 
@@ -378,7 +379,7 @@ function CalendarContent() {
     } finally {
       setEventsLoaded(true);
     }
-  }, []);
+  }, [COMPAT_EVENT_KEYS]);
 
   // Persist on change (after initial load completes)
   useEffect(() => {
@@ -413,7 +414,7 @@ function CalendarContent() {
     };
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
-  }, []);
+  }, [COMPAT_EVENT_KEYS]);
 
   // Keep in sync with custom events from other pages (like dashboard)
   useEffect(() => {
@@ -428,6 +429,7 @@ function CalendarContent() {
           const raw = localStorage.getItem(k);
           if (!raw) continue;
           try {
+            console.log('Calendar: Reading from key:', k);
             const arr = JSON.parse(raw) || [];
             if (Array.isArray(arr)) {
               for (const ev of arr) {
@@ -451,7 +453,7 @@ function CalendarContent() {
     
     window.addEventListener('calendarEventsUpdated', onCalendarEventsUpdated);
     return () => window.removeEventListener('calendarEventsUpdated', onCalendarEventsUpdated);
-  }, []);
+  }, [COMPAT_EVENT_KEYS]);
 
   useEffect(() => {
     setFocusAreas(loadFocusAreasForDate(selectedDate));
@@ -487,7 +489,7 @@ function CalendarContent() {
 
     // Clean the URL so refresh doesn't re-open the modal
     try { router.replace('/calendar', { scroll: false }); } catch {}
-  }, [searchParams]);
+  }, [searchParams, router, selectedDate]);
 
   const headerLabel = useMemo(() => {
     if (!selectedDate) return "Loading...";
@@ -658,13 +660,6 @@ function CalendarContent() {
   // --- Drag & drop support (move blocks vertically without resizing) ---
   const SNAP_MINUTES = 5; // snap to 5-minute grid
   const snapMs = (ms) => Math.round(ms / (SNAP_MINUTES*60000)) * (SNAP_MINUTES*60000);
-  const clampToDay = (startMs, endMs) => {
-    // keep duration same, clamp within the day
-    const dur = endMs - startMs;
-    let s = Math.max(dayStartMs, Math.min(startMs, dayEndMs - dur));
-    let e = s + dur;
-    return [s, e];
-  };
 
   // Drag state
   const [draggingId, setDraggingId] = useState(null);
@@ -689,6 +684,15 @@ function CalendarContent() {
     if (!dayStartMs) return 0;
     return dayStartMs + 24 * 60 * 60 * 1000;
   }, [dayStartMs]);
+
+  // Define clampToDay after dayStartMs and dayEndMs are defined
+  const clampToDay = useCallback((startMs, endMs) => {
+    // keep duration same, clamp within the day
+    const dur = endMs - startMs;
+    let s = Math.max(dayStartMs, Math.min(startMs, dayEndMs - dur));
+    let e = s + dur;
+    return [s, e];
+  }, [dayStartMs, dayEndMs]);
 
   // Pixel offset of the "now" line, only if selectedDate is today
   const nowTopPx = useMemo(() => {
@@ -769,7 +773,7 @@ function CalendarContent() {
       window.removeEventListener('touchmove', onMove);
       window.removeEventListener('touchend', onUp);
     };
-  }, [draggingId, pxPerHour, dayStartMs, dayEndMs]);
+  }, [draggingId, pxPerHour, dayStartMs, dayEndMs, clampToDay]);
 
   const eventsForSelected = useMemo(() => {
     // include events that overlap the selected day window [dayStartMs, dayEndMs)
@@ -1077,16 +1081,16 @@ function CalendarContent() {
       </button>
 
       {/* Bottom buttons: Dashboard | Calendar | Connect */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white shadow-inner p-3 z-50">
-        <div className="max-w-md mx-auto grid grid-cols-3 gap-4">
+      <div className="fixed bottom-0 left-0 right-0 p-3 pb-7 z-50">
+        <div className="max-w-md mx-auto grid grid-cols-3 gap-3">
           <button
             onClick={() => router.push('/')}
-            className="h-14 w-full rounded-[24px] border-2 border-[#4E4034] text-[#4E4034] font-medium"
+            className="h-12 w-full rounded-2xl bg-white text-gray-700 font-medium border-2 border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
           >
             Dashboard
           </button>
           <button
-            className="h-14 w-full rounded-[24px] border-2 border-[#4E4034] text-[#4E4034] font-medium bg-gray-200"
+            className="h-12 w-full rounded-2xl bg-gray-900 text-white font-semibold shadow-lg"
             disabled
             aria-current="page"
           >
@@ -1094,7 +1098,7 @@ function CalendarContent() {
           </button>
           <button
             onClick={() => router.push('/connect')}
-            className="h-14 w-full rounded-[24px] border-2 border-[#4E4034] text-[#4E4034] font-medium"
+            className="h-12 w-full rounded-2xl bg-white text-gray-700 font-medium border-2 border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
           >
             Connect
           </button>
@@ -1108,19 +1112,21 @@ function CalendarContent() {
           const todayAbbrev = DAYS[new Date().getDay()];
           const goalNum = Number(goal || 0);
           const daySpent = Number((days && days[todayAbbrev]) || 0);
+          
+          // Calculate progress percentages
+          const isOverGoal = daySpent > goalNum;
           const percentRaw = goalNum > 0 ? (daySpent / goalNum) * 100 : 0;
           const percent = Math.min(percentRaw, 100).toFixed(0);
+          
+          // For over-amount, calculate how much over as a percentage
           const overAmountRaw = goalNum > 0 ? ((daySpent - goalNum) / goalNum) * 100 : 0;
-          const overAmount = daySpent > goalNum ? Math.min(overAmountRaw, 100).toFixed(0) : 0;
+          const overAmount = isOverGoal ? Math.min(overAmountRaw, 100).toFixed(0) : 0;
 
           const category = { label, timeSpent, goal, days, color };
           const areaColor = category?.color || "#8CA4AF";
-          // Weekly bars constant
-          const bottomFraction = 14 / 21;
+          
           // Center label shows how much LEFT/OVER for today (day-aware)
           const centerAmount = Math.abs((goalNum || 0) - (daySpent || 0));
-          // Ring color (use areaColor or fallback)
-          const ringColor = areaColor || COLORS[index % COLORS.length];
           return (
             <div key={label} className="flex flex-col items-center pointer-events-auto">
               {/* SVG ring progress */}
@@ -1138,7 +1144,7 @@ function CalendarContent() {
                 {/* Progress ring (up to goal) */}
                 <path
                   stroke={areaColor}
-                  strokeOpacity="0.55"
+                  strokeOpacity={isOverGoal ? "0.3" : "0.55"}
                   strokeWidth="3"
                   strokeDasharray={`${percent}, 100`}
                   strokeLinecap="round"
@@ -1148,12 +1154,13 @@ function CalendarContent() {
                      a 15.9155 15.9155 0 0 1 0 31.831
                      a 15.9155 15.9155 0 0 1 0 -31.831"
                 />
-                {/* Over ring (scaled inside) */}
-                {overAmount > 0 && (
+                {/* Over ring (scaled inside) - more prominent when over goal */}
+                {isOverGoal && overAmount > 0 && (
                   <g transform="scale(0.88) translate(2.2 2.2)">
                     <path
                       stroke={areaColor}
-                      strokeWidth="2.2"
+                      strokeOpacity="0.8"
+                      strokeWidth="2.5"
                       strokeDasharray={`${overAmount}, 100`}
                       strokeLinecap="round"
                       fill="none"
@@ -1167,11 +1174,11 @@ function CalendarContent() {
                 {/* Center label */}
                 <foreignObject x="8" y="8" width="20" height="20">
                   <div xmlns="http://www.w3.org/1999/xhtml" className="w-full h-full flex flex-col items-center justify-center leading-tight">
-                    <div className="text-[10px] font-bold text-[#4E4034]">
+                    <div className={`text-[9px] font-bold ${isOverGoal ? 'text-red-600' : 'text-[#4E4034]'}`}>
                       {formatCenterAmount(centerAmount)}
                     </div>
-                    <div className="text-[8px] uppercase text-gray-500 -mt-0.5">
-                      {(daySpent > goalNum) ? 'OVER' : 'LEFT'}
+                    <div className={`text-[7px] uppercase -mt-0.5 ${isOverGoal ? 'text-red-500 font-semibold' : 'text-gray-500'}`}>
+                      {isOverGoal ? 'OVER' : 'LEFT'}
                     </div>
                   </div>
                 </foreignObject>

@@ -1,7 +1,7 @@
 "use client";
 
 import './globals.css';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 // Compute statistics for AI helper for a focus area and selected date
 function computeAiStats(focusArea, selectedDateYMD) {
   const d = new Date(selectedDateYMD);
@@ -147,6 +147,217 @@ export default function Home() {
     }
   }, [messages]);
 
+  // Enhanced AI action parsing and execution
+  const parseAndExecuteActions = (aiResponse, focusArea) => {
+    console.log('parseAndExecuteActions called with:', { aiResponse, focusArea }); // Debug log
+    
+    try {
+      // Only look for actions if the response contains action keywords
+      if (!aiResponse || typeof aiResponse !== 'string') {
+        console.log('No valid AI response to parse'); // Debug log
+        return [];
+      }
+      
+      // Check if response contains any action keywords before parsing
+      const hasActionKeywords = /CREATE_EVENT|ADJUST_GOAL|SET_REMINDER|UPDATE_NOTES/i.test(aiResponse);
+      console.log('Has action keywords:', hasActionKeywords); // Debug log
+      
+      if (!hasActionKeywords) {
+        console.log('No action keywords found, returning empty array'); // Debug log
+        return []; // No actions to parse, return empty array
+      }
+      
+      const actions = [];
+      
+      // Pattern 1: Create calendar event - more flexible matching
+      const eventMatches = aiResponse.match(/CREATE_EVENT:\s*([^|]+?)(?:\s*\|\s*([^|]+?)(?:\s*\|\s*([^|\n]+))?)?/gi);
+      if (eventMatches) {
+        eventMatches.forEach(match => {
+          const parts = match.replace(/CREATE_EVENT:\s*/i, '').split('|').map(p => p.trim());
+          if (parts[0] && parts[0].length > 1) { // Ensure title is more than 1 character
+            actions.push({
+              type: 'create_event',
+              title: parts[0],
+              time: parts[1] || '14:00', // default time
+              notes: parts[2] || '',
+              focusArea: focusArea?.label
+            });
+          }
+        });
+      }
+      
+      // Pattern 2: Adjust focus area goal
+      const goalMatches = aiResponse.match(/ADJUST_GOAL:\s*([^|]+?)(?:\s*\|\s*([^|\n]+))?/gi);
+      if (goalMatches) {
+        goalMatches.forEach(match => {
+          const parts = match.replace(/ADJUST_GOAL:\s*/i, '').split('|').map(p => p.trim());
+          const newGoal = parseFloat(parts[0]);
+          if (!isNaN(newGoal) && newGoal > 0) {
+            actions.push({
+              type: 'adjust_goal',
+              newGoal,
+              reason: parts[1] || 'AI suggestion',
+              focusArea: focusArea?.label
+            });
+          }
+        });
+      }
+      
+      // Pattern 3: Set reminder
+      const reminderMatches = aiResponse.match(/SET_REMINDER:\s*([^|]+?)(?:\s*\|\s*([^|\n]+))?/gi);
+      if (reminderMatches) {
+        reminderMatches.forEach(match => {
+          const parts = match.replace(/SET_REMINDER:\s*/i, '').split('|').map(p => p.trim());
+          if (parts[0]) {
+            actions.push({
+              type: 'set_reminder',
+              time: parts[0],
+              message: parts[1] || 'Focus time reminder',
+              focusArea: focusArea?.label
+            });
+          }
+        });
+      }
+      
+      // Pattern 4: Update notes
+      const notesMatches = aiResponse.match(/UPDATE_NOTES:\s*([^|\n]+)/gi);
+      if (notesMatches) {
+        notesMatches.forEach(match => {
+          const notes = match.replace(/UPDATE_NOTES:\s*/i, '').trim();
+          if (notes) {
+            actions.push({
+              type: 'update_notes',
+              notes,
+              focusArea: focusArea?.label
+            });
+          }
+        });
+      }
+      
+      console.log('Parsed actions:', actions); // Debug log
+      return actions;
+    } catch (error) {
+      console.warn('Failed to parse AI actions:', error);
+      return [];
+    }
+  };
+
+  const executeActions = async (actions, focusArea) => {
+    const results = [];
+    
+    for (const action of actions) {
+      try {
+        switch (action.type) {
+          case 'create_event':
+            // Create calendar event
+            const eventId = Date.now().toString();
+            
+            // Parse time and date more intelligently
+            let eventDate = new Date();
+            let duration = 60 * 60 * 1000; // 1 hour default
+            
+            // Try to parse time from the input
+            if (action.time) {
+              // Handle "6am", "6:00am", "18:00", etc.
+              let timeStr = action.time.toLowerCase().replace(/\s/g, '');
+              let isPM = timeStr.includes('pm');
+              let isAM = timeStr.includes('am');
+              
+              // Extract hours and minutes
+              let timeMatch = timeStr.match(/(\d{1,2})(?::(\d{2}))?/);
+              if (timeMatch) {
+                let hours = parseInt(timeMatch[1]);
+                let minutes = parseInt(timeMatch[2]) || 0;
+                
+                // Convert to 24-hour format
+                if (isPM && hours !== 12) hours += 12;
+                if (isAM && hours === 12) hours = 0;
+                
+                eventDate.setHours(hours, minutes, 0, 0);
+              }
+            }
+            
+            // Check if user mentioned "tomorrow" in the notes or context
+            if (action.notes && action.notes.toLowerCase().includes('tomorrow')) {
+              eventDate.setDate(eventDate.getDate() + 1);
+            }
+            
+            const newEvent = {
+              id: eventId,
+              title: action.title,
+              area: action.focusArea,
+              start: eventDate.toISOString(),
+              end: new Date(eventDate.getTime() + duration).toISOString(),
+              allDay: false,
+              notes: action.notes,
+            };
+            
+            // Save to localStorage
+            const existingEvents = JSON.parse(localStorage.getItem("hourglassEvents:v1") || "[]");
+            const updatedEvents = [...existingEvents, newEvent];
+            localStorage.setItem("hourglassEvents:v1", JSON.stringify(updatedEvents));
+            localStorage.setItem("calendarEvents", JSON.stringify(updatedEvents));
+            
+            // Notify other components
+            window.dispatchEvent(new Event("calendarEventsUpdated"));
+            
+            results.push(`✅ Created event: "${action.title}" at ${action.time}`);
+            break;
+            
+          case 'adjust_goal':
+            // Adjust focus area goal
+            if (action.newGoal > 0 && action.newGoal <= 24) {
+              const updatedCategories = categories.map(cat => {
+                if (normalizeLabel(cat.label) === normalizeLabel(action.focusArea)) {
+                  return { ...cat, goal: action.newGoal };
+                }
+                return cat;
+              });
+              
+              setCategories(updatedCategories);
+              saveWeekAndLive(updatedCategories);
+              
+              results.push(`✅ Adjusted goal for "${action.focusArea}" to ${action.newGoal} hours`);
+            }
+            break;
+            
+          case 'set_reminder':
+            // Set reminder (store in localStorage for now)
+            const reminders = JSON.parse(localStorage.getItem("hourglassReminders") || "[]");
+            const newReminder = {
+              id: Date.now().toString(),
+              time: action.time,
+              message: action.message,
+              focusArea: action.focusArea,
+              created: new Date().toISOString()
+            };
+            
+            reminders.push(newReminder);
+            localStorage.setItem("hourglassReminders", JSON.stringify(reminders));
+            
+            results.push(`✅ Set reminder: "${action.message}" at ${action.time}`);
+            break;
+            
+          case 'update_notes':
+            // Update focus area notes
+            if (action.focusArea) {
+              const notesKey = `focusNotes:${viewWeekKey}:${action.focusArea}`;
+              localStorage.setItem(notesKey, action.notes);
+              setNotes(action.notes);
+              
+              results.push(`✅ Updated notes for "${action.focusArea}"`);
+            }
+            break;
+        }
+      } catch (error) {
+        console.warn(`Failed to execute action ${action.type}:`, error);
+        results.push(`❌ Failed to execute: ${action.type}`);
+      }
+    }
+    
+    return results;
+  };
+
   // Ask AI for a suggestion or help on a focus area
   async function askAiForFocusArea(fa) {
     if (!aiInput.trim()) return;
@@ -160,7 +371,7 @@ export default function Home() {
     setAiLoading(true);
     
     try {
-      const selectedDateYMD = selectedDate; // uses computed date from this component
+      const selectedDateYMD = selectedDateFA || selectedDate; // use focus area date or fallback to main date
       const stats = computeAiStats(fa, selectedDateYMD);
 
       let notes = "";
@@ -170,30 +381,28 @@ export default function Home() {
         notes = raw || "";
       } catch {}
 
-      // Prepare comprehensive context for AI
+      // Prepare comprehensive context for AI (match backend expected format)
       const aiContext = {
         userMessage,
         focusArea: {
           label: fa.label,
-          category: fa.meta?.category || "Other",
           goal: fa.goal,
           color: fa.color,
           days: fa.days || {},
+          meta: {
+            category: fa.meta?.category || "Other"
+          }
         },
-        weeklyStats: {
+        viewWeekKey: viewWeekKey || weekKey(new Date()),
+        selectedDate: selectedDateYMD,
+        notes: notes || "",
+        computed: {
           todaySpent: stats.todaySpent,
           leftToday: stats.leftToday,
           totalWeek: stats.totalWeek,
           dailyAverage: stats.dailyAverage,
           weeklyGoal: stats.weeklyGoal,
-          selectedDate: selectedDateYMD,
-          weekKey: viewWeekKey,
-          isCurrentWeek,
-          isNextWeek,
-        },
-        notes: notes || "",
-        currentWeekKey: viewWeekKey,
-        selectedDate: selectedDateYMD,
+        }
       };
 
       const res = await fetch("/api/ai/assist", {
@@ -203,10 +412,40 @@ export default function Home() {
       });
 
       const data = await res.json();
+      console.log('AI Response received:', data); // Debug log
+      
       if (!data?.ok) throw new Error(data?.error || "AI failed");
+      
+      // Check if the AI response contains the error message
+      if (data.text && data.text.includes("The string did not match the expected pattern")) {
+        console.error('AI backend returned error message:', data.text);
+        throw new Error('AI backend error: ' + data.text);
+      }
       
       const aiMessage = { type: 'ai', content: data.text || "", timestamp: new Date() };
       setMessages(prev => [...prev, aiMessage]);
+      
+      // Parse and execute any actions from AI response (only if actions are found)
+      try {
+        console.log('About to parse AI response:', data.text); // Debug log
+        const actions = parseAndExecuteActions(data.text || "", fa);
+        console.log('Parsed actions:', actions); // Debug log
+        
+        if (actions && actions.length > 0) {
+          const actionResults = await executeActions(actions, fa);
+          if (actionResults && actionResults.length > 0) {
+            const actionMessage = { 
+              type: 'action', 
+              content: actionResults.join('\n'), 
+              timestamp: new Date() 
+            };
+            setMessages(prev => [...prev, actionMessage]);
+          }
+        }
+      } catch (error) {
+        console.log('Error parsing actions:', error); // Debug log
+        // Continue with normal AI response - no actions needed
+      }
     } catch (e) {
       const errorMessage = { type: 'error', content: e.message || "Something went wrong.", timestamp: new Date() };
       setMessages(prev => [...prev, errorMessage]);
@@ -222,16 +461,25 @@ export default function Home() {
   const MAX_WEEKS_BACK = 52;
   const MIN_OFFSET = -MAX_WEEKS_BACK * 7; // in days
   const MAX_FUTURE_DAYS = 7; // allow exactly one week forward
-  const rawDate = new Date();
-  rawDate.setDate(rawDate.getDate() + offset);
+  const rawDate = useMemo(() => {
+    const date = new Date();
+    date.setDate(date.getDate() + offset);
+    return date;
+  }, [offset]);
   // Compute Monday-Sunday range for the week of rawDate
-  const startOfWeek = new Date(rawDate);
-  startOfWeek.setDate(rawDate.getDate() - ((rawDate.getDay() + 6) % 7)); // Monday
-  startOfWeek.setHours(0, 0, 0, 0); // normalize to midnight for safe comparisons
+  const startOfWeek = useMemo(() => {
+    const start = new Date(rawDate);
+    start.setDate(rawDate.getDate() - ((rawDate.getDay() + 6) % 7)); // Monday
+    start.setHours(0, 0, 0, 0); // normalize to midnight for safe comparisons
+    return start;
+  }, [rawDate]);
 
-  const endOfWeek = new Date(startOfWeek);
-  endOfWeek.setDate(startOfWeek.getDate() + 6); // Sunday
-  endOfWeek.setHours(23, 59, 59, 999); // end of day for safe comparisons
+  const endOfWeek = useMemo(() => {
+    const end = new Date(startOfWeek);
+    end.setDate(startOfWeek.getDate() + 6); // Sunday
+    end.setHours(23, 59, 59, 999); // end of day for safe comparisons
+    return end;
+  }, [startOfWeek]);
   const formatDate = (date) =>
     date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
   const today = `${formatDate(startOfWeek)} – ${formatDate(endOfWeek)}`;
@@ -454,6 +702,11 @@ export default function Home() {
     setFriends(demo);
   }
 
+  function removeSampleFriends() {
+    saveFriends([]);
+    setFriends([]);
+  }
+
   // Seeds for future "Recommended" module and AI prompt hints
   const RECOMMENDATION_SEEDS = {
     Study: [
@@ -538,7 +791,7 @@ export default function Home() {
     const todayLocal = new Date();
     const inThisWeek = todayLocal >= startOfWeek && todayLocal <= endOfWeek;
     setSelectedDateFA(ymd(inThisWeek ? todayLocal : startOfWeek));
-  }, [viewWeekKey, selectedFocusArea]);
+  }, [viewWeekKey, selectedFocusArea, startOfWeek, endOfWeek]);
 
   // --- Derived values ---
   // Compute the selected date string in YMD format for the current view
@@ -591,7 +844,7 @@ export default function Home() {
   const [running, setRunning] = useState(false);
   const [initialRemaining, setInitialRemaining] = useState(0); // seconds baseline
   const [remaining, setRemaining] = useState(0);               // ticking value
-  const tickRef = (typeof window !== "undefined") ? { current: null } : { current: null };
+  const tickRef = useMemo(() => ({ current: null }), []);
 
   // Recompute countdown baseline when selected focus area changes (or its data changes)
   useEffect(() => {
@@ -609,9 +862,10 @@ export default function Home() {
     setRunning(false);
     if (tickRef.current) { try { clearInterval(tickRef.current); } catch {} }
   }, [
-    selectedFocusArea ? (selectedFocusArea.label || "") : "",
+    selectedFocusArea,
     selectedDateFA,
-    JSON.stringify(categories)
+    categories,
+    tickRef
   ]);
 
   // Tick when running
@@ -628,7 +882,7 @@ export default function Home() {
       });
     }, 1000);
     return () => { try { clearInterval(tickRef.current); } catch {} };
-  }, [running]);
+  }, [running, tickRef]);
 
   function handleResetTimer() {
     setRunning(false);
@@ -1151,6 +1405,9 @@ export default function Home() {
                       <div className="text-[12px] text-gray-600 mb-2">
                         Category: <span className="font-medium">{cat}</span>
                       </div>
+                      <div className="text-[11px] text-blue-600 mb-2 bg-blue-50 p-2 rounded border border-blue-200">
+                        <strong>New AI Actions:</strong> AI can now create events, adjust goals, set reminders, and update notes automatically!
+                      </div>
                       
                       {/* Chat Messages */}
                       <div ref={chatContainerRef} className="max-h-[300px] overflow-y-auto mb-3 space-y-3">
@@ -1170,6 +1427,8 @@ export default function Home() {
                                     ? 'bg-[#8CA4AF] text-white'
                                     : message.type === 'error'
                                     ? 'bg-red-100 text-red-800 border border-red-200'
+                                    : message.type === 'action'
+                                    ? 'bg-green-100 text-green-800 border border-green-200'
                                     : 'bg-gray-100 text-[#4E4034]'
                                 }`}
                               >
@@ -1635,40 +1894,18 @@ export default function Home() {
             </div>
           )}
         </div>
-        <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur shadow-inner p-3 z-50">
-          <div className="max-w-md mx-auto grid grid-cols-3 gap-4">
-            <button
-              aria-current="page"
-              disabled
-              className="h-14 w-full rounded-[24px] border-2 border-[#4E4034] text-[#4E4034] font-medium bg-gray-200"
-            >
-              Dashboard
-            </button>
-            <button
-              onClick={() => router.push('/calendar')}
-              className="h-14 w-full rounded-[24px] border-2 border-[#4E4034] text-[#4E4034] font-medium"
-            >
-              Calendar
-            </button>
-            <button
-              onClick={() => router.push('/connect')}
-              className="h-14 w-full rounded-[24px] border-2 border-[#4E4034] text-[#4E4034] font-medium"
-            >
-              Connect
-            </button>
-          </div>
-        </div>
+
       </div>
     );
   }
 
   return (
     <>
-    <div className="min-h-screen bg-white text-black px-4 pb-24 font-sans flex flex-col gap-6">
-      <header className="w-full bg-[#F7F6F3] py-3 px-4 shadow-sm flex justify-between items-center rounded-xl">
+    <div className="h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-900 px-4 pb-20 font-sans flex flex-col gap-6 overflow-hidden">
+      <header className="w-full py-3 px-4 flex justify-between items-center">
         <div className="flex items-center gap-2">
           <button
-            className={`text-[#4E4034] text-lg px-2 ${offset <= MIN_OFFSET ? 'opacity-30 cursor-not-allowed' : ''}`}
+            className={`text-gray-700 text-xl px-3 ${offset <= MIN_OFFSET ? 'opacity-30 cursor-not-allowed' : 'hover:text-gray-900'}`}
             aria-label="Previous Week"
             onClick={() => {
               if (offset <= MIN_OFFSET) return;
@@ -1679,10 +1916,10 @@ export default function Home() {
           >
             ‹
           </button>
-          <div className="text-[#4E4034] font-semibold text-base">{today}</div>
+          <div className="text-gray-900 font-bold text-lg">{today}</div>
           {/* Forward/right arrow for week navigation */}
           <button
-            className={`text-[#4E4034] text-lg px-2 ${offset >= MAX_FUTURE_DAYS ? 'opacity-30 cursor-not-allowed' : ''}`}
+            className={`text-gray-700 text-xl px-3 ${offset >= MAX_FUTURE_DAYS ? 'opacity-30 cursor-not-allowed' : 'hover:text-gray-900'}`}
             aria-label="Next Week"
             onClick={() => {
               if (offset >= MAX_FUTURE_DAYS) return;
@@ -1696,10 +1933,10 @@ export default function Home() {
         </div>
         <div className="ml-auto">
           <button
-            onClick={() => router.push('/account')}
-            title="Account"
-            aria-label="Account"
-            className="inline-flex items-center justify-center w-9 h-9 rounded-md border border-[#BCA88F] text-[#4E4034] hover:bg-[#F7F6F3]"
+            onClick={() => router.push('/settings')}
+            title="Settings"
+            aria-label="Settings"
+            className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors duration-200"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -1711,57 +1948,54 @@ export default function Home() {
               strokeLinejoin="round"
               className="w-5 h-5"
             >
-              {/* Top bar */}
-              <rect x="6" y="3" width="12" height="3" rx="1"/>
-              {/* Bottom bar */}
-              <rect x="6" y="18" width="12" height="3" rx="1"/>
-              {/* Left curve */}
-              <path d="M8 6c0 4 4 4 4 6s-4 2-4 6"/>
-              {/* Right curve */}
-              <path d="M16 6c0 4-4 4-4 6s4 2 4 6"/>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </button>
         </div>
       </header>
 
       {/* Friends (beta) */}
-      <section className="mt-3">
-        <div className="flex justify-between items-center px-1">
-          <h2 className="text-lg font-semibold text-[#4E4034]">Friends (beta)</h2>
+      <section className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold text-gray-900">Friends (beta)</h2>
           <div className="flex items-center gap-2">
             <button
-              onClick={seedDemoFriends}
-              className="text-sm px-2 py-1 rounded border border-[#BCA88F] text-[#4E4034] hover:bg-[#F7F6F3]"
-              title="Add sample friends to preview the module"
+              onClick={friends.length === 0 ? seedDemoFriends : removeSampleFriends}
+              className={`text-sm px-4 py-2 rounded-xl border transition-colors duration-200 ${
+                friends.length === 0 
+                  ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100' 
+                  : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
+              }`}
+              title={friends.length === 0 ? "Add sample friends to preview the module" : "Remove sample friends"}
               type="button"
             >
-              Add sample
+              {friends.length === 0 ? 'Add sample' : 'Remove samples'}
             </button>
           </div>
         </div>
 
         {friends.length === 0 ? (
-          <div className="mx-1 mt-2 rounded-md border border-gray-200 bg-gray-50 text-[#4E4034]/80 px-3 py-3 text-sm">
-            No friends yet. Tap <span className="font-medium">Add sample</span> to preview how this looks.
+          <div className="rounded-xl border border-gray-200 bg-gray-50 text-gray-600 px-4 py-4 text-sm">
+            No friends yet. Tap <span className="font-semibold text-gray-700">Add sample</span> to preview how this looks.
           </div>
         ) : (
-          <div className="mt-2 flex flex-col gap-2">
+          <div className="flex flex-col gap-3">
             {friends.map((f) => {
               const stats = friendWeeklyStats(f, startOfWeek);
               return (
-                <div key={f.id} className="bg-gray-100 p-3 rounded-xl shadow-md w-full flex flex-row items-center gap-3">
+                <div key={f.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 w-full flex flex-row items-center gap-4 hover:shadow-md transition-shadow duration-200">
                   {/* Initials avatar */}
-                  <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#ECEAE6] text-[#4E4034] font-semibold">
+                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 text-blue-700 font-bold text-sm">
                     {String(f.name || "?").split(" ").map(s=>s[0]).join("").slice(0,2).toUpperCase()}
                   </div>
                   <div className="flex-1">
-                    <div className="text-sm font-semibold text-[#4E4034]">{f.name}</div>
-                    <div className="text-[11px] text-gray-600">
+                    <div className="text-base font-semibold text-gray-900">{f.name}</div>
+                    <div className="text-sm text-gray-600">
                       This week: {formatHoursAndMinutes(stats.totalLogged)} / {formatHoursAndMinutes(stats.weeklyGoal)}
                     </div>
                   </div>
                   {/* Mini progress ring */}
-                  <div className="relative w-12 h-12">
+                  <div className="relative w-14 h-14">
                     <svg className="w-full h-full" viewBox="0 0 36 36" aria-hidden="true">
                       <path
                         stroke="#E5E7EB"
@@ -1770,7 +2004,7 @@ export default function Home() {
                         d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                       />
                       <path
-                        stroke="#8CA4AF"
+                        stroke="#3B82F6"
                         strokeWidth="3"
                         strokeDasharray={`${stats.pct}, 100`}
                         strokeLinecap="round"
@@ -1779,7 +2013,7 @@ export default function Home() {
                         d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                       />
                     </svg>
-                    <div className="absolute inset-0 flex items-center justify-center text-[11px] font-semibold text-[#4E4034]">
+                    <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-gray-900">
                       {stats.pct}%
                     </div>
                   </div>
@@ -1790,19 +2024,20 @@ export default function Home() {
         )}
       </section>
 
-      <div className="flex justify-between items-center px-1 mt-4">
-        <h2 className="text-lg font-semibold text-[#4E4034]">Focus Areas</h2>
-        <div className={`text-sm whitespace-nowrap ${plannedToday > MAX_DAY_HOURS ? 'text-red-600' : 'text-[#4E4034]'}`}>
-          <span className="font-semibold">{fmt1(plannedToday)}</span> out of 24 hours planned today
+      <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold text-gray-900">Focus Areas</h2>
+          <div className={`text-sm whitespace-nowrap ${plannedToday > MAX_DAY_HOURS ? 'text-red-600' : 'text-gray-600'}`}>
+            <span className="font-semibold">{fmt1(plannedToday)}</span> out of 24 hours planned today
+          </div>
         </div>
-      </div>
-      {overByToday > 0 && (
-        <div className="mx-1 -mt-2 mb-2 rounded-md border border-red-200 bg-red-50 text-red-700 text-sm px-3 py-2">
-          Your focus area daily goals add up to {fmt1(plannedToday)}hrs (over by {fmt1(overByToday)}hrs). Please reduce one or more daily goals so the total is 24hrs or less.
-        </div>
-      )}
-      
-      <section className="flex flex-col gap-1 mt-[-12px]">
+        {overByToday > 0 && (
+          <div className="rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm px-4 py-3 mb-4">
+            Your focus area daily goals add up to {fmt1(plannedToday)}hrs (over by {fmt1(overByToday)}hrs). Please reduce one or more daily goals so the total is 24hrs or less.
+          </div>
+        )}
+        
+        <div className="flex flex-col gap-3">
         {[...visibleCategories].reverse().map(({ label, timeSpent, goal, days, color }, index) => {
           // Day-aware progress: use only today's logged time (not weekly total)
           const goalNum = Number(goal ?? 0);
@@ -1836,12 +2071,12 @@ export default function Home() {
                 const inThisWeek = todayLocal >= startOfWeek && todayLocal <= endOfWeek;
                 setSelectedDateFA(ymd(inThisWeek ? todayLocal : startOfWeek));
               }}
-              className="bg-gray-100 p-3 rounded-xl shadow-md w-full flex flex-row items-center gap-2 relative cursor-pointer"
+              className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 w-full flex flex-row items-center gap-4 relative cursor-pointer hover:shadow-md transition-shadow duration-200"
             >
               {canEditWeek && (
                 <button
                   type="button"
-                  className="absolute bottom-2 right-2 text-[#4E4034] text-[11px] underline underline-offset-2 bg-transparent px-1 py-0 border-none hover:opacity-80"
+                  className="absolute -top-1 right-2 text-[#4E4034] text-xl px-2"
                   aria-label="Delete or Rename"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -1849,13 +2084,13 @@ export default function Home() {
                     setRenameValue(label);
                   }}
                 >
-                  Delete/Rename
+                  ⋯
                 </button>
               )}
               <div className="flex flex-row items-center gap-5 w-full">
                 <div className="flex flex-col items-center w-28">
                   <div
-                    className={`${label.length > 12 ? 'text-xs' : 'text-sm'} font-semibold text-[#4E4034] text-center`}
+                    className={`${label.length > 12 ? 'text-xs' : 'text-sm'} font-bold text-gray-900 text-center`}
                   >
                     {label}
                   </div>
@@ -1898,20 +2133,20 @@ export default function Home() {
                         </g>
                       )}
                     </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center text-xs font-bold text-[#4E4034] leading-tight">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-xs font-bold text-gray-900 leading-tight">
                       <div className="text-sm">
                         {formatCenterAmount(centerAmount)}
                       </div>
-                      <div className="text-[10px] uppercase text-gray-500">
+                      <div className="text-[10px] uppercase text-gray-600">
                         {(Number(daySpent || 0) > Number(goalNum || 0)) ? 'OVER' : 'LEFT'}
                       </div>
                     </div>
                   </div>
-                  <div className="text-xs text-gray-500 text-center">
+                  <div className="text-xs text-gray-600 text-center font-medium">
                     Daily Goal = {fmt1(goal ?? 0)}{hrUnit(goal ?? 0)}
                   </div>
                 </div>
-                <div className="flex justify-center items-center gap-3 w-full py-2">
+                <div className="flex justify-center items-center gap-4 w-full py-3">
                   {daysOfWeek.map((day) => {
                     const spent = (days?.[day] ?? 0);
                     const goalHrs = Number(goal ?? 0);
@@ -2002,19 +2237,19 @@ export default function Home() {
                 </button>
                 <div className="flex justify-between items-end flex-1 mt-2 w-full px-2 py-2">
                   {["M", "Tu", "W", "Th", "F", "Sa", "Su"].map((day) => (
-                    <div key={day} className="relative flex flex-col items-center">
-                      <div className="relative w-5 h-24 flex flex-col items-center justify-end">
-                        <div className="w-full h-6 rounded-t-sm border border-[#EAECEC] bg-[#DDE5ED]" />
-                        <div className="h-1" />
-                        <div className="w-full h-14 rounded-b-sm border border-[#EAECEC] bg-[#DDE5ED]" />
+                                          <div key={day} className="relative flex flex-col items-center">
+                        <div className="relative w-5 h-20 flex flex-col items-center justify-end">
+                          <div className="w-full h-6 rounded-t-sm border border-[#EAECEC] bg-[#DDE5ED]" />
+                          <div className="h-1" />
+                          <div className="w-full h-14 rounded-b-sm border border-[#EAECEC] bg-[#DDE5ED]" />
+                        </div>
+                        <div className="text-xs text-[#4E4034] text-center mt-1">{day}</div>
+                        {isCurrentWeek && day === todayAbbrev ? (
+                          <div className="text-[10px] text-[#BCA88F] leading-none mt-1">★</div>
+                        ) : (
+                          <div className="h-[10px] mt-1" />
+                        )}
                       </div>
-                      <div className="text-xs text-[#4E4034] text-center mt-1">{day}</div>
-                      {isCurrentWeek && day === todayAbbrev ? (
-                        <div className="text-[10px] text-[#BCA88F] leading-none mt-1">★</div>
-                      ) : (
-                        <div className="h-[10px] mt-1" />
-                      )}
-                    </div>
                   ))}
                 </div>
               </div>
@@ -2040,7 +2275,7 @@ export default function Home() {
                   setShowModal(true);
                 }}
                 type="button"
-                className="mt-2 w-full rounded-xl bg-[#8CA4AF] text-white py-3 font-medium shadow-md hover:brightness-105 active:brightness-95"
+                className="mt-4 w-full rounded-xl bg-[#8CA4AF] text-white py-3 font-semibold shadow-lg hover:bg-[#7A8F9A] active:bg-[#6B7A85] transition-all duration-200"
                 aria-label={addBtnLabel}
               >
                 + Add another Focus Area
@@ -2048,26 +2283,28 @@ export default function Home() {
             </>
           ) : null
         )}
-      </section>
+        </div>
+      </div>
     </div>
-    <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur shadow-inner p-3 z-50">
-      <div className="max-w-md mx-auto grid grid-cols-3 gap-4">
+    {/* Navigation - Always visible on main dashboard */}
+    <div className="fixed bottom-0 left-0 right-0 p-3 pb-7 z-[9999] bg-white shadow-lg border-t border-gray-200">
+      <div className="max-w-md mx-auto grid grid-cols-3 gap-3">
         <button
           aria-current="page"
           disabled
-          className="h-14 w-full rounded-[24px] border-2 border-[#4E4034] text-[#4E4034] font-medium bg-gray-200"
+          className="h-12 w-full rounded-2xl bg-gray-900 text-white font-semibold shadow-lg"
         >
           Dashboard
         </button>
         <button
           onClick={() => router.push('/calendar')}
-          className="h-14 w-full rounded-[24px] border-2 border-[#4E4034] text-[#4E4034] font-medium"
+          className="h-12 w-full rounded-2xl bg-white text-gray-700 font-medium border-2 border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
         >
           Calendar
         </button>
         <button
           onClick={() => router.push('/connect')}
-          className="h-14 w-full rounded-[24px] border-2 border-[#4E4034] text-[#4E4034] font-medium"
+          className="h-12 w-full rounded-2xl bg-white text-gray-700 font-medium border-2 border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
         >
           Connect
         </button>

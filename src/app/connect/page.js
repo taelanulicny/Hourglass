@@ -195,7 +195,7 @@ function FocusAreaPost({
 
 export default function ConnectPage() {
   // --- TODO: replace with real “today” values from your store/localStorage ---
-  const myToday = { goalMins: 240, spentMins: 36, color: "#7EA2B7", name: "My Progress" };
+  const myToday = useMemo(() => ({ goalMins: 240, spentMins: 36, color: "#7EA2B7", name: "My Progress" }), []);
   const percentMine = useMemo(() => (myToday.goalMins ? (myToday.spentMins / myToday.goalMins) * 100 : 0), [myToday]);
 
   // Fake follows — later, fetch from /api/connect or local cache
@@ -274,22 +274,22 @@ export default function ConnectPage() {
       </main>
 
       {/* Bottom nav (matches your style) */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur shadow-inner p-3 z-50">
-        <div className="max-w-md mx-auto grid grid-cols-3 gap-4">
+      <nav className="fixed bottom-0 left-0 right-0 p-3 pb-7 z-50">
+        <div className="max-w-md mx-auto grid grid-cols-3 gap-3">
         <Link
           href="/"
-            className="h-14 w-full rounded-[24px] border-2 border-[#4E4034] text-[#4E4034] font-medium grid place-items-center"
+            className="h-12 w-full rounded-2xl bg-white text-gray-700 font-medium border-2 border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-sm grid place-items-center"
         >
           Dashboard
         </Link>
         <Link
           href="/calendar"
-            className="h-14 w-full rounded-[24px] border-2 border-[#4E4034] text-[#4E4034] font-medium grid place-items-center"
+            className="h-12 w-full rounded-2xl bg-white text-gray-700 font-medium border-2 border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-sm grid place-items-center"
         >
           Calendar
         </Link>
           <button
-            className="h-14 w-full rounded-[24px] border-2 border-[#4E4034] text-[#4E4034] font-medium bg-gray-200 grid place-items-center"
+            className="h-12 w-full rounded-2xl bg-gray-900 text-white font-semibold shadow-lg grid place-items-center"
             aria-current="page"
             disabled
         >
