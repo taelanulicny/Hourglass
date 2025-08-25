@@ -1160,7 +1160,7 @@ export default function Home() {
 
     // --- Layout refactor for focus area view ---
     return (
-      <div className="min-h-screen bg-white text-black px-4 pb-24 font-sans flex flex-col">
+      <div className="min-h-screen bg-white text-black px-4 pb-32 font-sans flex flex-col">
         <div className="w-full">
           <button
             onClick={() => setSelectedFocusArea(null)}
@@ -1903,7 +1903,7 @@ export default function Home() {
 
   return (
     <>
-    <div className="h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-900 px-4 pb-20 font-sans flex flex-col gap-6 overflow-hidden">
+            <div className="h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-900 px-4 pb-32 font-sans flex flex-col gap-6 overflow-hidden">
       <header className="w-full py-3 px-4 flex justify-between items-center">
         <div className="flex items-center gap-2">
           <button
