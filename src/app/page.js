@@ -2288,13 +2288,13 @@ export default function Home() {
         </div>
       </div>
     </div>
-    {/* Navigation - Always visible on main dashboard */}
-    <div className="fixed bottom-0 left-0 right-0 p-3 pb-7 z-[9999] bg-white shadow-lg border-t border-gray-200">
+    {/* Bottom buttons: Dashboard | Calendar | Connect */}
+    <div className="fixed bottom-0 left-0 right-0 p-3 pb-7 z-50">
       <div className="max-w-md mx-auto grid grid-cols-3 gap-3">
         <button
-          aria-current="page"
-          disabled
           className="h-12 w-full rounded-2xl bg-gray-900 text-white font-semibold shadow-lg"
+          disabled
+          aria-current="page"
         >
           Dashboard
         </button>
