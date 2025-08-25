@@ -1,14 +1,28 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function SettingsPage() {
   const router = useRouter();
   const [userName, setUserName] = useState('taelanulicny');
-  const [defaultGoal, setDefaultGoal] = useState('5');
+  const [defaultGoal, setDefaultGoal] = useState('8');
   const [timeFormat, setTimeFormat] = useState('12');
   const [weekStart, setWeekStart] = useState('monday');
+
+  // Load sleep hours from local storage on component mount
+  useEffect(() => {
+    const savedSleepHours = localStorage.getItem('sleepHours');
+    if (savedSleepHours) {
+      setDefaultGoal(savedSleepHours);
+    }
+  }, []);
+
+  // Save sleep hours to local storage when it changes
+  const handleSleepHoursChange = (value) => {
+    setDefaultGoal(value);
+    localStorage.setItem('sleepHours', value);
+  };
 
   const handleExportData = () => {
     // Export logic will go here
@@ -90,7 +104,7 @@ export default function SettingsPage() {
               <input
                 type="number"
                 value={defaultGoal}
-                onChange={(e) => setDefaultGoal(e.target.value)}
+                onChange={(e) => handleSleepHoursChange(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#8CA4AF] focus:border-transparent transition-colors"
                 min="0"
                 step="0.25"

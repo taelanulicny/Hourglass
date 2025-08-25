@@ -130,7 +130,6 @@ function friendWeeklyStats(friend, mondayDateLike) {
 }
 
 export default function Home() {
-  const MAX_DAY_HOURS = 24;
   const router = useRouter();
 
   // --- AI Helper state (must be inside component) ---
@@ -506,6 +505,33 @@ export default function Home() {
   }, [offset]);
 
   const [categories, setCategories] = useState([]);
+  
+  // Sleep hours state for calculating available planning hours
+  const [sleepHours, setSleepHours] = useState(8); // Default to 8 hours sleep
+  
+  // Calculate available hours for planning (24 - sleep hours)
+  const availableHours = 24 - sleepHours;
+  
+  // Load sleep hours from local storage on component mount
+  useEffect(() => {
+    const savedSleepHours = localStorage.getItem('sleepHours');
+    if (savedSleepHours) {
+      setSleepHours(Number(savedSleepHours));
+    }
+  }, []);
+  
+  // Listen for sleep hours changes from settings page
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'sleepHours') {
+        setSleepHours(Number(e.newValue || 8));
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   // Mirror current-week snapshot to legacy live key so slug page can read it
   function saveWeekAndLive(updated) {
     try {
@@ -661,8 +687,8 @@ export default function Home() {
   const todayAbbrev = ["Su","M","Tu","W","Th","F","Sa"][new Date().getDay()];
   // Sum total planned time (daily goals) across all focus areas for today
   const plannedToday = (categories || []).reduce((sum, c) => sum + (Number(c?.goal) || 0), 0);
-  const remainingToday = Math.max(0, MAX_DAY_HOURS - plannedToday);
-  const overByToday = Math.max(0, plannedToday - MAX_DAY_HOURS);
+  const remainingToday = Math.max(0, availableHours - plannedToday);
+  const overByToday = Math.max(0, plannedToday - availableHours);
   // Preset colors for focus areas
   const PRESET_COLORS = ["#8CA4AF", "#BCA88F", "#9ACD32", "#E46C6C", "#7D7ACF", "#F2C94C", "#56CCF2"];
   const [newColor, setNewColor] = useState("#8CA4AF");
@@ -2025,13 +2051,13 @@ export default function Home() {
       <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-gray-900">Focus Areas</h2>
-          <div className={`text-sm whitespace-nowrap ${plannedToday > MAX_DAY_HOURS ? 'text-red-600' : 'text-gray-600'}`}>
-            <span className="font-semibold">{fmt1(plannedToday)}</span> out of 24 hours planned today
+          <div className={`text-sm whitespace-nowrap ${plannedToday > availableHours ? 'text-red-600' : 'text-gray-600'}`}>
+            <span className="font-semibold">{fmt1(plannedToday)}</span> out of {availableHours} hours planned today
           </div>
         </div>
         {overByToday > 0 && (
           <div className="rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm px-4 py-3 mb-4">
-            Your focus area daily goals add up to {fmt1(plannedToday)}hrs (over by {fmt1(overByToday)}hrs). Please reduce one or more daily goals so the total is 24hrs or less.
+            Your focus area daily goals add up to {fmt1(plannedToday)}hrs (over by {fmt1(overByToday)}hrs). Please reduce one or more daily goals so the total is {availableHours}hrs or less.
           </div>
         )}
         
