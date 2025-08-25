@@ -85,7 +85,7 @@ export default function SettingsPage() {
           <div className="p-6 space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Default Daily Goal (hours)
+                Sleep Hours
               </label>
               <input
                 type="number"
@@ -96,6 +96,9 @@ export default function SettingsPage() {
                 step="0.25"
                 max="24"
               />
+              <div className="text-xs text-gray-500 mt-1">
+                This determines how many hours are available for planning (24 - sleep hours)
+              </div>
             </div>
             
             <div>
@@ -133,45 +136,22 @@ export default function SettingsPage() {
           <div className="px-6 py-4 border-b border-gray-100">
             <h2 className="text-lg font-semibold text-gray-900">Hourglass Function</h2>
           </div>
-          <div className="p-6 space-y-4">
-            <div className="flex items-center justify-between p-4 bg-amber-50 rounded-xl border border-amber-200">
+          <div className="p-6">
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-10 h-10 bg-[#8CA4AF] rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
                 <div>
-                  <div className="font-medium text-gray-900">Hourglass Timer</div>
+                  <div className="font-medium text-gray-900">Enable Hourglass</div>
                   <div className="text-sm text-gray-600">Visual countdown timer for focus sessions</div>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500 px-2 py-1 bg-gray-100 rounded-full">Coming Soon</span>
+              <div className="w-12 h-6 bg-gray-300 rounded-full relative cursor-not-allowed opacity-50">
+                <div className="w-5 h-5 bg-white rounded-full absolute top-0.5 left-0.5 shadow-sm"></div>
               </div>
-            </div>
-            
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm font-medium text-gray-700">Enable Hourglass</span>
-                <div className="w-12 h-6 bg-gray-300 rounded-full relative cursor-not-allowed opacity-50">
-                  <div className="w-5 h-5 bg-white rounded-full absolute top-0.5 left-0.5 shadow-sm"></div>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm font-medium text-gray-700">Default Session Length</span>
-                <span className="text-sm text-gray-500">25 min</span>
-              </div>
-              
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm font-medium text-gray-700">Auto-start with Focus Areas</span>
-                <span className="text-sm text-gray-500">Disabled</span>
-              </div>
-            </div>
-            
-            <div className="text-center text-xs text-gray-500 pt-2">
-              Hourglass functionality will be available in a future update
             </div>
           </div>
         </section>
