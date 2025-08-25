@@ -416,11 +416,7 @@ export default function Home() {
       
       if (!data?.ok) throw new Error(data?.error || "AI failed");
       
-      // Check if the AI response contains the error message
-      if (data.text && data.text.includes("The string did not match the expected pattern")) {
-        console.error('AI backend returned error message:', data.text);
-        throw new Error('AI backend error: ' + data.text);
-      }
+      // AI response received successfully
       
       const aiMessage = { type: 'ai', content: data.text || "", timestamp: new Date() };
       setMessages(prev => [...prev, aiMessage]);
