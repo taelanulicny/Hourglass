@@ -1197,12 +1197,13 @@ export default function Home() {
                         strokeLinecap="round"
                         fill="none"
                         transform="rotate(-90 18 18)"
+                        className="transition-all duration-700 ease-out"
                         d="M18 2.0845
                               a 15.9155 15.9155 0 0 1 0 31.831
                               a 15.9155 15.9155 0 0 1 0 -31.831"
                       />
                       {overAmount > 0 && (
-                        <g transform="scale(0.88) translate(2.2 2.2)">
+                        <g transform="scale(0.88) translate(2.2 2.2)" className="animate-pulse">
                           <path
                             stroke={areaColor}
                             strokeWidth="2.2"
@@ -1210,6 +1211,7 @@ export default function Home() {
                             strokeLinecap="round"
                             fill="none"
                             transform="rotate(-90 18 18)"
+                            className="transition-all duration-700 ease-out"
                             d="M18 2.0845
                                   a 15.9155 15.9155 0 0 1 0 31.831
                                   a 15.9155 15.9155 0 0 1 0 -31.831"
