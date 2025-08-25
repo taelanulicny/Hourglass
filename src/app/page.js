@@ -2291,8 +2291,8 @@ export default function Home() {
               <button
                 onClick={() => {
                   setFormError("");
-                  if (plannedToday >= MAX_DAY_HOURS) {
-                    setFormError(`Your focus area daily goals already total ${fmt1(plannedToday)}hrs. Please adjust existing goals so the sum is 24hrs or less before adding another.`);
+                  if (plannedToday >= availableHours) {
+                    setFormError(`Your focus area daily goals already total ${fmt1(plannedToday)}hrs. Please adjust existing goals so the sum is ${availableHours}hrs or less before adding another.`);
                     setShowModal(true);
                     return;
                   }
@@ -2358,7 +2358,7 @@ export default function Home() {
               max={Math.max(0, remainingToday)}
             />
             <div className="mt-1 text-xs text-gray-500">
-              {fmt1(remainingToday)}hrs available today (out of 24)
+              {fmt1(remainingToday)}hrs available today (out of {availableHours})
             </div>
           </div>
           <div className="mb-4">
@@ -2418,8 +2418,8 @@ export default function Home() {
                   setFormError("Please enter a name and a goal greater than 0.");
                   return;
                 }
-                if (plannedToday + goalNum > MAX_DAY_HOURS) {
-                  setFormError(`This would put you over 24hrs today. You have ${fmt1(remainingToday)}hrs available.`);
+                if (plannedToday + goalNum > availableHours) {
+                  setFormError(`This would put you over ${availableHours}hrs today. You have ${fmt1(remainingToday)}hrs available.`);
                   return;
                 }
                 const updated = [
