@@ -1266,7 +1266,7 @@ export default function Home() {
                       ›
                     </button>
                   </div>
-                  <div className="flex justify-between items-center gap-2 w-full py-2">
+                  <div className="flex items-center gap-1 w-full py-2 justify-center px-2 pr-4">
                     {dayOrder.map((day) => {
                       const spent = (focusArea.days?.[day] ?? 0);
                       const goalHrs = Number(goal);
@@ -1903,7 +1903,7 @@ export default function Home() {
 
   return (
     <>
-            <div className="h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-900 px-4 pb-32 font-sans flex flex-col gap-6">
+            <div className="min-h-screen bg-white text-gray-900 pb-40 font-sans flex flex-col gap-6">
       <header className="w-full py-3 px-4 flex justify-between items-center">
         <div className="flex items-center gap-2">
           <button
