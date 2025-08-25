@@ -1266,7 +1266,7 @@ export default function Home() {
                       ›
                     </button>
                   </div>
-                  <div className="flex items-center gap-1 w-full py-2 justify-center px-2 pr-4">
+                  <div className="flex items-center gap-1 w-full py-2 justify-center px-3 pr-6">
                     {dayOrder.map((day) => {
                       const spent = (focusArea.days?.[day] ?? 0);
                       const goalHrs = Number(goal);
@@ -1977,7 +1977,7 @@ export default function Home() {
         </div>
 
         {friends.length === 0 ? (
-          <div className="rounded-xl border border-gray-200 bg-gray-50 text-gray-600 px-4 py-4 text-sm">
+          <div className="rounded-xl border border-gray-200 bg-white text-gray-600 px-4 py-4 text-sm">
             No friends yet. Tap <span className="font-semibold text-gray-700">Add sample</span> to preview how this looks.
           </div>
         ) : (
@@ -2205,7 +2205,7 @@ export default function Home() {
               {/* Show the example card when there are no focus areas yet (CURRENT or FUTURE weeks) */}
               <div
                 onClick={() => { setFormError(""); setShowModal(true); }}
-                className="relative bg-gray-100 p-3 rounded-xl shadow-md w-full flex flex-row items-center gap-3 opacity-50 cursor-pointer"
+                className="relative bg-white p-3 rounded-xl shadow-md w-full flex flex-row items-center gap-3 opacity-50 cursor-pointer"
               >
                 <div className="flex flex-col items-center w-28">
                   <div className="text-sm font-semibold text-[#4E4034] text-center">Add a Focus Area</div>
@@ -2258,7 +2258,7 @@ export default function Home() {
             </>
           ) : (
             // Older week with no focus areas—show a read-only notice (NO adding in past weeks)
-            <div className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 text-[#4E4034]/70 py-6 text-center">
+            <div className="mt-2 w-full rounded-xl border border-gray-200 bg-white text-[#4E4034]/70 py-6 text-center">
               No logged focus areas.
             </div>
           )
