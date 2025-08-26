@@ -195,9 +195,9 @@ export default function SettingsPage() {
         {/* FTUE Management Section */}
         <section className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-900">Welcome Experience</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Welcome Experience & Tutorials</h2>
           </div>
-          <div className="p-6">
+          <div className="p-6 space-y-4">
             <div className="flex items-center justify-between p-4 bg-blue-50 rounded-xl border border-blue-200">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -220,6 +220,34 @@ export default function SettingsPage() {
                 className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
               >
                 Restart
+              </button>
+            </div>
+            
+            <div className="flex items-center justify-between p-4 bg-purple-50 rounded-xl border border-purple-200">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="font-medium text-gray-900">Reset All Tutorials</div>
+                  <div className="text-sm text-gray-600">Show all tooltips and tutorials again from the beginning</div>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  // Reset all tooltip states so user can see them again
+                  localStorage.removeItem('hourglassTooltips');
+                  localStorage.removeItem('hourglassDashboardTourCompleted');
+                  localStorage.removeItem('hourglassCalendarTourCompleted');
+                  
+                  // Show confirmation
+                  alert('All tutorials have been reset! You will now see the dashboard and calendar tutorials again.');
+                }}
+                className="px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors"
+              >
+                Reset
               </button>
             </div>
           </div>

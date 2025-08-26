@@ -77,37 +77,7 @@ export function SettingsTooltips() {
             </svg>
           </button>
 
-          <button
-            onClick={() => {
-              // Reset all FTUE and tooltip states so user can see them again
-              localStorage.removeItem('hourglassFTUECompleted');
-              localStorage.removeItem('hourglassTooltips');
-              localStorage.removeItem('hourglassDashboardTourCompleted');
-              localStorage.removeItem('hourglassCalendarTourCompleted');
-              
-              // Show confirmation
-              alert('All tutorials have been reset! You will now see the welcome experience again.');
-              
-              // Redirect to FTUE page directly
-              window.location.href = '/ftue-test';
-            }}
-            className="w-full flex items-center justify-between p-4 bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 transition-colors duration-200"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-              </div>
-              <div className="text-left">
-                <div className="font-medium text-gray-900">Reset All Tutorials</div>
-                <div className="text-sm text-gray-600">Show all tooltips and tutorials again from the beginning</div>
-              </div>
-            </div>
-            <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
+
         </div>
       </div>
 
