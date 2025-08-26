@@ -1,21 +1,33 @@
 "use client";
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import WelcomeScreen from '../../components/ftue/WelcomeScreen';
 import SleepSetupScreen from '../../components/ftue/SleepSetupScreen';
 
 export default function FTUETestPage() {
   const [currentStep, setCurrentStep] = useState(0);
-
+  const router = useRouter();
 
   const steps = [
     { name: 'Welcome', component: WelcomeScreen },
     { name: 'Sleep Setup', component: SleepSetupScreen },
   ];
 
+  const handleNext = () => {
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      // FTUE completed, redirect to dashboard
+      router.push('/');
+    }
+  };
 
-
-
+  const handleBack = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
 
   const CurrentComponent = steps[currentStep].component;
 
@@ -42,10 +54,39 @@ export default function FTUETestPage() {
         <p className="text-xs text-gray-500 mt-2">
           Current: {steps[currentStep].name}
         </p>
+        <div className="flex gap-2 mt-2">
+          <button
+            onClick={handleBack}
+            disabled={currentStep === 0}
+            className={`px-2 py-1 text-xs rounded ${
+              currentStep === 0
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            ← Back
+          </button>
+          <button
+            onClick={handleNext}
+            className="px-2 py-1 text-xs rounded bg-blue-600 text-white hover:bg-blue-700"
+          >
+            {currentStep === steps.length - 1 ? 'Complete →' : 'Next →'}
+          </button>
+        </div>
+        <button
+          onClick={() => {
+            localStorage.removeItem('hourglassFTUECompleted');
+            localStorage.removeItem('sleepHours');
+            alert('FTUE state reset! Refresh the page to start over.');
+          }}
+          className="w-full mt-2 px-2 py-1 text-xs rounded bg-red-600 text-white hover:bg-red-700"
+        >
+          Reset FTUE State
+        </button>
       </div>
 
       {/* Current FTUE Screen */}
-      <CurrentComponent />
+      <CurrentComponent onNext={handleNext} onBack={handleBack} />
     </div>
   );
 }

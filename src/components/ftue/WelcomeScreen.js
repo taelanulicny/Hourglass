@@ -114,15 +114,12 @@ export default function WelcomeScreen({ onNext }) {
         {hasReadPrivacy && (
           <div className="mt-8 text-center animate-fade-in">
             <p className="text-gray-500 text-sm mb-3">Great! Let's get started</p>
-                          <button
-                onClick={() => {
-                  // Go to sleep setup instead of completing FTUE
-                  window.location.href = '/ftue-test/sleep';
-                }}
-                className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors duration-200 shadow-lg hover:shadow-xl"
-              >
-                Welcome to Hourglass →
-              </button>
+            <button
+              onClick={onNext}
+              className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors duration-200 shadow-lg hover:shadow-xl"
+            >
+              Continue to Sleep Setup →
+            </button>
           </div>
         )}
       </div>

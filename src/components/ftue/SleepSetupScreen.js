@@ -40,8 +40,10 @@ export default function SleepSetupScreen() {
     // Mark FTUE as completed
     localStorage.setItem('hourglassFTUECompleted', 'true');
     
-    // Redirect to dashboard
-    router.push('/');
+    // Call onNext to proceed to next step (which will redirect to dashboard)
+    if (onNext) {
+      onNext();
+    }
   };
 
   return (
