@@ -301,18 +301,82 @@ function CalendarContent() {
   // Focus areas from Dashboard/localStorage (prefer weekly snapshot based on selectedDate)
   const [focusAreas, setFocusAreas] = useState([]);
   useEffect(() => {
-    setFocusAreas(loadFocusAreasForDate(new Date())); // initial load (today)
+    // Clear out old test data and only load actual focus areas
+    const areas = loadFocusAreasForDate(new Date()); // initial load (today)
+    
+    // Filter out any test items (remove test 2, test 3, test 4)
+    const cleanAreas = areas.filter(area => 
+      !area.label.toLowerCase().includes('test') && 
+      area.label.trim() !== ''
+    );
+    
+    console.log('Calendar: Cleaned focus areas:', cleanAreas);
+    setFocusAreas(cleanAreas);
   }, []);
+  
+  // Load focus areas normally but filter out test items
+  useEffect(() => {
+    const areas = loadFocusAreasForDate(new Date()); // initial load (today)
+    
+    // Filter out any test items but keep real focus areas
+    const cleanAreas = areas.filter(area => 
+      !area.label.toLowerCase().includes('test') && 
+      area.label.trim() !== ''
+    );
+    
+    console.log('Calendar: Loaded focus areas:', areas);
+    console.log('Calendar: Cleaned focus areas:', cleanAreas);
+    setFocusAreas(cleanAreas);
+  }, []);
+
+  // Refresh focus areas when page becomes visible (e.g., switching from dashboard)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        const areas = loadFocusAreasForDate(selectedDate || new Date());
+        const cleanAreas = areas.filter(area => 
+          !area.label.toLowerCase().includes('test') && 
+          area.label.trim() !== ''
+        );
+        setFocusAreas(cleanAreas);
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [selectedDate]);
   useEffect(() => {
     const onStorage = (e) => {
       if (e.key && (e.key.startsWith("focusCategories") || e.key === "focusCategories")) {
         if (selectedDate) {
-          setFocusAreas(loadFocusAreasForDate(selectedDate));
+          const areas = loadFocusAreasForDate(selectedDate);
+          const cleanAreas = areas.filter(area => 
+            !area.label.toLowerCase().includes('test') && 
+            area.label.trim() !== ''
+          );
+          setFocusAreas(cleanAreas);
         }
       }
     };
+    
+    const onFocusCategoriesUpdated = () => {
+      if (selectedDate) {
+        const areas = loadFocusAreasForDate(selectedDate);
+        const cleanAreas = areas.filter(area => 
+          !area.label.toLowerCase().includes('test') && 
+          area.label.trim() !== ''
+        );
+        setFocusAreas(cleanAreas);
+      }
+    };
+    
     window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
+    window.addEventListener("focusCategoriesUpdated", onFocusCategoriesUpdated);
+    
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("focusCategoriesUpdated", onFocusCategoriesUpdated);
+    };
   }, [selectedDate]);
   
   // Modal state must be defined before the effects that use it

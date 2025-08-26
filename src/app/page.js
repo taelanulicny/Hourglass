@@ -132,6 +132,16 @@ function friendWeeklyStats(friend, mondayDateLike) {
 export default function Home() {
   const router = useRouter();
 
+  // --- FTUE Redirect Logic ---
+  useEffect(() => {
+    const hasCompletedFTUE = localStorage.getItem('hourglassFTUECompleted');
+    if (!hasCompletedFTUE) {
+      // Redirect to FTUE if not completed
+      router.push('/ftue-test');
+      return;
+    }
+  }, [router]);
+
   // --- AI Helper state (must be inside component) ---
   const [aiInput, setAiInput] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
@@ -1925,8 +1935,8 @@ export default function Home() {
 
   return (
     <>
-            <div className="min-h-screen bg-white text-gray-900 pb-40 font-sans flex flex-col gap-6">
-      <header className="w-full py-3 px-4 flex justify-between items-center">
+      <div className="min-h-screen bg-white text-gray-900 pb-40 font-sans flex flex-col gap-6">
+        <header className="w-full py-3 px-4 flex justify-between items-center">
         <div className="flex items-center gap-2">
           <button
             className={`text-gray-700 text-xl px-3 ${offset <= MIN_OFFSET ? 'opacity-30 cursor-not-allowed' : 'hover:text-gray-900'}`}
@@ -2309,9 +2319,10 @@ export default function Home() {
         )}
         </div>
       </div>
-    </div>
-    {/* Bottom buttons: Dashboard | Calendar | Connect */}
-    <div className="fixed bottom-0 left-0 right-0 p-3 pb-7 z-50">
+        </div>
+      
+      {/* Bottom buttons: Dashboard | Calendar | Connect */}
+      <div className="fixed bottom-0 left-0 right-0 p-3 pb-7 z-50">
       <div className="max-w-md mx-auto grid grid-cols-3 gap-3">
         <button
           className="h-12 w-full rounded-2xl bg-gray-900 text-white font-semibold shadow-lg"

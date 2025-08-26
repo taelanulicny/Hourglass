@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { SettingsTooltips } from '../../components/tooltips/SettingsTooltips';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -144,6 +145,9 @@ export default function SettingsPage() {
             </div>
           </div>
         </section>
+
+        {/* Help & Tutorials Section */}
+        <SettingsTooltips />
 
         {/* Hourglass Function Section */}
         <section className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
