@@ -516,25 +516,33 @@ export default function Home() {
 
   const [categories, setCategories] = useState([]);
   
-  // Sleep hours state for calculating available planning hours
+  // Sleep and misc hours state for calculating available planning hours
   const [sleepHours, setSleepHours] = useState(8); // Default to 8 hours sleep
+  const [miscHours, setMiscHours] = useState(0); // Default to 0 hours misc
   
-  // Calculate available hours for planning (24 - sleep hours)
-  const availableHours = 24 - sleepHours;
+  // Calculate available hours for planning (24 - sleep hours - misc hours)
+  const availableHours = 24 - sleepHours - miscHours;
   
-  // Load sleep hours from local storage on component mount
+  // Load sleep and misc hours from local storage on component mount
   useEffect(() => {
     const savedSleepHours = localStorage.getItem('sleepHours');
+    const savedMiscHours = localStorage.getItem('miscHours');
     if (savedSleepHours) {
       setSleepHours(Number(savedSleepHours));
     }
+    if (savedMiscHours) {
+      setMiscHours(Number(savedMiscHours));
+    }
   }, []);
   
-  // Listen for sleep hours changes from settings page
+  // Listen for sleep and misc hours changes from settings page
   useEffect(() => {
     const handleStorageChange = (e) => {
       if (e.key === 'sleepHours') {
         setSleepHours(Number(e.newValue || 8));
+      }
+      if (e.key === 'miscHours') {
+        setMiscHours(Number(e.newValue || 0));
       }
     };
     
@@ -2062,8 +2070,13 @@ export default function Home() {
       <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-gray-900">Focus Areas</h2>
-          <div className={`text-sm whitespace-nowrap ${plannedToday > availableHours ? 'text-red-600' : 'text-gray-600'}`}>
-            <span className="font-semibold">{fmt1(plannedToday)}</span> out of {availableHours} hours planned today
+          <div className="flex flex-col items-end gap-1">
+            <div className={`text-sm whitespace-nowrap ${plannedToday > availableHours ? 'text-red-600' : 'text-gray-600'}`}>
+              <span className="font-semibold">{fmt1(plannedToday)}</span> out of {availableHours} hours planned today
+            </div>
+            <div className="text-xs text-gray-500">
+              {sleepHours}hrs sleep + {miscHours > 0 ? `${miscHours}hrs misc` : 'no misc time'} = {24 - availableHours}hrs reserved
+            </div>
           </div>
         </div>
         {overByToday > 0 && (

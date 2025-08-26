@@ -6,14 +6,20 @@ import { useRouter } from 'next/navigation';
 export default function SleepSetupScreen() {
   const router = useRouter();
   const [sleepHours, setSleepHours] = useState('');
+  const [miscHours, setMiscHours] = useState('');
   const [hasReadAboutSleep, setHasReadAboutSleep] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [isMiscInputFocused, setIsMiscInputFocused] = useState(false);
 
-  // Load existing sleep hours if available
+  // Load existing sleep and misc hours if available
   useEffect(() => {
     const savedSleepHours = localStorage.getItem('sleepHours');
+    const savedMiscHours = localStorage.getItem('miscHours');
     if (savedSleepHours) {
       setSleepHours(savedSleepHours);
+    }
+    if (savedMiscHours) {
+      setMiscHours(savedMiscHours);
     }
   }, []);
 
@@ -23,7 +29,9 @@ export default function SleepSetupScreen() {
   };
 
   // Calculate available hours
-  const availableHours = 24 - parseFloat(sleepHours || 8);
+  const sleepHoursNum = parseFloat(sleepHours || 8);
+  const miscHoursNum = parseFloat(miscHours || 0);
+  const availableHours = 24 - sleepHoursNum - miscHoursNum;
   const weeklyHours = availableHours * 7;
 
   const handleContinue = () => {
@@ -34,8 +42,27 @@ export default function SleepSetupScreen() {
       return;
     }
 
-    // Save sleep hours to localStorage
+    // Validate misc hours (optional, but if entered must be valid)
+    const numMiscHours = parseFloat(miscHours);
+    if (miscHours && (isNaN(numMiscHours) || numMiscHours < 0 || numMiscHours > 8)) {
+      alert('Please enter a valid miscellaneous time between 0 and 8 hours, or leave it empty.');
+      return;
+    }
+
+    // Validate total time doesn't exceed 24 hours
+    const totalTime = numSleepHours + (numMiscHours || 0);
+    if (totalTime > 24) {
+      alert('Total time (sleep + miscellaneous) cannot exceed 24 hours. Please adjust your values.');
+      return;
+    }
+
+    // Save sleep and misc hours to localStorage
     localStorage.setItem('sleepHours', sleepHours);
+    if (miscHours) {
+      localStorage.setItem('miscHours', miscHours);
+    } else {
+      localStorage.removeItem('miscHours');
+    }
     
     // Mark FTUE as completed
     localStorage.setItem('hourglassFTUECompleted', 'true');
@@ -170,6 +197,54 @@ export default function SleepSetupScreen() {
                 That is <strong className="text-blue-600">{weeklyHours}</strong> hours a week.
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Miscellaneous Time Setup */}
+        <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Optional: Unaccounted Time</h2>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-4">
+                Do you want to reserve time for leisure, breaks, or other activities? <span className="text-gray-500">(optional)</span>
+              </label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="number"
+                  value={isMiscInputFocused ? miscHours : ''}
+                  onChange={(e) => setMiscHours(e.target.value)}
+                  onFocus={() => setIsMiscInputFocused(true)}
+                  onBlur={() => {
+                    if (miscHours === '') {
+                      setIsMiscInputFocused(false);
+                    }
+                  }}
+                  className={`flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-center text-lg font-medium ${
+                    isMiscInputFocused ? 'text-black' : 'text-gray-400'
+                  }`}
+                  min="0"
+                  max="8"
+                  step="0.25"
+                  placeholder="0.0"
+                />
+                <span className="text-gray-600 font-medium">hours</span>
+              </div>
+              <p className="text-sm text-gray-500 mt-2">
+                This time will be subtracted from your available productive hours each day.
+              </p>
+            </div>
+
+            {miscHours && (
+              <div className="p-4 bg-green-50 rounded-xl border border-green-200">
+                <div className="text-sm text-gray-700">
+                  With <strong className="text-green-600">{miscHours}</strong> hours of miscellaneous time, your daily productive hours are now <strong className="text-green-600">{availableHours}</strong>.
+                  <br />
+                  <br />
+                  That gives you <strong className="text-green-600">{weeklyHours}</strong> productive hours per week.
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
