@@ -73,16 +73,7 @@ export default function FTUETestPage() {
             {currentStep === steps.length - 1 ? 'Complete →' : 'Next →'}
           </button>
         </div>
-        <button
-          onClick={() => {
-            localStorage.removeItem('hourglassFTUECompleted');
-            localStorage.removeItem('sleepHours');
-            alert('FTUE state reset! Refresh the page to start over.');
-          }}
-          className="w-full mt-2 px-2 py-1 text-xs rounded bg-red-600 text-white hover:bg-red-700"
-        >
-          Reset FTUE State
-        </button>
+
       </div>
 
       {/* Current FTUE Screen */}
