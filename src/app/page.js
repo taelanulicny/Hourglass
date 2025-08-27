@@ -506,25 +506,33 @@ export default function Home() {
 
   const [categories, setCategories] = useState([]);
   
-  // Sleep hours state for calculating available planning hours
+  // Sleep and misc hours state for calculating available planning hours
   const [sleepHours, setSleepHours] = useState(8); // Default to 8 hours sleep
+  const [miscHours, setMiscHours] = useState(0); // Default to 0 hours misc
   
-  // Calculate available hours for planning (24 - sleep hours)
-  const availableHours = 24 - sleepHours;
+  // Calculate available hours for planning (24 - sleep hours - misc hours)
+  const availableHours = 24 - sleepHours - miscHours;
   
-  // Load sleep hours from local storage on component mount
+  // Load sleep and misc hours from local storage on component mount
   useEffect(() => {
     const savedSleepHours = localStorage.getItem('sleepHours');
+    const savedMiscHours = localStorage.getItem('miscHours');
     if (savedSleepHours) {
       setSleepHours(Number(savedSleepHours));
     }
+    if (savedMiscHours) {
+      setMiscHours(Number(savedMiscHours));
+    }
   }, []);
   
-  // Listen for sleep hours changes from settings page
+  // Listen for sleep and misc hours changes from settings page
   useEffect(() => {
     const handleStorageChange = (e) => {
       if (e.key === 'sleepHours') {
         setSleepHours(Number(e.newValue || 8));
+      }
+      if (e.key === 'miscHours') {
+        setMiscHours(Number(e.newValue || 0));
       }
     };
     
