@@ -27,6 +27,8 @@ export default function SettingsPage() {
   const handleSleepHoursChange = (value) => {
     setDefaultGoal(value);
     localStorage.setItem('sleepHours', value);
+    // Trigger a custom event to notify the main page
+    window.dispatchEvent(new CustomEvent('sleepHoursChanged', { detail: value }));
   };
 
   // Save misc hours to local storage when it changes
@@ -37,6 +39,8 @@ export default function SettingsPage() {
     } else {
       localStorage.removeItem('miscHours');
     }
+    // Trigger a custom event to notify the main page
+    window.dispatchEvent(new CustomEvent('miscHoursChanged', { detail: value }));
   };
 
   const handleExportData = () => {

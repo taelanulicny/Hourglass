@@ -536,8 +536,23 @@ export default function Home() {
       }
     };
     
+    const handleSleepHoursChanged = (e) => {
+      setSleepHours(Number(e.detail || 8));
+    };
+    
+    const handleMiscHoursChanged = (e) => {
+      setMiscHours(Number(e.detail || 0));
+    };
+    
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener('sleepHoursChanged', handleSleepHoursChanged);
+    window.addEventListener('miscHoursChanged', handleMiscHoursChanged);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('sleepHoursChanged', handleSleepHoursChanged);
+      window.removeEventListener('miscHoursChanged', handleMiscHoursChanged);
+    };
   }, []);
 
   // Mirror current-week snapshot to legacy live key so slug page can read it
