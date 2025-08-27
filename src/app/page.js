@@ -2011,8 +2011,8 @@ export default function Home() {
           })();
           // For weekly bars: bottom body is 14/21 of height
           const bottomFraction = 14 / 21;
-          // For ring center: use minutes-aware amount (day-aware)
-          const centerAmount = Math.abs((goalNum || 0) - (daySpent || 0));
+          // For ring center: show actual overage or remaining amount
+          const centerAmount = daySpent > goalNum ? (daySpent - goalNum) : (goalNum - daySpent);
 
           return (
             <div
