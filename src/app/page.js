@@ -2177,7 +2177,7 @@ export default function Home() {
                                a 15.9155 15.9155 0 0 1 0 31.831
                                a 15.9155 15.9155 0 0 1 0 -31.831"
                           />
-                        </g>
+                                                 </g>
                       )}
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-xs font-bold text-gray-900 leading-tight">
