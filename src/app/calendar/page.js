@@ -822,99 +822,23 @@ function CalendarContent() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => {
-              // Manual refresh of events
-              console.log('Calendar: Manual refresh requested');
-              const collected = [];
-              const seen = new Set();
-              for (const k of COMPAT_EVENT_KEYS) {
-                const raw = localStorage.getItem(k);
-                if (!raw) continue;
-                try {
-                  const arr = JSON.parse(raw) || [];
-                  if (Array.isArray(arr)) {
-                    for (const ev of arr) {
-                      const id = ev && (ev.id || `${ev.title || ""}-${ev.start || ""}`);
-                      if (id && !seen.has(id)) { seen.add(id); collected.push(ev); }
-                    }
-                  }
-                } catch (e) {
-                  console.warn(`Calendar: Failed to parse ${k}:`, e);
-                }
-              }
-              console.log('Calendar: Manual refresh found events:', collected);
-              setEvents(collected);
-            }}
-            aria-label="Refresh Events"
-            title="Refresh Events"
-            className="p-2 rounded-full border border-[#BCA88F] text-[#4E4034] hover:bg-white/60"
+            onClick={() => router.push('/settings')}
+            title="Settings"
+            aria-label="Settings"
+            className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors duration-200"
           >
             <svg
-              width="22"
-              height="22"
+              xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
-              aria-hidden="true"
+              className="w-5 h-5"
             >
-              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
-              <path d="M21 3v5h-5" />
-              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
-              <path d="M3 21v-5h5" />
-            </svg>
-          </button>
-          <button
-            onClick={() => {
-              console.log('Calendar: Current events state:', events);
-              console.log('Calendar: localStorage hourglassEvents:v1:', localStorage.getItem('hourglassEvents:v1'));
-              console.log('Calendar: localStorage calendarEvents:', localStorage.getItem('calendarEvents'));
-            }}
-            aria-label="Show Events Debug"
-            title="Show Events Debug"
-            className="p-2 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100"
-          >
-            <svg
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M9 12l2 2 4-4" />
-              <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" />
-            </svg>
-          </button>
-          <button
-            onClick={() => router.push('/account')}
-            aria-label="Account"
-            title="Account"
-            className="p-2 rounded-full border border-[#BCA88F] text-[#BCA88F] hover:bg-white/60"
-          >
-            <svg
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              {/* top plank */}
-              <rect x="6" y="2.5" width="12" height="3" rx="1.5" />
-              {/* bottom plank */}
-              <rect x="6" y="18.5" width="12" height="3" rx="1.5" />
-              {/* hourglass curves */}
-              <path d="M8 6c0 3.2 2.2 4.7 4 6-1.8 1.3-4 2.8-4 6" />
-              <path d="M16 6c0 3.2-2.2 4.7-4 6 1.8 1.3 4 2.8 4 6" />
+              <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+              <circle cx="12" cy="12" r="3" />
             </svg>
           </button>
         </div>
