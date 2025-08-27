@@ -1,0 +1,10 @@
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+  Cache-Control = "no-store, must-revalidate"
+
+# Optional: prevent over-caching of HTML during debugging
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+  Cache-Control = "no-store"
