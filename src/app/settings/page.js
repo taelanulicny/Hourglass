@@ -7,14 +7,19 @@ export default function SettingsPage() {
   const router = useRouter();
   const [userName, setUserName] = useState('taelanulicny');
   const [defaultGoal, setDefaultGoal] = useState('8');
+  const [miscHours, setMiscHours] = useState('0');
   const [timeFormat, setTimeFormat] = useState('12');
   const [weekStart, setWeekStart] = useState('monday');
 
-  // Load sleep hours from local storage on component mount
+  // Load sleep and misc hours from local storage on component mount
   useEffect(() => {
     const savedSleepHours = localStorage.getItem('sleepHours');
+    const savedMiscHours = localStorage.getItem('miscHours');
     if (savedSleepHours) {
       setDefaultGoal(savedSleepHours);
+    }
+    if (savedMiscHours) {
+      setMiscHours(savedMiscHours);
     }
   }, []);
 
@@ -22,6 +27,16 @@ export default function SettingsPage() {
   const handleSleepHoursChange = (value) => {
     setDefaultGoal(value);
     localStorage.setItem('sleepHours', value);
+  };
+
+  // Save misc hours to local storage when it changes
+  const handleMiscHoursChange = (value) => {
+    setMiscHours(value);
+    if (value && parseFloat(value) > 0) {
+      localStorage.setItem('miscHours', value);
+    } else {
+      localStorage.removeItem('miscHours');
+    }
   };
 
   const handleExportData = () => {
@@ -111,7 +126,35 @@ export default function SettingsPage() {
                 max="24"
               />
               <div className="text-xs text-gray-500 mt-1">
-                This determines how many hours are available for planning (24 - sleep hours)
+                Hours reserved for sleep each day (24 - sleep hours = available planning time)
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Miscellaneous Time (Optional)
+              </label>
+              <input
+                type="number"
+                value={miscHours}
+                onChange={(e) => handleMiscHoursChange(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#8CA4AF] focus:border-transparent transition-colors"
+                min="0"
+                step="0.25"
+                max="8"
+                placeholder="0.0"
+              />
+              <div className="text-xs text-gray-500 mt-1">
+                Optional time for leisure, breaks, or unplanned activities
+              </div>
+            </div>
+            
+            {/* Productive Hours Summary */}
+            <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+              <div className="text-sm text-gray-700">
+                <strong>Daily Productive Hours:</strong> {Math.max(0, 24 - parseFloat(defaultGoal || 8) - parseFloat(miscHours || 0))} hours
+                <br />
+                <strong>Weekly Productive Hours:</strong> {Math.max(0, (24 - parseFloat(defaultGoal || 8) - parseFloat(miscHours || 0)) * 7)} hours
               </div>
             </div>
             
