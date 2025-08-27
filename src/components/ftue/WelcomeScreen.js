@@ -42,7 +42,7 @@ export default function WelcomeScreen({ onNext }) {
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
               </div>
-              <span className="text-gray-700">We don't collect, store, or access your personal information</span>
+              <span className="text-gray-700">We don&apos;t collect, store, or access your personal information</span>
             </div>
             
             <div className="flex items-start gap-3">
@@ -60,7 +60,7 @@ export default function WelcomeScreen({ onNext }) {
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
               </div>
-              <span className="text-gray-700">We can't see your data unless you explicitly choose to share it</span>
+              <span className="text-gray-700">We can&apos;t see your data unless you explicitly choose to share it</span>
             </div>
             
             <div className="flex items-start gap-3">
@@ -113,7 +113,7 @@ export default function WelcomeScreen({ onNext }) {
         {/* Enter App Button (only shown after reading privacy) */}
         {hasReadPrivacy && (
           <div className="mt-8 text-center animate-fade-in">
-            <p className="text-gray-500 text-sm mb-3">Great! Let's get started</p>
+            <p className="text-gray-500 text-sm mb-3">Great! Let&apos;s get started</p>
             <button
               onClick={onNext}
               className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors duration-200 shadow-lg hover:shadow-xl"

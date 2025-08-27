@@ -40,7 +40,7 @@ export default function AppTransitionScreen({ onNext, onBack, focusAreas = [], s
           <div className="w-6"></div> {/* Spacer for centering */}
         </div>
         <p className="text-lg text-gray-600">
-          Now let's set up your focus areas in Hourglass
+          Now let&apos;s set up your focus areas in Hourglass
         </p>
       </div>
 
@@ -71,11 +71,11 @@ export default function AppTransitionScreen({ onNext, onBack, focusAreas = [], s
                 Welcome to Hourglass!
               </h3>
               <p className="text-blue-700 mb-3">
-                Now that you have an idea of what your focus areas are, it's time to input them into Hourglass. 
+                Now that you have an idea of what your focus areas are, it&apos;s time to input them into Hourglass. 
                 This will guide you through setting up your dashboard and getting started with time tracking.
               </p>
               <p className="text-blue-700">
-                You'll be setting daily goals for each of your {focusAreas.length} focus areas and learning how to use the app.
+                You&apos;ll be setting daily goals for each of your {focusAreas.length} focus areas and learning how to use the app.
               </p>
             </div>
           </div>
@@ -83,8 +83,8 @@ export default function AppTransitionScreen({ onNext, onBack, focusAreas = [], s
 
         {/* What You'll Do Next */}
         <div className="mb-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">
-            What You'll Do Next
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">
+            What You&apos;ll Do Next
           </h3>
           
           <div className="space-y-4">
@@ -148,7 +148,7 @@ export default function AppTransitionScreen({ onNext, onBack, focusAreas = [], s
                 Total available time: <span className="font-semibold text-blue-600">{availableHours} hours</span>
               </p>
               <p className="text-xs text-gray-500 mt-1">
-                You'll distribute these hours across your focus areas in the next step.
+                You&apos;ll distribute these hours across your focus areas in the next step.
               </p>
             </div>
           </div>
@@ -165,7 +165,7 @@ export default function AppTransitionScreen({ onNext, onBack, focusAreas = [], s
               className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
             />
             <label htmlFor="ready-checkbox" className="text-sm text-gray-700 font-medium">
-              I'm ready to set up my focus areas in Hourglass
+              I&apos;m ready to set up my focus areas in Hourglass
             </label>
           </div>
         </div>
