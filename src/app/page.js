@@ -535,6 +535,7 @@ export default function Home() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [renameTarget, setRenameTarget] = useState(null);
   const [renameValue, setRenameValue] = useState("");
+  const [renameGoal, setRenameGoal] = useState("");
   // Cascade renaming of a focus area label across storage, notes, and events
   function cascadeRename(oldLabel, newLabel){
     const norm = normalizeLabel;
@@ -2022,6 +2023,7 @@ export default function Home() {
                     e.stopPropagation();
                     setRenameTarget(label);
                     setRenameValue(label);
+                    setRenameGoal(goal || 0);
                   }}
                 >
                   ⋯
@@ -2369,18 +2371,36 @@ export default function Home() {
     {renameTarget && (
       <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-50">
         <div className="bg-white rounded-lg shadow-lg p-6 w-[90%] max-w-md">
-          <h2 className="text-lg font-bold mb-4 text-black">Rename Focus Area</h2>
-          <p className="text-sm text-gray-600 mb-3">Changing the name will update it everywhere, including today&apos;s dashboard, your calendar events, and saved notes.</p>
-          <input
-            type="text"
-            value={renameValue}
-            onChange={(e)=> setRenameValue(e.target.value)}
-            className="w-full border border-gray-300 rounded px-3 py-2 mb-4 text-black"
-            placeholder="New name"
-          />
+          <h2 className="text-lg font-bold mb-4 text-black">Edit Focus Area</h2>
+          <p className="text-sm text-gray-600 mb-3">Changing the name or goal will update it everywhere, including today&apos;s dashboard, your calendar events, and saved notes.</p>
+          
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+            <input
+              type="text"
+              value={renameValue}
+              onChange={(e)=> setRenameValue(e.target.value)}
+              className="w-full border border-gray-300 rounded px-3 py-2 text-black"
+              placeholder="Focus area name"
+            />
+          </div>
+          
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Daily Goal (hours)</label>
+            <input
+              type="number"
+              value={renameGoal}
+              onChange={(e)=> setRenameGoal(e.target.value)}
+              className="w-full border border-gray-300 rounded px-3 py-2 text-black"
+              placeholder="0.0"
+              min="0"
+              step="0.25"
+              max="24"
+            />
+          </div>
           <div className="flex justify-between items-center gap-3">
             <button
-              onClick={()=>{ setRenameTarget(null); setRenameValue(""); }}
+              onClick={()=>{ setRenameTarget(null); setRenameValue(""); setRenameGoal(""); }}
               className="px-4 py-2 bg-gray-300 rounded"
             >
               Cancel
@@ -2400,7 +2420,14 @@ export default function Home() {
                 onClick={()=>{
                   const oldName = renameTarget;
                   const newName = (renameValue || "").trim();
+                  const newGoal = parseFloat(renameGoal) || 0;
+                  
                   if (!newName) return;
+                  if (newGoal < 0 || newGoal > 24) {
+                    alert("Daily goal must be between 0 and 24 hours.");
+                    return;
+                  }
+                  
                   // prevent duplicates (case-insensitive)
                   const exists = (categories || []).some(c => normalizeLabel(c.label) === normalizeLabel(newName));
                   const same = normalizeLabel(oldName) === normalizeLabel(newName);
@@ -2408,13 +2435,15 @@ export default function Home() {
                     alert("Another focus area already uses that name.");
                     return;
                   }
-                  const updated = (categories || []).map(c => c.label === oldName ? { ...c, label: newName } : c);
+                  
+                  const updated = (categories || []).map(c => c.label === oldName ? { ...c, label: newName, goal: newGoal } : c);
                   setCategories(updated);
                   saveWeekAndLive(updated);
                   // cascade to notes, events, and snapshots
                   cascadeRename(oldName, newName);
                   setRenameTarget(null);
                   setRenameValue("");
+                  setRenameGoal("");
                 }}
                 className="px-4 py-2 bg-[#BCA88F] text-white rounded"
               >
