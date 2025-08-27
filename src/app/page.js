@@ -146,99 +146,10 @@ export default function Home() {
     }
   }, [messages]);
 
-  // Enhanced AI action parsing and execution
+  // Simple AI helper - no complex action parsing, just chat
   const parseAndExecuteActions = (aiResponse, focusArea) => {
-    console.log('parseAndExecuteActions called with:', { aiResponse, focusArea }); // Debug log
-    
-    try {
-      // Only look for actions if the response contains action keywords
-      if (!aiResponse || typeof aiResponse !== 'string') {
-        console.log('No valid AI response to parse'); // Debug log
-        return [];
-      }
-      
-      // Check if response contains any action keywords before parsing
-      const hasActionKeywords = /CREATE_EVENT|ADJUST_GOAL|SET_REMINDER|UPDATE_NOTES/i.test(aiResponse);
-      console.log('Has action keywords:', hasActionKeywords); // Debug log
-      
-      if (!hasActionKeywords) {
-        console.log('No action keywords found, returning empty array'); // Debug log
-        return []; // No actions to parse, return empty array
-      }
-      
-      const actions = [];
-      
-      // Pattern 1: Create calendar event - more flexible matching
-      const eventMatches = aiResponse.match(/CREATE_EVENT:\s*([^|]+?)(?:\s*\|\s*([^|]+?)(?:\s*\|\s*([^|\n]+))?)?/gi);
-      if (eventMatches) {
-        eventMatches.forEach(match => {
-          const parts = match.replace(/CREATE_EVENT:\s*/i, '').split('|').map(p => p.trim());
-          if (parts[0] && parts[0].length > 1) { // Ensure title is more than 1 character
-            actions.push({
-              type: 'create_event',
-              title: parts[0],
-              time: parts[1] || '14:00', // default time
-              notes: parts[2] || '',
-              focusArea: focusArea?.label
-            });
-          }
-        });
-      }
-      
-      // Pattern 2: Adjust focus area goal
-      const goalMatches = aiResponse.match(/ADJUST_GOAL:\s*([^|]+?)(?:\s*\|\s*([^|\n]+))?/gi);
-      if (goalMatches) {
-        goalMatches.forEach(match => {
-          const parts = match.replace(/ADJUST_GOAL:\s*/i, '').split('|').map(p => p.trim());
-          const newGoal = parseFloat(parts[0]);
-          if (!isNaN(newGoal) && newGoal > 0) {
-            actions.push({
-              type: 'adjust_goal',
-              newGoal,
-              reason: parts[1] || 'AI suggestion',
-              focusArea: focusArea?.label
-            });
-          }
-        });
-      }
-      
-      // Pattern 3: Set reminder
-      const reminderMatches = aiResponse.match(/SET_REMINDER:\s*([^|]+?)(?:\s*\|\s*([^|\n]+))?/gi);
-      if (reminderMatches) {
-        reminderMatches.forEach(match => {
-          const parts = match.replace(/SET_REMINDER:\s*/i, '').split('|').map(p => p.trim());
-          if (parts[0]) {
-            actions.push({
-              type: 'set_reminder',
-              time: parts[0],
-              message: parts[1] || 'Focus time reminder',
-              focusArea: focusArea?.label
-            });
-          }
-        });
-      }
-      
-      // Pattern 4: Update notes
-      const notesMatches = aiResponse.match(/UPDATE_NOTES:\s*([^|\n]+)/gi);
-      if (notesMatches) {
-        notesMatches.forEach(match => {
-          const notes = match.replace(/UPDATE_NOTES:\s*/i, '').trim();
-          if (notes) {
-            actions.push({
-              type: 'update_notes',
-              notes,
-              focusArea: focusArea?.label
-            });
-          }
-        });
-      }
-      
-      console.log('Parsed actions:', actions); // Debug log
-      return actions;
-    } catch (error) {
-      console.warn('Failed to parse AI actions:', error);
-      return [];
-    }
+    // Simplified - no actions to parse, just return empty array
+    return [];
   };
 
   const executeActions = async (actions, focusArea) => {
@@ -420,27 +331,7 @@ export default function Home() {
       const aiMessage = { type: 'ai', content: data.text || "", timestamp: new Date() };
       setMessages(prev => [...prev, aiMessage]);
       
-      // Parse and execute any actions from AI response (only if actions are found)
-      try {
-        console.log('About to parse AI response:', data.text); // Debug log
-        const actions = parseAndExecuteActions(data.text || "", fa);
-        console.log('Parsed actions:', actions); // Debug log
-        
-        if (actions && actions.length > 0) {
-          const actionResults = await executeActions(actions, fa);
-          if (actionResults && actionResults.length > 0) {
-            const actionMessage = { 
-              type: 'action', 
-              content: actionResults.join('\n'), 
-              timestamp: new Date() 
-            };
-            setMessages(prev => [...prev, actionMessage]);
-          }
-        }
-      } catch (error) {
-        console.log('Error parsing actions:', error); // Debug log
-        // Continue with normal AI response - no actions needed
-      }
+      // Simple AI helper - no actions to parse or execute
     } catch (e) {
       const errorMessage = { type: 'error', content: e.message || "Something went wrong.", timestamp: new Date() };
       setMessages(prev => [...prev, errorMessage]);
@@ -1454,7 +1345,7 @@ export default function Home() {
                         Category: <span className="font-medium">{cat}</span>
                       </div>
                       <div className="text-[11px] text-blue-600 mb-2 bg-blue-50 p-2 rounded border border-blue-200">
-                        <strong>New AI Actions:</strong> AI can now create events, adjust goals, set reminders, and update notes automatically!
+                        <strong>Tip:</strong> Ask for suggestions, then add events and notes yourself using the calendar and notes features!
                       </div>
                       
                       {/* Chat Messages */}
