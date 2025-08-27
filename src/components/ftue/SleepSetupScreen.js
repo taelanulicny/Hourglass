@@ -8,8 +8,6 @@ export default function SleepSetupScreen({ onNext, onBack }) {
   const [sleepHours, setSleepHours] = useState('');
   const [miscHours, setMiscHours] = useState('');
   const [hasReadAboutSleep, setHasReadAboutSleep] = useState(false);
-  const [isInputFocused, setIsInputFocused] = useState(false);
-  const [isMiscInputFocused, setIsMiscInputFocused] = useState(false);
 
   // Load existing sleep and misc hours if available
   useEffect(() => {
@@ -166,24 +164,13 @@ export default function SleepSetupScreen({ onNext, onBack }) {
               <div className="flex items-center gap-3">
                 <input
                   type="number"
-                  value={isInputFocused ? sleepHours : ''}
-                  onChange={(e) => {
-                    console.log('Input changed:', e.target.value, 'Type:', typeof e.target.value);
-                    handleSleepHoursChange(e.target.value);
-                  }}
-                  onFocus={() => setIsInputFocused(true)}
-                  onBlur={() => {
-                    if (sleepHours === '') {
-                      setIsInputFocused(false);
-                    }
-                  }}
-                  className={`flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-center text-lg font-medium ${
-                    isInputFocused ? 'text-black' : 'text-gray-400'
-                  }`}
+                  value={sleepHours}
+                  onChange={(e) => handleSleepHoursChange(e.target.value)}
+                  className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-center text-lg font-medium text-black"
                   min="5"
                   max="12"
                   step="0.25"
-                  placeholder="0.0"
+                  placeholder="8.0"
                 />
                 <span className="text-gray-600 font-medium">hours</span>
               </div>
@@ -212,17 +199,9 @@ export default function SleepSetupScreen({ onNext, onBack }) {
               <div className="flex items-center gap-3">
                 <input
                   type="number"
-                  value={isMiscInputFocused ? miscHours : ''}
+                  value={miscHours}
                   onChange={(e) => setMiscHours(e.target.value)}
-                  onFocus={() => setIsMiscInputFocused(true)}
-                  onBlur={() => {
-                    if (miscHours === '') {
-                      setIsMiscInputFocused(false);
-                    }
-                  }}
-                  className={`flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-center text-lg font-medium ${
-                    isMiscInputFocused ? 'text-black' : 'text-gray-400'
-                  }`}
+                  className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-center text-lg font-medium text-black"
                   min="0"
                   max="8"
                   step="0.25"
