@@ -5,9 +5,8 @@ import { useState } from 'react';
 export default function WelcomeScreen({ onNext }) {
   const [hasReadPrivacy, setHasReadPrivacy] = useState(false);
 
-  // Prevent scroll interference with inputs
+  // Handle checkbox change without interfering with default behavior
   const handleCheckboxChange = (e) => {
-    e.preventDefault();
     setHasReadPrivacy(e.target.checked);
   };
 
