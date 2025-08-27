@@ -2579,4 +2579,4 @@ export default function Home() {
     </>
   );
 }
-// Force redeploy
+// Force redeploy - FTUE redirect removed
