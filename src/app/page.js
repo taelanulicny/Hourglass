@@ -132,15 +132,7 @@ function friendWeeklyStats(friend, mondayDateLike) {
 export default function Home() {
   const router = useRouter();
 
-  // --- FTUE Redirect Logic ---
-  useEffect(() => {
-    const hasCompletedFTUE = localStorage.getItem('hourglassFTUECompleted');
-    if (!hasCompletedFTUE) {
-      // Redirect to FTUE if not completed
-      router.push('/ftue-test');
-      return;
-    }
-  }, [router]);
+  // FTUE redirect logic removed - users go directly to main dashboard
 
   // --- AI Helper state (must be inside component) ---
   const [aiInput, setAiInput] = useState("");
