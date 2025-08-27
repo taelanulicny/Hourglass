@@ -5,6 +5,12 @@ import { useState } from 'react';
 export default function WelcomeScreen({ onNext }) {
   const [hasReadPrivacy, setHasReadPrivacy] = useState(false);
 
+  // Prevent scroll interference with inputs
+  const handleCheckboxChange = (e) => {
+    e.preventDefault();
+    setHasReadPrivacy(e.target.checked);
+  };
+
   return (
     <div className="min-h-screen bg-white text-gray-900 font-sans flex flex-col">
       {/* Header */}
@@ -18,7 +24,7 @@ export default function WelcomeScreen({ onNext }) {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 pb-20">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 pb-20 overflow-y-auto">
         {/* App Icon/Logo Placeholder */}
         <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-blue-200 rounded-3xl flex items-center justify-center mb-8">
           <svg className="w-12 h-12 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -101,7 +107,7 @@ export default function WelcomeScreen({ onNext }) {
               type="checkbox"
               id="privacy-checkbox"
               checked={hasReadPrivacy}
-              onChange={(e) => setHasReadPrivacy(e.target.checked)}
+              onChange={handleCheckboxChange}
               className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
             />
             <label htmlFor="privacy-checkbox" className="text-sm text-gray-700 font-medium">
