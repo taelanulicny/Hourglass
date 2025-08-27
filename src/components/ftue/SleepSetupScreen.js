@@ -9,6 +9,15 @@ export default function SleepSetupScreen({ onNext, onBack }) {
   const [miscHours, setMiscHours] = useState('');
   const [hasReadAboutSleep, setHasReadAboutSleep] = useState(false);
 
+  // Handle input changes without scroll interference
+  const handleSleepHoursChange = (value) => {
+    setSleepHours(value);
+  };
+
+  const handleMiscHoursChange = (value) => {
+    setMiscHours(value);
+  };
+
   // Load existing sleep and misc hours if available
   useEffect(() => {
     const savedSleepHours = localStorage.getItem('sleepHours');
@@ -21,10 +30,7 @@ export default function SleepSetupScreen({ onNext, onBack }) {
     }
   }, []);
 
-  const handleSleepHoursChange = (value) => {
-    // Allow any input, we'll validate on continue
-    setSleepHours(value);
-  };
+
 
   // Calculate available hours
   const sleepHoursNum = parseFloat(sleepHours || 8);
@@ -72,7 +78,7 @@ export default function SleepSetupScreen({ onNext, onBack }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4 overflow-y-auto">
       <div className="max-w-2xl w-full">
         {/* Header */}
         <div className="text-center mb-8">
@@ -200,7 +206,7 @@ export default function SleepSetupScreen({ onNext, onBack }) {
                 <input
                   type="number"
                   value={miscHours}
-                  onChange={(e) => setMiscHours(e.target.value)}
+                  onChange={(e) => handleMiscHoursChange(e.target.value)}
                   className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-center text-lg font-medium text-black"
                   min="0"
                   max="8"
