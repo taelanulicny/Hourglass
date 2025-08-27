@@ -131,6 +131,8 @@ function friendWeeklyStats(friend, mondayDateLike) {
 
 export default function Home() {
   const router = useRouter();
+  
+  // COMPLETELY CLEAN VERSION - NO FTUE, NO WELCOME PAGE, NO REDIRECTS
 
   // FTUE redirect logic removed - users go directly to main dashboard
 
