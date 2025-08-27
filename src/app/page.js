@@ -36,6 +36,18 @@ function hrUnit(n){
   return Number(n) === 1 ? 'hr' : 'hrs';
 }
 
+// Safe JSON parse with fallback
+function safeJsonParse(jsonString, fallback = []) {
+  try {
+    if (!jsonString) return fallback;
+    const parsed = JSON.parse(jsonString);
+    return parsed || fallback;
+  } catch (error) {
+    console.warn('Failed to parse JSON:', jsonString, error);
+    return fallback;
+  }
+}
+
 // Show minutes if under 1 hour, else hours with one decimal
 function formatCenterAmount(hoursFloat){
   const h = Math.max(0, Number(hoursFloat) || 0);
@@ -103,7 +115,7 @@ function ymd(date) {
 function loadFriends() {
   try {
     const raw = localStorage.getItem("friends:v1");
-    const arr = raw ? JSON.parse(raw) : [];
+    const arr = raw ? safeJsonParse(raw, []) : [];
     return Array.isArray(arr) ? arr : [];
   } catch {
     return [];
@@ -203,7 +215,7 @@ export default function Home() {
             };
             
             // Save to localStorage
-            const existingEvents = JSON.parse(localStorage.getItem("hourglassEvents:v1") || "[]");
+            const existingEvents = safeJsonParse(localStorage.getItem("hourglassEvents:v1"), []);
             const updatedEvents = [...existingEvents, newEvent];
             localStorage.setItem("hourglassEvents:v1", JSON.stringify(updatedEvents));
             localStorage.setItem("calendarEvents", JSON.stringify(updatedEvents));
@@ -233,7 +245,7 @@ export default function Home() {
             
           case 'set_reminder':
             // Set reminder (store in localStorage for now)
-            const reminders = JSON.parse(localStorage.getItem("hourglassReminders") || "[]");
+            const reminders = safeJsonParse(localStorage.getItem("hourglassReminders"), []);
             const newReminder = {
               id: Date.now().toString(),
               time: action.time,
@@ -468,18 +480,18 @@ export default function Home() {
         // Prefer live
         const liveRaw = localStorage.getItem("focusCategories");
         if (liveRaw) {
-          data = JSON.parse(liveRaw) || [];
+          data = safeJsonParse(liveRaw, []);
           // keep snapshot in sync with live
           localStorage.setItem(key, JSON.stringify(data));
         } else {
           // fall back to snapshot if no live yet
           const snap = localStorage.getItem(key);
-          data = snap ? (JSON.parse(snap) || []) : [];
+          data = snap ? safeJsonParse(snap, []) : [];
         }
       } else {
         // Past weeks: read snapshot only (no fallback to live)
         const snap = localStorage.getItem(key);
-        data = snap ? (JSON.parse(snap) || []) : [];
+        data = snap ? safeJsonParse(snap, []) : [];
       }
     } catch (_) {
       data = [];
@@ -494,7 +506,7 @@ export default function Home() {
       try {
         const liveRaw = localStorage.getItem("focusCategories");
         if (!liveRaw) return;
-        const live = JSON.parse(liveRaw) || [];
+        const live = safeJsonParse(liveRaw, []);
         // Keep the CURRENT week's snapshot up to date
         try {
           localStorage.setItem(STORAGE_PREFIX + currentWeekKey, JSON.stringify(live));
@@ -550,7 +562,7 @@ export default function Home() {
       try {
         const raw = localStorage.getItem(k);
         if (!raw) continue;
-        const arr = JSON.parse(raw) || [];
+        const arr = safeJsonParse(raw, []);
         const updated = Array.isArray(arr) ? arr.map(c => {
           if (norm(c.label) === norm(oldLabel)) {
             return { ...c, label: newLabel };
@@ -576,7 +588,7 @@ export default function Home() {
       try {
         const raw = localStorage.getItem(ek);
         if (!raw) continue;
-        const arr = JSON.parse(raw);
+        const arr = safeJsonParse(raw, []);
         if (!Array.isArray(arr)) continue;
         const updated = arr.map(ev => {
           const evFocus = ev.area || ev.focusArea || ev.category || ev.label || "";
@@ -965,7 +977,7 @@ export default function Home() {
     const allEvents = (() => {
       try {
         const raw = localStorage.getItem("hourglassEvents:v1") || localStorage.getItem("calendarEvents");
-        return raw ? JSON.parse(raw) : [];
+        return raw ? safeJsonParse(raw, []) : [];
       } catch {
         return [];
       }
@@ -1782,7 +1794,7 @@ export default function Home() {
                   <button
                     onClick={() => {
                       const allRaw = localStorage.getItem("hourglassEvents:v1") || localStorage.getItem("calendarEvents");
-                      const all = allRaw ? JSON.parse(allRaw) : [];
+                      const all = allRaw ? safeJsonParse(allRaw, []) : [];
                       const updated = all.filter(ev => ev.id !== editEventId);
                       try {
                         localStorage.setItem("hourglassEvents:v1", JSON.stringify(updated));
@@ -1806,7 +1818,7 @@ export default function Home() {
                     <button
                       onClick={() => {
                         const allRaw = localStorage.getItem("hourglassEvents:v1") || localStorage.getItem("calendarEvents");
-                        const all = allRaw ? JSON.parse(allRaw) : [];
+                        const all = allRaw ? safeJsonParse(allRaw, []) : [];
                         const startISO = isoFromDateAndTime(editDraft.dateYMD, editDraft.start);
                         const endISO = isoFromDateAndTime(editDraft.dateYMD, editDraft.end);
                         const updated = all.map(ev => ev.id === editEventId ? {
@@ -2482,7 +2494,7 @@ export default function Home() {
                   try {
                     const raw = localStorage.getItem(key);
                     if (!raw) continue;
-                    const arr = JSON.parse(raw);
+                    const arr = safeJsonParse(raw, []);
                     if (!Array.isArray(arr)) continue;
                     const cleaned = arr.filter(ev => {
                       const evName = ev.area || ev.focusArea || ev.category || ev.label || "";
