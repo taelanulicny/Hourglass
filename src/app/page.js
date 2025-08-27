@@ -2076,10 +2076,10 @@ export default function Home() {
                       )}
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-xs font-bold text-gray-900 leading-tight">
-                      <div className="text-sm">
+                      <div className="text-xs">
                         {formatCenterAmount(centerAmount)}
                       </div>
-                      <div className="text-[10px] uppercase text-gray-600">
+                      <div className="text-[9px] uppercase text-gray-600">
                         {(Number(daySpent || 0) > Number(goalNum || 0)) ? 'OVER' : 'LEFT'}
                       </div>
                     </div>
