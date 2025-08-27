@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function SleepSetupScreen() {
+export default function SleepSetupScreen({ onNext, onBack }) {
   const router = useRouter();
   const [sleepHours, setSleepHours] = useState('');
   const [miscHours, setMiscHours] = useState('');
