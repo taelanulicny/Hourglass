@@ -1106,7 +1106,7 @@ function CalendarContent() {
       </div>
 
       {/* --- Focus Area Rings (Categories) --- */}
-      <div className="flex flex-row gap-2 px-4 justify-center pointer-events-none select-none mt-8 mb-6">
+      <div className="flex flex-row gap-2 px-4 pr-8 justify-start pointer-events-none select-none mt-8 mb-6 overflow-x-auto scrollbar-hide scroll-smooth">
         {[...focusAreas].reverse().map(({ label, timeSpent, goal, days, color }, index) => {
           // Day-aware calculations using TODAY's logged time from `days`
           const todayAbbrev = DAYS[new Date().getDay()];
