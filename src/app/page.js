@@ -315,7 +315,7 @@ export default function Home() {
         }
       };
 
-      const res = await fetch("/api/ai/assist", {
+      const res = await fetch("/api/ai/assist/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(aiContext),
