@@ -11,11 +11,18 @@ export default function SleepSetupScreen({ onNext, onBack }) {
 
   // Handle input changes without scroll interference
   const handleSleepHoursChange = (value) => {
+    // Prevent scroll interference by handling the change directly
     setSleepHours(value);
   };
 
   const handleMiscHoursChange = (value) => {
+    // Prevent scroll interference by handling the change directly
     setMiscHours(value);
+  };
+
+  // Prevent scroll wheel from changing input values
+  const preventScrollChange = (e) => {
+    e.target.blur();
   };
 
   // Load existing sleep and misc hours if available
@@ -170,9 +177,11 @@ export default function SleepSetupScreen({ onNext, onBack }) {
               <div className="flex items-center gap-3">
                 <input
                   type="number"
-                  value={sleepHours}
+                  value={sleepHours || ''}
                   onChange={(e) => handleSleepHoursChange(e.target.value)}
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-center text-lg font-medium text-black"
+                  onWheel={preventScrollChange}
+                  className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-center text-lg font-medium"
+                  style={{ color: sleepHours ? 'black' : 'rgb(156 163 175)' }}
                   min="5"
                   max="12"
                   step="0.25"
@@ -205,9 +214,11 @@ export default function SleepSetupScreen({ onNext, onBack }) {
               <div className="flex items-center gap-3">
                 <input
                   type="number"
-                  value={miscHours}
+                  value={miscHours || ''}
                   onChange={(e) => handleMiscHoursChange(e.target.value)}
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-center text-lg font-medium text-black"
+                  onWheel={preventScrollChange}
+                  className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-center text-lg font-medium"
+                  style={{ color: miscHours ? 'black' : 'rgb(156 163 175)' }}
                   min="0"
                   max="8"
                   step="0.25"
