@@ -19,10 +19,9 @@ export default function FTUETestPage() {
       setCurrentStep(currentStep + 1);
     } else {
       // FTUE completed, redirect to dashboard
-      // Clear any existing FTUE data to ensure fresh start
-      localStorage.removeItem('hourglassFTUECompleted');
-      localStorage.removeItem('sleepHours');
-      localStorage.removeItem('miscHours');
+      // Mark FTUE as completed and save user data
+      localStorage.setItem('hourglassFTUECompleted', 'true');
+      // Note: sleepHours and miscHours are already saved by SleepSetupScreen
       router.push('/');
     }
   };
