@@ -110,7 +110,7 @@ export function DashboardHighlightedTooltips({ children }) {
         <div className="fixed inset-0 bg-black/20 z-40 pointer-events-none">
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-6 shadow-xl max-w-md text-center">
             <h3 className="text-xl font-semibold text-gray-900 mb-3">Welcome to Hourglass! 🎉</h3>
-            <p className="text-gray-700 mb-4">Let's take a quick tour of your dashboard to get you started.</p>
+            <p className="text-gray-700 mb-4">Let&apos;s take a quick tour of your dashboard to get you started.</p>
             <button
               onClick={handleNext}
               className="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
