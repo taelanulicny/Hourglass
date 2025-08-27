@@ -709,6 +709,7 @@ export default function Home() {
   // Abbrev of today's weekday in the same format as daysOfWeek
   const todayAbbrev = ["Su","M","Tu","W","Th","F","Sa"][new Date().getDay()];
   // Sum total planned time (daily goals) across all focus areas for today
+  const MAX_DAY_HOURS = 24; // Maximum hours that can be planned in a day
   const plannedToday = (categories || []).reduce((sum, c) => sum + (Number(c?.goal) || 0), 0);
   const remainingToday = Math.max(0, availableHours - plannedToday);
   const overByToday = Math.max(0, plannedToday - availableHours);
