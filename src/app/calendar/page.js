@@ -798,7 +798,7 @@ function CalendarContent() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-[#4E4034] pb-36">
+    <div className="min-h-screen bg-white text-[#4E4034] pb-24">
       {/* Top bar */}
       <header className="sticky top-0 bg-[#F7F6F3] px-4 py-3 shadow-sm z-10 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -1106,7 +1106,7 @@ function CalendarContent() {
       </div>
 
       {/* --- Focus Area Rings (Categories) --- */}
-      <div className="fixed left-0 right-0 bottom-24 z-40 flex flex-row gap-2 px-4 justify-center pointer-events-none select-none">
+      <div className="flex flex-row gap-2 px-4 justify-center pointer-events-none select-none mt-8 mb-6">
         {[...focusAreas].reverse().map(({ label, timeSpent, goal, days, color }, index) => {
           // Day-aware calculations using TODAY's logged time from `days`
           const todayAbbrev = DAYS[new Date().getDay()];
