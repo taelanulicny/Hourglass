@@ -1174,10 +1174,10 @@ function CalendarContent() {
                 {/* Center label */}
                 <foreignObject x="8" y="8" width="20" height="20">
                   <div xmlns="http://www.w3.org/1999/xhtml" className="w-full h-full flex flex-col items-center justify-center leading-tight">
-                    <div className={`text-[9px] font-bold ${isOverGoal ? 'text-red-600' : 'text-[#4E4034]'}`}>
+                    <div className={`text-[8px] font-bold ${isOverGoal ? 'text-red-600' : 'text-[#4E4034]'}`}>
                       {formatCenterAmount(centerAmount)}
                     </div>
-                    <div className={`text-[7px] uppercase -mt-0.5 ${isOverGoal ? 'text-red-500 font-semibold' : 'text-gray-500'}`}>
+                    <div className={`text-[6px] uppercase -mt-0.5 ${isOverGoal ? 'text-red-500 font-semibold' : 'text-gray-500'}`}>
                       {isOverGoal ? 'OVER' : 'LEFT'}
                     </div>
                   </div>
