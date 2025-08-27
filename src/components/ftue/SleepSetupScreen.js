@@ -78,7 +78,7 @@ export default function SleepSetupScreen({ onNext, onBack }) {
     // Mark FTUE as completed
     localStorage.setItem('hourglassFTUECompleted', 'true');
     
-    // Call onNext to proceed to next step (which will redirect to dashboard)
+    // FTUE completed, call onNext to redirect to dashboard
     if (onNext) {
       onNext();
     }

@@ -26,6 +26,13 @@ export default function FTUETestPage() {
     }
   };
 
+  // Handle FTUE completion from SleepSetupScreen
+  const handleFTUEComplete = () => {
+    // FTUE completed, redirect to dashboard
+    localStorage.setItem('hourglassFTUECompleted', 'true');
+    router.push('/');
+  };
+
   const handleBack = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
@@ -80,7 +87,10 @@ export default function FTUETestPage() {
       </div>
 
       {/* Current FTUE Screen */}
-      <CurrentComponent onNext={handleNext} onBack={handleBack} />
+      <CurrentComponent 
+        onNext={currentStep === steps.length - 1 ? handleFTUEComplete : handleNext} 
+        onBack={handleBack} 
+      />
     </div>
   );
 }
