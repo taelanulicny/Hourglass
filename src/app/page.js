@@ -525,6 +525,14 @@ export default function Home() {
     }
   }, [searchParams, categories]);
 
+  // Scroll to top whenever a focus area is selected (from dashboard clicks)
+  useEffect(() => {
+    if (selectedFocusArea) {
+      // Scroll to top of the page to show the focus area detail module
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [selectedFocusArea]);
+
   // When other pages modify the live "focusCategories" (current week),
   // always sync to the current week's snapshot and jump dashboard view to current week if needed.
   useEffect(() => {
