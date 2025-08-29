@@ -357,30 +357,6 @@ export default function Home() {
   const [offset, setOffset] = useState(0);
   const [isNextWeek, setIsNextWeek] = useState(false);
   const [selectedFocusArea, setSelectedFocusArea] = useState(null);
-  
-  // Handle URL parameters for focus area selection and scroll to top
-  const searchParams = useSearchParams();
-  
-  useEffect(() => {
-    const focusParam = searchParams.get('focus');
-    const scrollParam = searchParams.get('scroll');
-    
-    if (focusParam) {
-      // Find the focus area by label
-      const focusArea = categories?.find(cat => 
-        normalizeLabel(cat.label) === normalizeLabel(focusParam)
-      );
-      
-      if (focusArea) {
-        setSelectedFocusArea(focusArea);
-        
-        // Scroll to top if requested
-        if (scrollParam === 'top') {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-      }
-    }
-  }, [searchParams, categories]);
   const MAX_WEEKS_BACK = 52;
   const MIN_OFFSET = -MAX_WEEKS_BACK * 7; // in days
   const MAX_FUTURE_DAYS = 7; // allow exactly one week forward
@@ -433,6 +409,9 @@ export default function Home() {
   }, [offset]);
 
   const [categories, setCategories] = useState([]);
+  
+  // Handle URL parameters for focus area selection and scroll to top
+  const searchParams = useSearchParams();
   
   // Sleep and misc hours state for calculating available planning hours
   const [sleepHours, setSleepHours] = useState(8); // Default to 8 hours sleep
@@ -523,6 +502,28 @@ export default function Home() {
     }
     setCategories(data);
   }, [viewWeekKey, currentWeekKey]);
+
+  // Handle URL parameters for focus area selection and scroll to top
+  useEffect(() => {
+    const focusParam = searchParams.get('focus');
+    const scrollParam = searchParams.get('scroll');
+    
+    if (focusParam && categories.length > 0) {
+      // Find the focus area by label
+      const focusArea = categories.find(cat => 
+        normalizeLabel(cat.label) === normalizeLabel(focusParam)
+      );
+      
+      if (focusArea) {
+        setSelectedFocusArea(focusArea);
+        
+        // Scroll to top if requested
+        if (scrollParam === 'top') {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }
+    }
+  }, [searchParams, categories]);
 
   // When other pages modify the live "focusCategories" (current week),
   // always sync to the current week's snapshot and jump dashboard view to current week if needed.
