@@ -505,6 +505,9 @@ function CalendarContent() {
   // Refs to help scroll the day grid to the current time
   const gridRootRef = useRef(null);
   const dayColRef = useRef(null);
+  
+  // Ref for focus area rings horizontal scrolling
+  const focusRingsRef = useRef(null);
 
   const stripDays = useMemo(() => {
     const start = new Date(today);
@@ -535,6 +538,14 @@ function CalendarContent() {
     const left = targetEl.offsetLeft - 24;
     stripRef.current.scrollTo({ left, top: 0, behavior: "auto" });
   }, [selectedDate, stripDays]);
+
+  // Scroll focus rings to beginning when focus areas change
+  useEffect(() => {
+    if (focusRingsRef.current && focusAreas.length > 0) {
+      // Scroll to the beginning to ensure leftmost ring is visible
+      focusRingsRef.current.scrollTo({ left: 0, top: 0, behavior: "auto" });
+    }
+  }, [focusAreas]);
 
   // Modal state for new event (showModal/showEditModal/draft declared above)
   const [editingId, setEditingId] = useState(null);
@@ -1030,7 +1041,13 @@ function CalendarContent() {
       </div>
 
       {/* --- Focus Area Rings (Categories) --- */}
-      <div className="flex flex-row gap-2 px-4 pr-8 justify-center pointer-events-none select-none mt-8 mb-6 overflow-x-auto scrollbar-hide scroll-smooth">
+      <div className="relative">
+        {/* Scroll indicator - shows when content can be scrolled */}
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-6 h-6 bg-gradient-to-r from-white to-transparent pointer-events-none z-10" />
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-6 h-6 bg-gradient-to-l from-white to-transparent pointer-events-none z-10" />
+        
+        <div ref={focusRingsRef} className="flex flex-row gap-2 px-4 justify-center pointer-events-none select-none mt-8 mb-6 overflow-x-auto scroll-smooth scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300">
+          <div className="flex flex-row gap-2 min-w-max px-2">
         {[...focusAreas].reverse().map(({ label, timeSpent, goal, days, color }, index) => {
           // Day-aware calculations using TODAY's logged time from `days`
           const todayAbbrev = DAYS[new Date().getDay()];
@@ -1111,6 +1128,8 @@ function CalendarContent() {
             </div>
           );
         })}
+      </div>
+        </div>
       </div>
 
       {/* Add Modal */}
