@@ -542,18 +542,12 @@ function CalendarContent() {
   // Scroll focus rings to beginning when focus areas change
   useEffect(() => {
     if (focusRingsRef.current && focusAreas.length > 0) {
-      console.log('Focus areas changed, scrolling to beginning...');
-      console.log('Container scrollLeft:', focusRingsRef.current.scrollLeft);
-      console.log('Container scrollWidth:', focusRingsRef.current.scrollWidth);
-      console.log('Container clientWidth:', focusRingsRef.current.clientWidth);
-      
       // Scroll to the beginning to ensure leftmost ring is visible
       focusRingsRef.current.scrollTo({ left: 0, top: 0, behavior: "auto" });
       
       // Also try scrolling after a short delay to ensure DOM is fully rendered
       setTimeout(() => {
         if (focusRingsRef.current) {
-          console.log('Delayed scroll - scrollLeft:', focusRingsRef.current.scrollLeft);
           focusRingsRef.current.scrollTo({ left: 0, top: 0, behavior: "auto" });
         }
       }, 100);
@@ -1055,20 +1049,12 @@ function CalendarContent() {
 
       {/* --- Focus Area Rings (Categories) --- */}
       <div className="relative">
-        {/* Scroll indicator - shows when content can be scrolled */}
+        {/* Subtle scroll indicators */}
         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-6 h-6 bg-gradient-to-r from-white to-transparent pointer-events-none z-10" />
         <div className="absolute right-0 top-1/2 -translate-y-1/2 w-6 h-6 bg-gradient-to-l from-white to-transparent pointer-events-none z-10" />
         
-        {/* Debug scroll button - click to scroll to beginning */}
-        <button 
-          onClick={() => focusRingsRef.current?.scrollTo({ left: 0, top: 0, behavior: "smooth" })}
-          className="absolute left-2 top-2 z-20 px-2 py-1 text-xs bg-blue-500 text-white rounded opacity-50 hover:opacity-100 transition-opacity"
-        >
-          ←
-        </button>
-        
-        <div ref={focusRingsRef} className="flex flex-row gap-2 px-4 pointer-events-none select-none mt-8 mb-6 overflow-x-auto scroll-smooth scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300 border border-red-300">
-          <div className="flex flex-row gap-2 min-w-max px-2 justify-center border border-blue-300">
+        <div ref={focusRingsRef} className="flex flex-row gap-2 px-4 pointer-events-none select-none mt-8 mb-6 overflow-x-auto scroll-smooth scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300">
+          <div className="flex flex-row gap-2 min-w-max px-2 justify-center">
         {[...focusAreas].reverse().map(({ label, timeSpent, goal, days, color }, index) => {
           // Day-aware calculations using TODAY's logged time from `days`
           const todayAbbrev = DAYS[new Date().getDay()];
