@@ -1076,7 +1076,15 @@ function CalendarContent() {
           // Center label shows how much LEFT/OVER for today (day-aware)
           const centerAmount = Math.abs((goalNum || 0) - (daySpent || 0));
           return (
-            <div key={label} className="flex flex-col items-center pointer-events-auto">
+            <div 
+              key={label} 
+              className="flex flex-col items-center pointer-events-auto cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => {
+                // Navigate to main page with focus area selected and scroll to top
+                router.push(`/?focus=${encodeURIComponent(label)}&scroll=top`);
+              }}
+              title={`Click to view ${label} details`}
+            >
               {/* SVG ring progress */}
               <svg width={54} height={54} viewBox="0 0 36 36" className="block mb-1">
                 {/* Track */}

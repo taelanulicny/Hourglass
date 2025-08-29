@@ -2,6 +2,7 @@
 
 import './globals.css';
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 // Compute statistics for AI helper for a focus area and selected date
 function computeAiStats(focusArea, selectedDateYMD) {
   const d = new Date(selectedDateYMD);
@@ -356,6 +357,30 @@ export default function Home() {
   const [offset, setOffset] = useState(0);
   const [isNextWeek, setIsNextWeek] = useState(false);
   const [selectedFocusArea, setSelectedFocusArea] = useState(null);
+  
+  // Handle URL parameters for focus area selection and scroll to top
+  const searchParams = useSearchParams();
+  
+  useEffect(() => {
+    const focusParam = searchParams.get('focus');
+    const scrollParam = searchParams.get('scroll');
+    
+    if (focusParam) {
+      // Find the focus area by label
+      const focusArea = categories?.find(cat => 
+        normalizeLabel(cat.label) === normalizeLabel(focusParam)
+      );
+      
+      if (focusArea) {
+        setSelectedFocusArea(focusArea);
+        
+        // Scroll to top if requested
+        if (scrollParam === 'top') {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }
+    }
+  }, [searchParams, categories]);
   const MAX_WEEKS_BACK = 52;
   const MIN_OFFSET = -MAX_WEEKS_BACK * 7; // in days
   const MAX_FUTURE_DAYS = 7; // allow exactly one week forward
