@@ -529,7 +529,7 @@ export default function Home() {
   useEffect(() => {
     if (selectedFocusArea) {
       // Scroll to top of the page to show the focus area detail module
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: 'auto' });
     }
   }, [selectedFocusArea]);
 
