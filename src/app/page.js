@@ -403,6 +403,7 @@ function HomeContent() {
   const canEditWeek = isCurrentWeek || isNextWeek;
 
   useEffect(() => {
+    console.log('DEBUG: offset useEffect triggered - offset:', offset, 'rawDate:', rawDate, 'weekKey(rawDate):', weekKey(rawDate));
     setViewWeekKey(weekKey(rawDate));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [offset]);
@@ -517,8 +518,10 @@ function HomeContent() {
         setSelectedFocusArea(focusArea);
         
         // Reset week view to current week when navigating from calendar
+        console.log('DEBUG: Before reset - offset:', offset, 'viewWeekKey:', viewWeekKey, 'currentWeekKey:', currentWeekKey);
         setOffset(0); // Reset offset to 0 (current week)
         setViewWeekKey(currentWeekKey); // Also set view week key
+        console.log('DEBUG: After reset - set offset to 0, set viewWeekKey to:', currentWeekKey);
         
         // Scroll to top if requested
         if (scrollParam === 'top') {
