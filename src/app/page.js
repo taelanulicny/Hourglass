@@ -1,8 +1,8 @@
 "use client";
 
 import './globals.css';
-import { useState, useEffect, useRef, useMemo } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useState, useEffect, useRef, useMemo, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 // Compute statistics for AI helper for a focus area and selected date
 function computeAiStats(focusArea, selectedDateYMD) {
   const d = new Date(selectedDateYMD);
@@ -142,7 +142,8 @@ function friendWeeklyStats(friend, mondayDateLike) {
   return { totalLogged, weeklyGoal, pct: Math.round(pct) };
 }
 
-export default function Home() {
+// Component that uses search params (needs Suspense)
+function HomeContent() {
   const router = useRouter();
 
   // --- AI Helper state (must be inside component) ---
@@ -377,7 +378,7 @@ export default function Home() {
     const end = new Date(startOfWeek);
     end.setDate(startOfWeek.getDate() + 6); // Sunday
     end.setHours(23, 59, 59, 999); // end of day for safe comparisons
-    return end;
+    return startOfWeek;
   }, [startOfWeek]);
   const formatDate = (date) =>
     date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
@@ -2554,3 +2555,12 @@ export default function Home() {
   );
 }
 // Force redeploy
+
+// Main component with Suspense wrapper
+export default function Home() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <HomeContent />
+    </Suspense>
+  );
+}
