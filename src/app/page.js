@@ -515,7 +515,9 @@ function HomeContent() {
       );
       
       if (focusArea) {
-        setSelectedFocusArea(focusArea);
+        // Mark this focus area as manually set to prevent auto-reset
+        const focusAreaWithFlag = { ...focusArea, _manuallySet: true };
+        setSelectedFocusArea(focusAreaWithFlag);
         
         // Reset week view to current week when navigating from calendar
         console.log('DEBUG: Before reset - offset:', offset, 'viewWeekKey:', viewWeekKey, 'currentWeekKey:', currentWeekKey);
@@ -536,11 +538,21 @@ function HomeContent() {
     }
   }, [searchParams, categories, currentWeekKey]);
 
-  // Scroll to top whenever a focus area is selected (from dashboard clicks)
+  // Scroll to top and reset date whenever a focus area is selected (from dashboard clicks)
   useEffect(() => {
     if (selectedFocusArea) {
       // Scroll to top of the page to show the focus area detail module
       window.scrollTo({ top: 0, behavior: 'auto' });
+      
+      // Reset selected date to today when opening focus area details
+      const todayLocal = new Date();
+      setSelectedDateFA(ymd(todayLocal));
+      console.log('DEBUG: Focus area selected from dashboard - reset selectedDateFA to today:', ymd(todayLocal));
+      
+      // Mark this focus area as manually set to prevent auto-reset
+      if (!selectedFocusArea._manuallySet) {
+        setSelectedFocusArea({ ...selectedFocusArea, _manuallySet: true });
+      }
     }
   }, [selectedFocusArea]);
 
@@ -783,6 +795,11 @@ function HomeContent() {
   });
           // When switching weeks or changing focus area, jump to &quot;today&quot; if it&apos;s within this week; otherwise Monday.
   useEffect(() => {
+    // Skip this auto-reset if we're manually setting the date (from URL params or dashboard clicks)
+    if (selectedFocusArea && selectedFocusArea._manuallySet) {
+      return;
+    }
+    
     const todayLocal = new Date();
     const inThisWeek = todayLocal >= startOfWeek && todayLocal <= endOfWeek;
     setSelectedDateFA(ymd(inThisWeek ? todayLocal : startOfWeek));
@@ -1252,7 +1269,8 @@ function HomeContent() {
                         const cur = parseYMD(selectedDateFA);
                         const next = new Date(cur);
                         next.setDate(cur.getDate() + 1);
-                        if (next <= endOfWeek) setSelectedDateFA(ymd(next));
+                        // Allow navigation to next day within the current week
+                        if (next >= startOfWeek && next <= endOfWeek) setSelectedDateFA(ymd(next));
                       }}
                       disabled={parseYMD(selectedDateFA) >= endOfWeek}
                       aria-label="Next day"
