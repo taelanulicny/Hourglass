@@ -984,7 +984,7 @@ function CalendarContent() {
                     setDragGhostTop(Math.max(0, topPxSeed));
                   }}
                   onTouchStart={(e) => {
-                    e.preventDefault();
+                    // Don't prevent default on touch start to avoid passive listener issues
                     const t = e.touches[0];
                     const dur = ev.end - ev.start;
                     setDraggingId(ev.id);
