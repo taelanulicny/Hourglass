@@ -224,8 +224,9 @@ function HomeContent() {
   // --- AI Helper state (must be inside component) ---
   const [aiInput, setAiInput] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
-  const [aiError, setAiError] = useState("");
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState([
+    { role: "assistant", content: "How can I help you use your time better today?" }
+  ]);
   const chatContainerRef = useRef(null);
 
   // Scroll to bottom of chat when new messages arrive
@@ -236,195 +237,40 @@ function HomeContent() {
   }, [messages]);
 
   // Simple AI helper - no complex action parsing, just chat
-  const parseAndExecuteActions = (aiResponse, focusArea) => {
-    // Simplified - no actions to parse, just return empty array
-    return [];
-  };
-
-  const executeActions = async (actions, focusArea) => {
-    const results = [];
-    
-    for (const action of actions) {
-      try {
-        switch (action.type) {
-          case 'create_event':
-            // Create calendar event
-            const eventId = Date.now().toString();
-            
-            // Parse time and date more intelligently
-            let eventDate = new Date();
-            let duration = 60 * 60 * 1000; // 1 hour default
-            
-            // Try to parse time from the input
-            if (action.time) {
-              // Handle "6am", "6:00am", "18:00", etc.
-              let timeStr = action.time.toLowerCase().replace(/\s/g, '');
-              let isPM = timeStr.includes('pm');
-              let isAM = timeStr.includes('am');
-              
-              // Extract hours and minutes
-              let timeMatch = timeStr.match(/(\d{1,2})(?::(\d{2}))?/);
-              if (timeMatch) {
-                let hours = parseInt(timeMatch[1]);
-                let minutes = parseInt(timeMatch[2]) || 0;
-                
-                // Convert to 24-hour format
-                if (isPM && hours !== 12) hours += 12;
-                if (isAM && hours === 12) hours = 0;
-                
-                eventDate.setHours(hours, minutes, 0, 0);
-              }
-            }
-            
-            // Check if user mentioned "tomorrow" in the notes or context
-            if (action.notes && action.notes.toLowerCase().includes('tomorrow')) {
-              eventDate.setDate(eventDate.getDate() + 1);
-            }
-            
-            const newEvent = {
-              id: eventId,
-              title: action.title,
-              area: action.focusArea,
-              start: eventDate.toISOString(),
-              end: new Date(eventDate.getTime() + duration).toISOString(),
-              allDay: false,
-              notes: action.notes,
-            };
-            
-            // Save to localStorage
-            const existingEvents = safeJsonParse(localStorage.getItem("hourglassEvents:v1"), []);
-            const updatedEvents = [...existingEvents, newEvent];
-            localStorage.setItem("hourglassEvents:v1", JSON.stringify(updatedEvents));
-            localStorage.setItem("calendarEvents", JSON.stringify(updatedEvents));
-            
-            // Notify other components
-            window.dispatchEvent(new Event("calendarEventsUpdated"));
-            
-            results.push(`✅ Created event: "${action.title}" at ${action.time}`);
-            break;
-            
-          case 'adjust_goal':
-            // Adjust focus area goal
-            if (action.newGoal > 0 && action.newGoal <= 24) {
-              const updatedCategories = categories.map(cat => {
-                if (normalizeLabel(cat.label) === normalizeLabel(action.focusArea)) {
-                  return { ...cat, goal: action.newGoal };
-                }
-                return cat;
-              });
-              
-              setCategories(updatedCategories);
-              saveWeekAndLive(updatedCategories);
-              
-              results.push(`✅ Adjusted goal for "${action.focusArea}" to ${action.newGoal} hours`);
-            }
-            break;
-            
-          case 'set_reminder':
-            // Set reminder (store in localStorage for now)
-            const reminders = safeJsonParse(localStorage.getItem("hourglassReminders"), []);
-            const newReminder = {
-              id: Date.now().toString(),
-              time: action.time,
-              message: action.message,
-              focusArea: action.focusArea,
-              created: new Date().toISOString()
-            };
-            
-            reminders.push(newReminder);
-            localStorage.setItem("hourglassReminders", JSON.stringify(reminders));
-            
-            results.push(`✅ Set reminder: "${action.message}" at ${action.time}`);
-            break;
-            
-          case 'update_notes':
-            // Update focus area notes
-            if (action.focusArea) {
-              const notesKey = `focusNotes:${viewWeekKey}:${action.focusArea}`;
-              localStorage.setItem(notesKey, action.notes);
-              setNotes(action.notes);
-              
-              results.push(`✅ Updated notes for "${action.focusArea}"`);
-            }
-            break;
-        }
-      } catch (error) {
-        console.warn(`Failed to execute action ${action.type}:`, error);
-        results.push(`❌ Failed to execute: ${action.type}`);
-      }
-    }
-    
-    return results;
-  };
-
-  // Ask AI for a suggestion or help on a focus area
-  async function askAiForFocusArea(fa) {
-    if (!aiInput.trim()) return;
+  // Simple AI helper - no complex action parsing, just chat
+  async function sendAiMessage() {
+    if (!aiInput.trim() || !focusArea) return;
     
     const userMessage = aiInput.trim();
-    const newMessage = { type: 'user', content: userMessage, timestamp: new Date() };
-    
-    setMessages(prev => [...prev, newMessage]);
+    const newHistory = [...messages, { role: "user", content: userMessage }];
+    setMessages(newHistory);
     setAiInput("");
-    setAiError("");
     setAiLoading(true);
     
     try {
-      const selectedDateYMD = selectedDateFA || selectedDate; // use focus area date or fallback to main date
-      const stats = computeAiStats(fa, selectedDateYMD);
-
-      let notes = "";
-      try {
-        const key = `focusNotes:${fa.label}`;
-        const raw = localStorage.getItem(key);
-        notes = raw || "";
-      } catch {}
-
-      // Prepare comprehensive context for AI (match backend expected format)
-      const aiContext = {
-        userMessage,
-        focusArea: {
-          label: fa.label,
-          goal: fa.goal,
-          color: fa.color,
-          days: fa.days || {},
-          meta: {
-            category: fa.meta?.category || "Other"
-          }
-        },
-        viewWeekKey: viewWeekKey || weekKey(new Date()),
-        selectedDate: selectedDateYMD,
-        notes: notes || "",
-        computed: {
-          todaySpent: stats.todaySpent,
-          leftToday: stats.leftToday,
-          totalWeek: stats.totalWeek,
-          dailyAverage: stats.dailyAverage,
-          weeklyGoal: stats.weeklyGoal,
-        }
+      const selectedDateYMD = selectedDateFA || selectedDate;
+      const stats = computeAiStats(focusArea, selectedDateYMD);
+      
+      const focusContext = {
+        name: focusArea.label,
+        goal: focusArea.goal,
+        weekLogged: stats.totalWeek,
+        leftToday: stats.leftToday
       };
-
-      const res = await fetch("/api/ai/assist/", {
+      
+      const res = await fetch("/api/ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(aiContext),
+        body: JSON.stringify({ 
+          messages: newHistory.map(m => ({ role: m.role, content: m.content })),
+          focusContext
+        })
       });
-
+      
       const data = await res.json();
-      console.log('AI Response received:', data); // Debug log
-      
-      if (!data?.ok) throw new Error(data?.error || "AI failed");
-      
-      // AI response received successfully
-      
-      const aiMessage = { type: 'ai', content: data.text || "", timestamp: new Date() };
-      setMessages(prev => [...prev, aiMessage]);
-      
-      // Simple AI helper - no actions to parse or execute
+      setMessages([...newHistory, { role: "assistant", content: data.text }]);
     } catch (e) {
-      const errorMessage = { type: 'error', content: e.message || "Something went wrong.", timestamp: new Date() };
-      setMessages(prev => [...prev, errorMessage]);
-      setAiError(e.message || "Something went wrong.");
+      setMessages([...newHistory, { role: "assistant", content: "Sorry—there was an error. Try again." }]);
     } finally {
       setAiLoading(false);
     }
@@ -1502,107 +1348,74 @@ function HomeContent() {
 
 
               {/* AI Helper - Chat Style UI */}
+              {/* AI Helper - Simple Chat UI */}
               <div className="rounded-2xl border-2 border-gray-200 bg-white p-3 mt-3">
-                {(() => {
-                  const cat =
-                    (focusArea?.meta && focusArea.meta.category) ||
-                    (categories.find(c => normalizeLabel(c.label) === normalizeLabel(focusArea.label))?.meta?.category) ||
-                    "Other";
+                <div>
+                  <div className="text-[#4E4034] font-semibold text-base mb-2">AI Helper</div>
+                  <div className="text-[12px] text-gray-600 mb-2">
+                    The AI helper gives advice only. It won&apos;t schedule or change anything.
+                  </div>
                   
-                  return (
-                    <div>
-                      <div className="text-[#4E4034] font-semibold text-base mb-2">AI Helper</div>
-                      <div className="text-[12px] text-gray-600 mb-2">
-                        Ask this focus‑area‑specific AI for quick plans, next steps, or ways to work smarter. It uses your goals and this week&apos;s progress.
-                      </div>
-                      <div className="text-[12px] text-gray-600 mb-2">
-                        Category: <span className="font-medium">{cat}</span>
-                      </div>
-                      <div className="text-[11px] text-blue-600 mb-2 bg-blue-50 p-2 rounded border border-blue-200">
-                        <strong>Tip:</strong> Ask for suggestions, then add events and notes yourself using the calendar and notes features!
-                      </div>
-                      
-                      {/* Chat Messages */}
-                      <div ref={chatContainerRef} className="max-h-[300px] overflow-y-auto mb-3 space-y-3">
-                        {messages.length === 0 ? (
-                          <div className="text-[11px] text-gray-500 text-center py-4">
-                            Start a conversation to get tailored suggestions for this focus area.
-                          </div>
-                        ) : (
-                          messages.map((message, index) => (
-                            <div
-                              key={index}
-                              className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-                            >
-                              <div
-                                className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm ${
-                                  message.type === 'user'
-                                    ? 'bg-[#8CA4AF] text-white'
-                                    : message.type === 'error'
-                                    ? 'bg-red-100 text-red-800 border border-red-200'
-                                    : message.type === 'action'
-                                    ? 'bg-green-100 text-green-800 border border-green-200'
-                                    : 'bg-gray-100 text-[#4E4034]'
-                                }`}
-                              >
-                                <div className="whitespace-pre-wrap">{message.content}</div>
-                                <div className={`text-xs mt-1 ${
-                                  message.type === 'user' ? 'text-blue-100' : 'text-gray-500'
-                                }`}>
-                                  {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </div>
-                              </div>
-                            </div>
-                          ))
-                        )}
-                        
-                        {/* Loading indicator */}
-                        {aiLoading && (
-                          <div className="flex justify-start">
-                            <div className="bg-gray-100 text-[#4E4034] rounded-2xl px-3 py-2 text-sm">
-                              <div className="flex items-center space-x-1">
-                                <span>Thinking</span>
-                                <div className="flex space-x-1">
-                                  <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce"></div>
-                                  <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                                  <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Input Area */}
-                      <div className="relative">
-                        <textarea
-                          className="w-full min-h-[44px] max-h-[120px] rounded-lg border border-gray-300 px-3 py-2 pr-12 text-[#4E4034] bg-[#F7F6F3] shadow-inner text-sm focus:outline-none focus:ring-2 focus:ring-[#BCA88F] resize-none"
-                          placeholder="Ask anything to make you more productive in this focus area..."
-                          value={aiInput}
-                          onChange={(e) => setAiInput(e.target.value)}
-                          disabled={aiLoading}
-                          onKeyDown={(e) => {
-                            if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && !aiLoading) {
-                              e.preventDefault();
-                              askAiForFocusArea(focusArea);
-                            }
-                          }}
-                          style={{ minHeight: '44px' }}
-                        />
-                        <button
-                          onClick={() => askAiForFocusArea(focusArea)}
-                          className="absolute right-2 top-1/2 transform -translate-y-1/2 h-[36px] w-[36px] rounded-lg bg-[#8CA4AF] text-white flex items-center justify-center disabled:opacity-60 hover:bg-[#7A8F9A] transition-colors border-2 border-[#8CA4AF] hover:border-[#7A8F9A]"
-                          disabled={aiLoading || !aiInput.trim()}
-                          title="Send message to AI"
+                  {/* Chat Messages */}
+                  <div ref={chatContainerRef} className="max-h-[300px] overflow-y-auto mb-3 space-y-3">
+                    {messages.map((message, index) => (
+                      <div
+                        key={index}
+                        className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                      >
+                        <div
+                          className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm ${
+                            message.role === 'user'
+                              ? 'bg-[#8CA4AF] text-white'
+                              : 'bg-gray-100 text-[#4E4034]'
+                          }`}
                         >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        </button>
+                          <div className="whitespace-pre-wrap">{message.content}</div>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })()}
+                    ))}
+                    
+                    {/* Loading indicator */}
+                    {aiLoading && (
+                      <div className="flex justify-start">
+                        <div className="bg-gray-100 text-[#4E4034] rounded-2xl px-3 py-2 text-sm">
+                          <div className="flex items-center space-x-1">
+                            <span>Thinking</span>
+                            <div className="flex space-x-1">
+                              <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce"></div>
+                              <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                              <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Input Area */}
+                  <div className="relative">
+                    <input
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 pr-12 text-[#4E4034] bg-[#F7F6F3] shadow-inner text-sm focus:outline-none focus:ring-2 focus:ring-[#BCA88F]"
+                      placeholder="Ask for advice…"
+                      value={aiInput}
+                      onChange={(e) => setAiInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !aiLoading) {
+                          e.preventDefault();
+                          sendAiMessage();
+                        }
+                      }}
+                    />
+                    <button
+                      onClick={sendAiMessage}
+                      disabled={aiLoading}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 h-[36px] w-[36px] rounded-lg bg-[#8CA4AF] text-white flex items-center justify-center disabled:opacity-60 hover:bg-[#7A8F9A] transition-colors border-2 border-[#8CA4AF] hover:border-[#7A8F9A]"
+                      title="Send message to AI"
+                    >
+                      {aiLoading ? "…" : "→"}
+                    </button>
+                  </div>
+                </div>
               </div>
               
               {/* Data summary (match old slug) */}
