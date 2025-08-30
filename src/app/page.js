@@ -516,8 +516,8 @@ function HomeContent() {
       if (focusArea) {
         setSelectedFocusArea(focusArea);
         
-        // Reset week view to today when navigating from calendar
-        setOffset(0);
+        // Reset week view to current week when navigating from calendar
+        setViewWeekKey(currentWeekKey);
         
         // Scroll to top if requested
         if (scrollParam === 'top') {
@@ -525,7 +525,7 @@ function HomeContent() {
         }
       }
     }
-  }, [searchParams, categories]);
+  }, [searchParams, categories, currentWeekKey]);
 
   // Scroll to top whenever a focus area is selected (from dashboard clicks)
   useEffect(() => {
