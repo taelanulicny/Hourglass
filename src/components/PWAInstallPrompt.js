@@ -5,8 +5,16 @@ const PWAInstallPrompt = () => {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showPrompt, setShowPrompt] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    // Only run on client side
+    if (typeof window === 'undefined') return;
+
     // Check if app is already installed
     const checkIfInstalled = () => {
       if (window.matchMedia('(display-mode: standalone)').matches || 
@@ -79,11 +87,14 @@ const PWAInstallPrompt = () => {
     localStorage.setItem('pwa-prompt-dismissed', Date.now().toString());
   };
 
+  // Don't render on server side
+  if (!isClient) return null;
+
   // Don't show if already installed or recently dismissed
   if (isInstalled || !showPrompt) return null;
 
   // Check if recently dismissed (within 7 days)
-  const dismissedTime = localStorage.getItem('pwa-prompt-dismissed');
+  const dismissedTime = typeof window !== 'undefined' ? localStorage.getItem('pwa-prompt-dismissed') : null;
   if (dismissedTime && (Date.now() - parseInt(dismissedTime)) < 7 * 24 * 60 * 60 * 1000) {
     return null;
   }

@@ -12,6 +12,7 @@ class DataPersistence {
 
   // Initialize IndexedDB
   async initDB() {
+    if (typeof window === 'undefined') return false;
     if (!this.isIndexedDBSupported) return false;
 
     return new Promise((resolve, reject) => {
@@ -328,7 +329,9 @@ class DataPersistence {
 // Create singleton instance
 const dataPersistence = new DataPersistence();
 
-// Initialize on module load
-dataPersistence.initDB().catch(console.error);
+// Initialize on module load (only on client side)
+if (typeof window !== 'undefined') {
+  dataPersistence.initDB().catch(console.error);
+}
 
 export default dataPersistence;

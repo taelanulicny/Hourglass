@@ -1,5 +1,5 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import dataPersistence from '../utils/dataPersistence';
 
 const DataBackup = () => {
@@ -8,6 +8,11 @@ const DataBackup = () => {
   const [importFile, setImportFile] = useState(null);
   const [storageInfo, setStorageInfo] = useState(null);
   const [message, setMessage] = useState('');
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const exportData = async () => {
     setIsExporting(true);
@@ -69,6 +74,7 @@ const DataBackup = () => {
 
   const getStorageInfo = async () => {
     try {
+      if (typeof window === 'undefined') return;
       const info = await dataPersistence.getStorageInfo();
       setStorageInfo(info);
     } catch (error) {
@@ -83,6 +89,16 @@ const DataBackup = () => {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
+
+  // Don't render on server side
+  if (!isClient) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Data Backup & Storage</h3>
+        <p className="text-gray-500">Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
