@@ -517,7 +517,8 @@ function HomeContent() {
         setSelectedFocusArea(focusArea);
         
         // Reset week view to current week when navigating from calendar
-        setViewWeekKey(currentWeekKey);
+        setOffset(0); // Reset offset to 0 (current week)
+        setViewWeekKey(currentWeekKey); // Also set view week key
         
         // Scroll to top if requested
         if (scrollParam === 'top') {
