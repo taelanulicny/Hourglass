@@ -536,11 +536,16 @@ function HomeContent() {
     }
   }, [searchParams, categories, currentWeekKey]);
 
-  // Scroll to top whenever a focus area is selected (from dashboard clicks)
+  // Scroll to top and reset date whenever a focus area is selected (from dashboard clicks)
   useEffect(() => {
     if (selectedFocusArea) {
       // Scroll to top of the page to show the focus area detail module
       window.scrollTo({ top: 0, behavior: 'auto' });
+      
+      // Reset selected date to today when opening focus area details
+      const todayLocal = new Date();
+      setSelectedDateFA(ymd(todayLocal));
+      console.log('DEBUG: Focus area selected from dashboard - reset selectedDateFA to today:', ymd(todayLocal));
     }
   }, [selectedFocusArea]);
 
