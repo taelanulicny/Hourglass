@@ -74,7 +74,6 @@ function AiHelper({ focusAreaId, focusContext }) {
       {/* AI Helper Header */}
       <div className="ai-header">
         <div className="ai-title">
-          <span className="ai-icon">🤖</span>
           <span className="ai-text">Focus Area Specific AI Assistant</span>
         </div>
         <div className="ai-subtitle">Get personalized advice for "{focusContext?.name ?? "this focus area"}"</div>
