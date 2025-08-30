@@ -31,12 +31,11 @@ if (!self.workbox) {
     );
   });
 } else {
-  const { precaching, core, strategies, routing } = self.workbox;
+  const { precaching, strategies, routing } = self.workbox;
 
   // Bump this when changing SW to force updates
   const SW_VERSION = 'v5';
 
-  core.setCacheNameDetails({ prefix: 'time-macros' });
   precaching.cleanupOutdatedCaches();
 
   // Filter out Next.js internal manifests that may 404 on Netlify
@@ -66,12 +65,6 @@ if (!self.workbox) {
     ({ request }) => request.destination === 'style' || request.destination === 'script',
     new strategies.StaleWhileRevalidate({
       cacheName: 'static-assets',
-      plugins: [
-        new core.ExpirationPlugin({
-          maxEntries: 100,
-          maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
-        }),
-      ],
     })
   );
 
@@ -80,12 +73,6 @@ if (!self.workbox) {
     ({ request }) => request.destination === 'image',
     new strategies.CacheFirst({
       cacheName: 'images',
-      plugins: [
-        new core.ExpirationPlugin({
-          maxEntries: 60,
-          maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
-        }),
-      ],
     })
   );
 
