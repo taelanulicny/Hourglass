@@ -26,8 +26,6 @@ function computeAiStats(focusArea, selectedDateYMD) {
   return { todaySpent: daySpent, leftToday, totalWeek, dailyAverage, weeklyGoal };
 }
 
-import { useRouter } from 'next/navigation';
-
 // --- small format helpers ---
 function fmt1(n){
   const v = Math.round((Number(n) || 0) * 10) / 10;
