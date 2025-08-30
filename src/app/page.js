@@ -516,9 +516,12 @@ function HomeContent() {
       if (focusArea) {
         setSelectedFocusArea(focusArea);
         
+        // Reset week view to today when navigating from calendar
+        setOffset(0);
+        
         // Scroll to top if requested
         if (scrollParam === 'top') {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
+          window.scrollTo({ top: 0, behavior: 'auto' });
         }
       }
     }
