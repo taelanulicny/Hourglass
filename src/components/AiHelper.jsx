@@ -7,7 +7,7 @@ function AiHelper({ focusAreaId, focusContext }) {
   const defaultGreeting = {
     role: "assistant",
     content:
-      `How can I help you in "${focusContext?.name ?? "this focus area"}" today?`
+      `Hi! I'm your AI assistant. How can I help you in "${focusContext?.name ?? "this focus area"}" today?`
   };
 
   // load per-area history on mount / focusAreaId change
@@ -71,6 +71,15 @@ function AiHelper({ focusAreaId, focusContext }) {
 
   return (
     <div className="ai-helper">
+      {/* AI Helper Header */}
+      <div className="ai-header">
+        <div className="ai-title">
+          <span className="ai-icon">🤖</span>
+          <span className="ai-text">Focus Area Specific AI Assistant</span>
+        </div>
+        <div className="ai-subtitle">Get personalized advice for "{focusContext?.name ?? "this focus area"}"</div>
+      </div>
+      
       <div className="ai-messages">
         {history.map((m, i) => (
           <div key={i} className={m.role === "assistant" ? "msg assistant" : "msg user"}>
@@ -82,7 +91,7 @@ function AiHelper({ focusAreaId, focusContext }) {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={`Ask for advice about ${focusContext?.name ?? "this area"}…`}
+          placeholder={`Ask AI for advice about ${focusContext?.name ?? "this area"}…`}
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); send(); } }}
         />
         <button onClick={send} disabled={loading}>{loading ? "Thinking…" : "Send"}</button>
