@@ -521,7 +521,12 @@ function HomeContent() {
         console.log('DEBUG: Before reset - offset:', offset, 'viewWeekKey:', viewWeekKey, 'currentWeekKey:', currentWeekKey);
         setOffset(0); // Reset offset to 0 (current week)
         setViewWeekKey(currentWeekKey); // Also set view week key
-        console.log('DEBUG: After reset - set offset to 0, set viewWeekKey to:', currentWeekKey);
+        
+        // Reset selected date to today when navigating from calendar
+        const todayLocal = new Date();
+        setSelectedDateFA(ymd(todayLocal));
+        
+        console.log('DEBUG: After reset - set offset to 0, set viewWeekKey to:', currentWeekKey, 'set selectedDateFA to today:', ymd(todayLocal));
         
         // Scroll to top if requested
         if (scrollParam === 'top') {
