@@ -52,3 +52,20 @@ body {
 .scrollbar-thumb-gray-300::-webkit-scrollbar-thumb:hover {
   background-color: #9ca3af;
 }
+
+/* Date navigation layout for focus area */
+.date-nav {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  text-align: center;
+}
+.date-nav button:first-child {
+  justify-self: start;   /* pins left arrow above first column */
+}
+.date-nav button:last-child {
+  justify-self: end;     /* pins right arrow above seventh column */
+}
+.date-nav .current-date {
+  justify-self: center;  /* keeps the date centered between arrows */
+}

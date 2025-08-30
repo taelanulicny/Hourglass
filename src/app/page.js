@@ -1270,7 +1270,7 @@ function HomeContent() {
 
                 {/* Right: weekly bars (same as dashboard) */}
                 <div className="flex-1 flex flex-col w-full">
-                  <div className="flex items-center justify-center gap-2 mb-1">
+                  <div className="date-nav mb-1">
                     <button
                       className={`px-2 text-lg ${parseYMD(selectedDateFA) <= startOfWeek ? 'opacity-30 cursor-not-allowed' : ''}`}
                       onClick={() => {
@@ -1281,7 +1281,7 @@ function HomeContent() {
                       aria-label="Previous day"
                       type="button"
                     >
-                      ‹
+                      ◀
                     </button>
                     <div className="text-[#4E4034] text-sm font-medium">
                       {parseYMD(selectedDateFA).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
@@ -1299,7 +1299,7 @@ function HomeContent() {
                       aria-label="Next day"
                       type="button"
                     >
-                      ›
+                      ▶
                     </button>
                   </div>
                   <div className="flex items-center gap-1 w-full py-2 justify-center px-3 pr-6">
