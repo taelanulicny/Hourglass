@@ -100,44 +100,57 @@ function secondsToHMMSS(s) {
 }
 
 // --- Future Planning Timeline helpers ---
-function parseLocalISO(s) {
-  // Safely parse either full ISO strings or YMD/HM fields stored separately
-  if (!s) return null;
-  const d = new Date(s);
-  if (!isNaN(d)) return d; // ISO string path
+function buildLocalDate({ y, m, d, hh = 0, mm = 0 }) {
+  return new Date(Number(y), Number(m) - 1, Number(d), Number(hh), Number(mm), 0, 0);
+}
+
+function parseEventDateLocal(valueYMD, valueHM, fallbackISO) {
+  // Prefer explicit YMD/HM fields to avoid UTC shifts.
+  if (valueYMD) {
+    const [y, m, d] = valueYMD.split('-');
+    if (valueHM) {
+      const [hh, mm] = valueHM.split(':');
+      return buildLocalDate({ y, m, d, hh, mm });
+    }
+    return buildLocalDate({ y, m, d });
+  }
+  // If we only have a single string, parse defensively:
+  if (fallbackISO) {
+    // Case 1: full ISO with timezone (e.g., ...Z or +hh:mm) → let Date parse it.
+    if (/[zZ]|[+\-]\d{2}:\d{2}$/.test(fallbackISO)) {
+      const d = new Date(fallbackISO);
+      return isNaN(d) ? null : d;
+    }
+    // Case 2: "YYYY-MM-DDTHH:mm" (no tz) → treat as LOCAL time
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(fallbackISO)) {
+      const [ymd, hm] = fallbackISO.split('T');
+      const [y, m, d] = ymd.split('-');
+      const [hh, mm] = hm.split(':');
+      return buildLocalDate({ y, m, d, hh, mm });
+    }
+    // Case 3: "YYYY-MM-DD" (date only) → LOCAL midnight
+    if (/^\d{4}-\d{2}-\d{2}$/.test(fallbackISO)) {
+      const [y, m, d] = fallbackISO.split('-');
+      return buildLocalDate({ y, m, d });
+    }
+    // Fallback best effort
+    const d = new Date(fallbackISO);
+    return isNaN(d) ? null : d;
+  }
   return null;
 }
 
-function eventStartLocal(ev) {
-  // Try common fields; extend if your shape differs
+function getEventStart(ev) {
   return (
-    parseLocalISO(ev.start) ||
-    parseLocalISO(ev.startAt) ||
-    (ev.startYMD && ev.startHM
-      ? new Date(
-          Number(ev.startYMD.slice(0, 4)),
-          Number(ev.startYMD.slice(5, 7)) - 1,
-          Number(ev.startYMD.slice(8, 10)),
-          Number(ev.startHM.slice(0, 2)),
-          Number(ev.startHM.slice(3, 5)),
-          0,
-          0
-        )
-      : ev.startYMD
-      ? new Date(
-          Number(ev.startYMD.slice(0, 4)),
-          Number(ev.startYMD.slice(5, 7)) - 1,
-          Number(ev.startYMD.slice(8, 10))
-        )
-      : null)
+    parseEventDateLocal(ev.startYMD, ev.startHM, ev.start) ||
+    parseEventDateLocal(ev.dateYMD, ev.timeHM, ev.startAt)
   );
 }
 
-function eventEndLocal(ev) {
+function getEventEnd(ev) {
   return (
-    parseLocalISO(ev.end) ||
-    parseLocalISO(ev.endAt) ||
-    null
+    parseEventDateLocal(ev.endYMD, ev.endHM, ev.end) ||
+    parseEventDateLocal(null, null, ev.endAt)
   );
 }
 
@@ -1153,14 +1166,14 @@ function HomeContent() {
         const matchesArea = normalizeLabel(ev.area) === normalizeLabel(focusArea.label);
         if (!matchesArea) return false;
         
-        const s = eventStartLocal(ev);
-        const e = eventEndLocal(ev);
-        // keep if it starts today/future OR (if no end) starts today/future OR ends today/future
-        return (s && s >= todayStart) || (e && e >= todayStart);
+        const s = getEventStart(ev);
+        const e = getEventEnd(ev);
+        // Keep if it starts today/future OR (if no start) ends today/future
+        return (s && s >= todayStart) || (!s && e && e >= todayStart);
       })
       .sort((a, b) => {
-        const sa = eventStartLocal(a)?.getTime() ?? 0;
-        const sb = eventStartLocal(b)?.getTime() ?? 0;
+        const sa = getEventStart(a)?.getTime() ?? Infinity;
+        const sb = getEventStart(b)?.getTime() ?? Infinity;
         return sa - sb;
       });
 
@@ -1710,7 +1723,7 @@ function HomeContent() {
                   <span>Timeline - Future Planning</span>
                 </div>
                 <div className="text-[12px] text-gray-600 mb-3">
-                  Showing all events from <strong>{ymdLocal(todayStart)}</strong> forward.
+                  Showing events from <strong>{todayStart.toLocaleDateString()}</strong> onward.
                 </div>
               {/* Add Event Modal */}
               {showNewEventForm && (
