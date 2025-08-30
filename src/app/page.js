@@ -99,6 +99,48 @@ function secondsToHMMSS(s) {
   return `${pad(h)}:${pad(m)}:${pad(ss)}`;
 }
 
+// --- Future Planning Timeline helpers ---
+function parseLocalISO(s) {
+  // Safely parse either full ISO strings or YMD/HM fields stored separately
+  if (!s) return null;
+  const d = new Date(s);
+  if (!isNaN(d)) return d; // ISO string path
+  return null;
+}
+
+function eventStartLocal(ev) {
+  // Try common fields; extend if your shape differs
+  return (
+    parseLocalISO(ev.start) ||
+    parseLocalISO(ev.startAt) ||
+    (ev.startYMD && ev.startHM
+      ? new Date(
+          Number(ev.startYMD.slice(0, 4)),
+          Number(ev.startYMD.slice(5, 7)) - 1,
+          Number(ev.startYMD.slice(8, 10)),
+          Number(ev.startHM.slice(0, 2)),
+          Number(ev.startHM.slice(3, 5)),
+          0,
+          0
+        )
+      : ev.startYMD
+      ? new Date(
+          Number(ev.startYMD.slice(0, 4)),
+          Number(ev.startYMD.slice(5, 7)) - 1,
+          Number(ev.startYMD.slice(8, 10))
+        )
+      : null)
+  );
+}
+
+function eventEndLocal(ev) {
+  return (
+    parseLocalISO(ev.end) ||
+    parseLocalISO(ev.endAt) ||
+    null
+  );
+}
+
 // === Date helpers for focus area navigation ===
 function ymdLocal(d = new Date()) {
   const y = d.getFullYear();
@@ -1102,6 +1144,26 @@ function HomeContent() {
       return matchesArea && matchesMonth;
     });
 
+    // Filter for future planning timeline - events from today forward
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    
+    const futureEvents = allEvents
+      .filter(ev => {
+        const matchesArea = normalizeLabel(ev.area) === normalizeLabel(focusArea.label);
+        if (!matchesArea) return false;
+        
+        const s = eventStartLocal(ev);
+        const e = eventEndLocal(ev);
+        // keep if it starts today/future OR (if no end) starts today/future OR ends today/future
+        return (s && s >= todayStart) || (e && e >= todayStart);
+      })
+      .sort((a, b) => {
+        const sa = eventStartLocal(a)?.getTime() ?? 0;
+        const sb = eventStartLocal(b)?.getTime() ?? 0;
+        return sa - sb;
+      });
+
     // Save new event
     function saveNewEvent() {
       if (!newEvent?.date || !newEvent?.start || !newEvent?.end) {
@@ -1644,12 +1706,12 @@ function HomeContent() {
               {/* --- END inserted sections --- */}
               {/* Timeline module - Future Planning Tool */}
               <div className="rounded-2xl border-2 border-gray-200 bg-white p-3 mt-3">
-                          <div className="text-[#4E4034] font-semibold text-base mb-2">
-            <span>Timeline - Future Planning</span>
-          </div>
-                          <div className="text-[12px] text-gray-600 mb-3">
-            Showing all events this month. Go to the Calendar page to add and plan your upcoming sessions
-          </div>
+                <div className="text-[#4E4034] font-semibold text-base mb-2">
+                  <span>Timeline - Future Planning</span>
+                </div>
+                <div className="text-[12px] text-gray-600 mb-3">
+                  Showing all events from <strong>{ymdLocal(todayStart)}</strong> forward.
+                </div>
               {/* Add Event Modal */}
               {showNewEventForm && (
                 <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-50">
@@ -1738,11 +1800,11 @@ function HomeContent() {
               )}
 
                 {/* List events */}
-                {filteredEvents.length === 0 ? (
-                  <div className="text-gray-400 text-sm">No events this week.</div>
+                {futureEvents.length === 0 ? (
+                  <div className="text-gray-400 text-sm">No upcoming sessions. Add one in Calendar →</div>
                 ) : (
                   <div className="flex flex-col gap-2">
-                    {filteredEvents.map(ev => (
+                    {futureEvents.map(ev => (
                       <div
                         key={ev.id}
                         className="rounded-lg p-2 flex justify-between items-center text-sm"
