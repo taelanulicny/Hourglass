@@ -69,3 +69,11 @@ body {
 .date-nav .current-date {
   justify-self: center;  /* keeps the date centered between arrows */
 }
+
+/* Calendar touch handling - prevent browser from handling touch gestures during drags */
+.calendar-event,
+.calendar-event *[data-draggable],
+.drag-handle {
+  touch-action: none;           /* prevents browser from handling scroll/pinch on touch */
+  -ms-touch-action: none;       /* IE/old Edge */
+}

@@ -793,6 +793,46 @@ function CalendarContent() {
     };
   }, [draggingId, pxPerHour, dayStartMs, dayEndMs, clampToDay]);
 
+  // Add non-passive touch event listeners for calendar events
+  useEffect(() => {
+    if (!isClient) return;
+
+    const eventElements = document.querySelectorAll('.calendar-event');
+    
+    const onTouchStart = (e) => {
+      const eventId = e.currentTarget.getAttribute('data-event-id');
+      if (!eventId) return;
+      
+      const ev = events.find(x => x.id === eventId);
+      if (!ev) return;
+      
+      const t = e.touches[0];
+      const dur = ev.end - ev.start;
+      setDraggingId(ev.id);
+      dragRef.current = {
+        startY: t.clientY,
+        origStart: ev.start,
+        origEnd: ev.end,
+        duration: dur,
+        lastStartMs: null,
+        moved: false,
+      };
+      const vs = new Date(Math.max(ev.start, dayStartMs));
+      const topPxSeed = (vs.getHours() + vs.getMinutes() / 60) * pxPerHour;
+      setDragGhostTop(Math.max(0, topPxSeed));
+    };
+
+    eventElements.forEach(el => {
+      el.addEventListener('touchstart', onTouchStart, { passive: false });
+    });
+
+    return () => {
+      eventElements.forEach(el => {
+        el.removeEventListener('touchstart', onTouchStart, { passive: false });
+      });
+    };
+  }, [isClient, events, dayStartMs, pxPerHour]);
+
   const eventsForSelected = useMemo(() => {
     // include events that overlap the selected day window [dayStartMs, dayEndMs)
     if (!dayStartMs || !dayEndMs) return [];
@@ -957,7 +997,8 @@ function CalendarContent() {
               return (
                 <div
                   key={ev.id}
-                  className={`absolute left-1 right-1 rounded-md shadow ${draggingId === ev.id ? 'cursor-grabbing' : 'cursor-grab'}`}
+                  data-event-id={ev.id}
+                  className={`absolute left-1 right-1 rounded-md shadow calendar-event ${draggingId === ev.id ? 'cursor-grabbing' : 'cursor-grab'}`}
                   style={{
                     top: (draggingId === ev.id && dragGhostTop != null ? dragGhostTop : Math.max(0, topPx)) + 'px',
                     height: Math.max(24, heightPx) + 'px',
@@ -979,23 +1020,6 @@ function CalendarContent() {
                       moved: false,
                     };
                     // seed ghost top from current position
-                    const vs = new Date(Math.max(ev.start, dayStartMs));
-                    const topPxSeed = (vs.getHours() + vs.getMinutes() / 60) * pxPerHour;
-                    setDragGhostTop(Math.max(0, topPxSeed));
-                  }}
-                  onTouchStart={(e) => {
-                    // Don't prevent default on touch start to avoid passive listener issues
-                    const t = e.touches[0];
-                    const dur = ev.end - ev.start;
-                    setDraggingId(ev.id);
-                    dragRef.current = {
-                      startY: t.clientY,
-                      origStart: ev.start,
-                      origEnd: ev.end,
-                      duration: dur,
-                      lastStartMs: null,
-                      moved: false,
-                    };
                     const vs = new Date(Math.max(ev.start, dayStartMs));
                     const topPxSeed = (vs.getHours() + vs.getMinutes() / 60) * pxPerHour;
                     setDragGhostTop(Math.max(0, topPxSeed));
