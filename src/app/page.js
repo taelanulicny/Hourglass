@@ -99,6 +99,28 @@ function secondsToHMMSS(s) {
   return `${pad(h)}:${pad(m)}:${pad(ss)}`;
 }
 
+// === Date helpers for focus area navigation ===
+function ymdLocal(d = new Date()) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+function parseYMDLocal(ymd) {
+  const [y,m,d] = ymd.split('-').map(Number);
+  return new Date(y, m - 1, d); // local midnight
+}
+function addDays(d, n) {
+  const x = new Date(d);
+  x.setDate(x.getDate() + n);
+  return x;
+}
+function compareYMD(a, b) {
+  // returns -1, 0, 1
+  if (a === b) return 0;
+  return a < b ? -1 : 1;
+}
+
 // YMD (YYYY-MM-DD) helper for stable date-only state
 function ymd(date) {
   const d = new Date(date);
@@ -787,6 +809,9 @@ function HomeContent() {
     return goalNum > 0 || spentNum > 0 || daysTotal > 0;
   });
 
+  // === State (selected date must already exist); ensure todayYMD is local ===
+  const todayYMD = ymdLocal(new Date());
+  
   // --- Focus view: selected day within the visible week (prefer "today" if it falls in this week) ---
   const [selectedDateFA, setSelectedDateFA] = useState(() => {
     const todayLocal = new Date();
@@ -1249,10 +1274,8 @@ function HomeContent() {
                     <button
                       className={`px-2 text-lg ${parseYMD(selectedDateFA) <= startOfWeek ? 'opacity-30 cursor-not-allowed' : ''}`}
                       onClick={() => {
-                        const cur = parseYMD(selectedDateFA);
-                        const prev = new Date(cur);
-                        prev.setDate(cur.getDate() - 1);
-                        if (prev >= startOfWeek) setSelectedDateFA(ymd(prev));
+                        const prev = ymdLocal(addDays(parseYMDLocal(selectedDateFA), -1));
+                        setSelectedDateFA(prev);
                       }}
                       disabled={parseYMD(selectedDateFA) <= startOfWeek}
                       aria-label="Previous day"
@@ -1264,15 +1287,15 @@ function HomeContent() {
                       {parseYMD(selectedDateFA).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                     </div>
                     <button
-                      className={`px-2 text-lg ${parseYMD(selectedDateFA) >= endOfWeek ? 'opacity-30 cursor-not-allowed' : ''}`}
+                      className={`px-2 text-lg ${compareYMD(selectedDateFA, todayYMD) >= 0 ? 'opacity-30 cursor-not-allowed' : ''}`}
                       onClick={() => {
-                        const cur = parseYMD(selectedDateFA);
-                        const next = new Date(cur);
-                        next.setDate(cur.getDate() + 1);
-                        // Allow navigation to next day within the current week
-                        if (next >= startOfWeek && next <= endOfWeek) setSelectedDateFA(ymd(next));
+                        const next = ymdLocal(addDays(parseYMDLocal(selectedDateFA), 1));
+                        // allow navigating forward up to (and including) today
+                        if (compareYMD(next, todayYMD) <= 0) {
+                          setSelectedDateFA(next);
+                        }
                       }}
-                      disabled={parseYMD(selectedDateFA) >= endOfWeek}
+                      disabled={compareYMD(selectedDateFA, todayYMD) >= 0}
                       aria-label="Next day"
                       type="button"
                     >
