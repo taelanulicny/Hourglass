@@ -77,3 +77,36 @@ body {
   touch-action: none;           /* prevents browser from handling scroll/pinch on touch */
   -ms-touch-action: none;       /* IE/old Edge */
 }
+
+/* AI Helper Component Styles */
+.ai-helper {
+  @apply rounded-2xl border-2 border-gray-200 bg-white p-3 mt-3;
+}
+
+.ai-messages {
+  @apply max-h-[300px] overflow-y-auto mb-3 space-y-3;
+}
+
+.ai-messages .msg {
+  @apply max-w-[80%] rounded-2xl px-3 py-2 text-sm;
+}
+
+.ai-messages .msg.assistant {
+  @apply bg-gray-100 text-[#4E4034];
+}
+
+.ai-messages .msg.user {
+  @apply bg-[#8CA4AF] text-white ml-auto;
+}
+
+.ai-input {
+  @apply relative;
+}
+
+.ai-input input {
+  @apply w-full rounded-lg border border-gray-300 px-3 py-2 pr-12 text-[#4E4034] bg-[#F7F6F3] shadow-inner text-sm focus:outline-none focus:ring-2 focus:ring-[#BCA88F];
+}
+
+.ai-input button {
+  @apply absolute right-2 top-1/2 transform -translate-y-1/2 h-[36px] w-[36px] rounded-lg bg-[#8CA4AF] text-white flex items-center justify-center disabled:opacity-60 hover:bg-[#7A8F9A] transition-colors border-2 border-[#8CA4AF] hover:border-[#7A8F9A];
+}

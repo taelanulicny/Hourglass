@@ -3,6 +3,7 @@
 import './globals.css';
 import { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import AiHelper from '../components/AiHelper';
 // Compute statistics for AI helper for a focus area and selected date
 function computeAiStats(focusArea, selectedDateYMD) {
   const d = new Date(selectedDateYMD);
@@ -221,60 +222,10 @@ function friendWeeklyStats(friend, mondayDateLike) {
 function HomeContent() {
   const router = useRouter();
 
-  // --- AI Helper state (must be inside component) ---
-  const [aiInput, setAiInput] = useState("");
-  const [aiLoading, setAiLoading] = useState(false);
-  const [messages, setMessages] = useState([
-    { role: "assistant", content: "How can I help you use your time better today?" }
-  ]);
-  const chatContainerRef = useRef(null);
 
-  // Scroll to bottom of chat when new messages arrive
-  useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-    }
-  }, [messages]);
 
   // Simple AI helper - no complex action parsing, just chat
-  // Simple AI helper - no complex action parsing, just chat
-  async function sendAiMessage() {
-    if (!aiInput.trim() || !focusArea) return;
-    
-    const userMessage = aiInput.trim();
-    const newHistory = [...messages, { role: "user", content: userMessage }];
-    setMessages(newHistory);
-    setAiInput("");
-    setAiLoading(true);
-    
-    try {
-      const selectedDateYMD = selectedDateFA || selectedDate;
-      const stats = computeAiStats(focusArea, selectedDateYMD);
-      
-      const focusContext = {
-        name: focusArea.label,
-        goal: focusArea.goal,
-        weekLogged: stats.totalWeek,
-        leftToday: stats.leftToday
-      };
-      
-      const res = await fetch("/api/ai", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          messages: newHistory.map(m => ({ role: m.role, content: m.content })),
-          focusContext
-        })
-      });
-      
-      const data = await res.json();
-      setMessages([...newHistory, { role: "assistant", content: data.text }]);
-    } catch (e) {
-      setMessages([...newHistory, { role: "assistant", content: "Sorry—there was an error. Try again." }]);
-    } finally {
-      setAiLoading(false);
-    }
-  }
+
 
   const [offset, setOffset] = useState(0);
   const [isNextWeek, setIsNextWeek] = useState(false);
@@ -1348,75 +1299,27 @@ function HomeContent() {
 
 
               {/* AI Helper - Chat Style UI */}
-              {/* AI Helper - Simple Chat UI */}
-              <div className="rounded-2xl border-2 border-gray-200 bg-white p-3 mt-3">
-                <div>
-                  <div className="text-[#4E4034] font-semibold text-base mb-2">AI Helper</div>
-                  <div className="text-[12px] text-gray-600 mb-2">
-                    The AI helper gives advice only. It won&apos;t schedule or change anything.
-                  </div>
-                  
-                  {/* Chat Messages */}
-                  <div ref={chatContainerRef} className="max-h-[300px] overflow-y-auto mb-3 space-y-3">
-                    {messages.map((message, index) => (
-                      <div
-                        key={index}
-                        className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                      >
-                        <div
-                          className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm ${
-                            message.role === 'user'
-                              ? 'bg-[#8CA4AF] text-white'
-                              : 'bg-gray-100 text-[#4E4034]'
-                          }`}
-                        >
-                          <div className="whitespace-pre-wrap">{message.content}</div>
-                        </div>
-                      </div>
-                    ))}
-                    
-                    {/* Loading indicator */}
-                    {aiLoading && (
-                      <div className="flex justify-start">
-                        <div className="bg-gray-100 text-[#4E4034] rounded-2xl px-3 py-2 text-sm">
-                          <div className="flex items-center space-x-1">
-                            <span>Thinking</span>
-                            <div className="flex space-x-1">
-                              <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce"></div>
-                              <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                              <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Input Area */}
-                  <div className="relative">
-                    <input
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 pr-12 text-[#4E4034] bg-[#F7F6F3] shadow-inner text-sm focus:outline-none focus:ring-2 focus:ring-[#BCA88F]"
-                      placeholder="Ask for advice…"
-                      value={aiInput}
-                      onChange={(e) => setAiInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !aiLoading) {
-                          e.preventDefault();
-                          sendAiMessage();
-                        }
-                      }}
-                    />
-                    <button
-                      onClick={sendAiMessage}
-                      disabled={aiLoading}
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 h-[36px] w-[36px] rounded-lg bg-[#8CA4AF] text-white flex items-center justify-center disabled:opacity-60 hover:bg-[#7A8F9A] transition-colors border-2 border-[#8CA4AF] hover:border-[#7A8F9A]"
-                      title="Send message to AI"
-                    >
-                      {aiLoading ? "…" : "→"}
-                    </button>
-                  </div>
-                </div>
-              </div>
+              {/* AI Helper Component */}
+              <AiHelper
+                key={focusArea.label}
+                focusAreaId={focusArea.label}
+                focusContext={{
+                  name: focusArea.label,
+                  goal: focusArea.goal,
+                  weekLogged: (() => {
+                    const weekDays = ["M","Tu","W","Th","F","Sa","Su"];
+                    return weekDays.reduce(
+                      (sum, d) => sum + Number(focusArea?.days?.[d] || 0),
+                      0
+                    );
+                  })(),
+                  leftToday: (() => {
+                    const selectedDateYMD = selectedDateFA || selectedDate;
+                    const stats = computeAiStats(focusArea, selectedDateYMD);
+                    return stats.leftToday;
+                  })()
+                }}
+              />
               
               {/* Data summary (match old slug) */}
               {(() => {
