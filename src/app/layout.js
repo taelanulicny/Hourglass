@@ -1,6 +1,12 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
-import PWAInstallPrompt from "../components/PWAInstallPrompt";
+import dynamic from "next/dynamic";
+
+// Dynamically import PWA components with SSR disabled
+const PWAInstallPrompt = dynamic(() => import("../components/PWAInstallPrompt"), {
+  ssr: false,
+  loading: () => null
+});
 
 const inter = Inter({
   variable: "--font-inter",
@@ -43,15 +49,19 @@ export default function RootLayout({ children }) {
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              if ('serviceWorker' in navigator) {
+              if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js')
-                    .then(function(registration) {
-                      console.log('SW registered: ', registration);
-                    })
-                    .catch(function(registrationError) {
-                      console.log('SW registration failed: ', registrationError);
-                    });
+                  try {
+                    navigator.serviceWorker.register('/sw.js')
+                      .then(function(registration) {
+                        console.log('SW registered: ', registration);
+                      })
+                      .catch(function(registrationError) {
+                        console.log('SW registration failed: ', registrationError);
+                      });
+                  } catch (error) {
+                    console.log('SW registration error: ', error);
+                  }
                 });
               }
             `,

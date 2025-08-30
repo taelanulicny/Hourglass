@@ -103,31 +103,4 @@ self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
-  
-  if (event.data && event.data.type === 'CACHE_DATA') {
-    // Cache important data for offline use
-    event.waitUntil(
-      caches.open('user-data').then((cache) => {
-        return cache.put('/user-data-backup', new Response(JSON.stringify(event.data.data)));
-      })
-    );
-  }
 });
-
-// Background sync for data persistence
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'background-sync') {
-    event.waitUntil(doBackgroundSync());
-  }
-});
-
-async function doBackgroundSync() {
-  // Sync any pending data when connection returns
-  const clients = await self.clients.matchAll();
-  clients.forEach((client) => {
-    client.postMessage({
-      type: 'BACKGROUND_SYNC_COMPLETE',
-      timestamp: Date.now()
-    });
-  });
-}

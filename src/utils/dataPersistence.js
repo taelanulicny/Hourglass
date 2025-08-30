@@ -6,8 +6,8 @@ class DataPersistence {
     this.dbName = 'TimeMacrosDB';
     this.dbVersion = 1;
     this.db = null;
-    this.isIndexedDBSupported = 'indexedDB' in window;
-    this.isLocalStorageSupported = 'localStorage' in window;
+    this.isIndexedDBSupported = typeof window !== 'undefined' && 'indexedDB' in window;
+    this.isLocalStorageSupported = typeof window !== 'undefined' && 'localStorage' in window;
   }
 
   // Initialize IndexedDB
@@ -47,6 +47,8 @@ class DataPersistence {
 
   // Store data with fallback strategy
   async setItem(key, value, options = {}) {
+    if (typeof window === 'undefined') return false;
+    
     const data = {
       value,
       timestamp: Date.now(),
@@ -88,6 +90,8 @@ class DataPersistence {
 
   // Retrieve data with fallback strategy
   async getItem(key, defaultValue = null) {
+    if (typeof window === 'undefined') return defaultValue;
+    
     // Try IndexedDB first
     if (this.isIndexedDBSupported && this.db) {
       try {
@@ -128,6 +132,8 @@ class DataPersistence {
 
   // Remove data
   async removeItem(key) {
+    if (typeof window === 'undefined') return;
+    
     // Try IndexedDB first
     if (this.isIndexedDBSupported && this.db) {
       try {
