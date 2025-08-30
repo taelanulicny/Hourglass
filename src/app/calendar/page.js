@@ -1008,7 +1008,8 @@ function CalendarContent() {
                   }}
                   title={ev.title}
                   onMouseDown={(e) => {
-                    e.preventDefault();
+                    // Only prevent default if the event is cancelable
+                    if (e.cancelable) e.preventDefault();
                     const dur = ev.end - ev.start;
                     setDraggingId(ev.id);
                     dragRef.current = {
@@ -1024,7 +1025,7 @@ function CalendarContent() {
                     const topPxSeed = (vs.getHours() + vs.getMinutes() / 60) * pxPerHour;
                     setDragGhostTop(Math.max(0, topPxSeed));
                   }}
-                  onClick={(e) => { if (dragRef.current.moved) { e.preventDefault(); e.stopPropagation(); } else { openEdit(ev); } }}
+                  onClick={(e) => { if (dragRef.current.moved) { if (e.cancelable) e.preventDefault(); e.stopPropagation(); } else { openEdit(ev); } }}
                 >
                   <div className="text-[11px] px-2 py-1 leading-tight">
                     <div className="font-semibold truncate">{ev.title}</div>
