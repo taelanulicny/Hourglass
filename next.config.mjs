@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
+  // Do NOT set output: 'export' when using API routes
+  // Let Netlify plugin build serverless functions
   trailingSlash: true,
   images: {
     unoptimized: true
