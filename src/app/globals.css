@@ -120,19 +120,23 @@ body {
   @apply bg-[#8CA4AF] text-white ml-auto;
 }
 
-.ai-messages .msg.thinking {
-  @apply bg-gray-100 text-gray-500 italic;
+.msg.assistant.typing-indicator {
+  font-style: italic;
+  opacity: 0.7;
+  margin: 0.25rem 0;
 }
 
-.ai-messages .msg.thinking::after {
-  content: "...";
-  animation: thinking 1.5s infinite;
+/* If you want animated dots instead of plain text: */
+.msg.assistant.typing-indicator::after {
+  content: '…';
+  animation: dots 1s steps(5, end) infinite;
 }
 
-@keyframes thinking {
-  0%, 20% { content: "."; }
-  40% { content: ".."; }
-  60%, 100% { content: "..."; }
+@keyframes dots {
+  0%, 20% { content: ''; }
+  40% { content: '.'; }
+  60% { content: '..'; }
+  80%, 100% { content: '...'; }
 }
 
 .ai-input {
