@@ -55,7 +55,7 @@ function AiHelper({ focusAreaId, focusContext }) {
           // only send THIS area's chat history
           messages: [
             // prepend a light "style hint" as the user's last message context
-            { role: "system", content: "Format with short sections, ### headings, numbered steps, and - [ ] checklists when helpful." },
+            { role: "system", content: "Format with ### headings, bullet lists (- item), numbered steps (1.), and checklists (- [ ]). Keep it scannable." },
             ...next.map(m => ({ role: m.role, content: m.content }))
           ],
           // readonly context for better advice
@@ -97,9 +97,13 @@ function AiHelper({ focusAreaId, focusContext }) {
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeRaw, rehypeSanitize]}
                 components={{
-                  h1: (props) => <h3 {...props} />,  // down-weight headings for bubble
-                  h2: (props) => <h3 {...props} />,
-                  h3: (props) => <h4 {...props} />,
+                  h1: ({node, ...props}) => <h3 {...props} />,
+                  h2: ({node, ...props}) => <h4 {...props} />,
+                  h3: ({node, ...props}) => <h5 {...props} />,
+                  ul: ({node, ...props}) => <ul className="list-disc pl-5 my-1" {...props} />,
+                  ol: ({node, ...props}) => <ol className="list-decimal pl-5 my-1" {...props} />,
+                  li: ({node, ...props}) => <li className="my-0.5" {...props} />,
+                  strong: ({node, ...props}) => <strong className="font-semibold" {...props} />,
                 }}
               >
                 {m.content}

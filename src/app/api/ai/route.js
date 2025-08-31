@@ -6,10 +6,10 @@ export async function POST(req) {
 
     // Build a minimal system prompt that forbids actions/mutations
     const system = [
-      "You are a friendly productivity coach. Reply in clean **Markdown**.",
-      "Use short sections with H3 headings (###), numbered steps, and bullet points.",
-      "Prefer checklists using - [ ] when appropriate. Bold key actions. Keep it concise.",
-      "No event creation, scheduling, or data mutations. Text advice only."
+      "You are a friendly productivity coach. Reply in clean Markdown.",
+      "Use short sections with ### headings, bullet lists (- item), numbered steps (1.), and checklists (- [ ]).",
+      "Keep answers clear and visually scannable. Avoid dumping one big block of text.",
+      "Do not include triple backticks unless explicitly asked for code."
     ].join(" ");
 
     // Optionally include readonly context for better suggestions
