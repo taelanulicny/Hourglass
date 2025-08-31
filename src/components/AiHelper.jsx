@@ -42,6 +42,11 @@ function AiHelper({ focusAreaId, focusContext }) {
     setHistory(next);
     setInput("");
     setLoading(true);
+    
+    // Add a temporary "thinking" message to show loading state in chat
+    const thinkingMessage = { role: "assistant", content: "Thinking...", isThinking: true };
+    setHistory(prev => [...prev, thinkingMessage]);
+    
     try {
       const res = await fetch("/api/ai", {
         method: "POST",
@@ -61,9 +66,12 @@ function AiHelper({ focusAreaId, focusContext }) {
       });
       const data = await res.json();
       const text = data?.text ?? "Sorry—couldn't generate a reply.";
-      setHistory(prev => [...prev, { role: "assistant", content: text }]);
+      
+      // Replace the thinking message with the actual response
+      setHistory(prev => prev.filter(msg => !msg.isThinking).concat({ role: "assistant", content: text }));
     } catch (e) {
-      setHistory(prev => [...prev, { role: "assistant", content: "Error. Try again." }]);
+      // Replace the thinking message with error message
+      setHistory(prev => prev.filter(msg => !msg.isThinking).concat({ role: "assistant", content: "Error. Try again." }));
     } finally {
       setLoading(false);
     }
@@ -81,8 +89,11 @@ function AiHelper({ focusAreaId, focusContext }) {
       
       <div className="ai-messages">
         {history.map((m, i) => (
-          <div key={i} className={m.role === "assistant" ? "msg assistant" : "msg user"}>
-            {m.content}
+          <div key={i} className={
+            m.isThinking ? "msg thinking" : 
+            m.role === "assistant" ? "msg assistant" : "msg user"
+          }>
+            {m.isThinking ? "Thinking" : m.content}
           </div>
         ))}
       </div>
@@ -93,7 +104,7 @@ function AiHelper({ focusAreaId, focusContext }) {
           placeholder={`Ask AI for advice about ${focusContext?.name ?? "this area"}…`}
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); send(); } }}
         />
-        <button onClick={send} disabled={loading}>{loading ? "Thinking…" : "Send"}</button>
+        <button onClick={send} disabled={loading}>Send</button>
       </div>
     </div>
   );

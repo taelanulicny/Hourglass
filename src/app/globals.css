@@ -120,6 +120,21 @@ body {
   @apply bg-[#8CA4AF] text-white ml-auto;
 }
 
+.ai-messages .msg.thinking {
+  @apply bg-gray-100 text-gray-500 italic;
+}
+
+.ai-messages .msg.thinking::after {
+  content: "...";
+  animation: thinking 1.5s infinite;
+}
+
+@keyframes thinking {
+  0%, 20% { content: "."; }
+  40% { content: ".."; }
+  60%, 100% { content: "..."; }
+}
+
 .ai-input {
   @apply relative;
 }
