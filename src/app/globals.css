@@ -174,5 +174,5 @@ body {
 }
 
 .ai-input button {
-  @apply absolute right-2 top-1/2 transform -translate-y-1/2 h-[36px] w-[36px] rounded-lg bg-[#8CA4AF] text-white flex items-center justify-center disabled:opacity-60 hover:bg-[#7A8F9A] transition-colors border-2 border-[#8CA4AF] hover:border-[#7A8F9A];
+  @apply absolute right-2 top-1/2 transform -translate-y-1/2 h-[36px] w-[36px] rounded-lg bg-[#8CA4AF] text-[#4E4034] flex items-center justify-center disabled:opacity-60 hover:bg-[#7A8F9A] transition-colors;
 }
