@@ -1,4 +1,8 @@
 import { useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
+import rehypeSanitize from "rehype-sanitize";
 
 function AiHelper({ focusAreaId, focusContext }) {
   // unique storage key per focus area
@@ -49,7 +53,11 @@ function AiHelper({ focusAreaId, focusContext }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           // only send THIS area's chat history
-          messages: next.map(m => ({ role: m.role, content: m.content })),
+          messages: [
+            // prepend a light "style hint" as the user's last message context
+            { role: "system", content: "Format with short sections, ### headings, numbered steps, and - [ ] checklists when helpful." },
+            ...next.map(m => ({ role: m.role, content: m.content }))
+          ],
           // readonly context for better advice
           focusContext: {
             id: focusAreaId,
@@ -84,7 +92,21 @@ function AiHelper({ focusAreaId, focusContext }) {
       <div className="ai-messages">
         {history.map((m, i) => (
           <div key={i} className={m.role === "assistant" ? "msg assistant" : "msg user"}>
-            {m.content}
+            {m.role === "assistant" ? (
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                rehypePlugins={[rehypeRaw, rehypeSanitize]}
+                components={{
+                  h1: (props) => <h3 {...props} />,  // down-weight headings for bubble
+                  h2: (props) => <h3 {...props} />,
+                  h3: (props) => <h4 {...props} />,
+                }}
+              >
+                {m.content}
+              </ReactMarkdown>
+            ) : (
+              m.content
+            )}
           </div>
         ))}
         {loading && (
