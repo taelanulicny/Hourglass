@@ -1,6 +1,105 @@
 "use client";
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import Link from "next/link";
+
+// --- Tab Components -----------------------------------------------------
+function FeedTab() { 
+  return (
+    <div className="space-y-4">
+      <FocusAreaPost
+        author="Jordan Lee"
+        handle="@jordan"
+        title="Run"
+        weekLabel="Aug 11–17"
+        color="#7EA2B7"
+        dailyGoalHrs={2}
+        dayRatios={[1, 1, 1, 1, 1, 1, 1]}
+      />
+
+      <FocusAreaPost
+        author="Chris Park"
+        handle="@chris"
+        title="Study"
+        weekLabel="Aug 11–17"
+        color="#B7A27E"
+        dailyGoalHrs={3}
+        dayRatios={[1, 1.3, 1, 0.5, 1, 1, 1]}
+      />
+    </div>
+  );
+}
+
+function ChallengesTab() { 
+  return (
+    <div className="space-y-4">
+      <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <h3 className="text-lg font-semibold mb-3">Active Challenges</h3>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+            <div>
+              <div className="font-medium">7-Day Study Streak</div>
+              <div className="text-sm text-gray-600">3 days remaining</div>
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-blue-600">4/7</div>
+              <div className="text-xs text-gray-500">days</div>
+            </div>
+          </div>
+          <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+            <div>
+              <div className="font-medium">Morning Routine</div>
+              <div className="text-sm text-gray-600">21-day challenge</div>
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-green-600">12/21</div>
+              <div className="text-xs text-gray-500">days</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ResourcesTab() { 
+  return (
+    <div className="space-y-4">
+      <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <h3 className="text-lg font-semibold mb-3">Focus Area Resources</h3>
+        <div className="space-y-3">
+          <div className="p-3 border border-gray-200 rounded-lg">
+            <div className="font-medium">LSAT Prep</div>
+            <div className="text-sm text-gray-600">Top YouTube channels, Discord groups, and shared templates</div>
+          </div>
+          <div className="p-3 border border-gray-200 rounded-lg">
+            <div className="font-medium">Fitness</div>
+            <div className="text-sm text-gray-600">Workout templates, recommended trackers, credible coaches</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TemplatesTab() { 
+  return (
+    <div className="space-y-4">
+      <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <h3 className="text-lg font-semibold mb-3">Popular Templates</h3>
+        <div className="space-y-3">
+          <div className="p-3 border border-gray-200 rounded-lg">
+            <div className="font-medium">3hr GRE Study Day</div>
+            <div className="text-sm text-gray-600">Optimized study schedule for GRE prep</div>
+          </div>
+          <div className="p-3 border border-gray-200 rounded-lg">
+            <div className="font-medium">Balanced Work/School Week</div>
+            <div className="text-sm text-gray-600">Perfect balance of work, study, and personal time</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // --- Tiny ring component -----------------------------------------------------
 function StoryRing({ percent = 0, label = "", tint = "#8CA4AF" }) {
@@ -197,6 +296,21 @@ export default function ConnectPage() {
   // --- TODO: replace with real “today” values from your store/localStorage ---
   const myToday = useMemo(() => ({ goalMins: 240, spentMins: 36, color: "#7EA2B7", name: "My Progress" }), []);
   const percentMine = useMemo(() => (myToday.goalMins ? (myToday.spentMins / myToday.goalMins) * 100 : 0), [myToday]);
+  
+  // --- Tab state ---
+  const [tab, setTab] = useState('Feed');
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  // close menu when clicking outside
+  useEffect(() => {
+    function onDocClick(e) {
+      if (!menuRef.current) return;
+      if (!menuRef.current.contains(e.target)) setOpen(false);
+    }
+    document.addEventListener('mousedown', onDocClick);
+    return () => document.removeEventListener('mousedown', onDocClick);
+  }, []);
 
   // Fake follows — later, fetch from /api/connect or local cache
   const follows = [
@@ -211,29 +325,53 @@ export default function ConnectPage() {
     <div className="min-h-screen bg-[#F7F6F3] text-[#4E4034] pb-36">
       {/* Header */}
       <header className="px-4 pt-4 pb-2 text-center">
-        <h1 className="text-xl font-semibold flex items-center justify-center gap-2">
-          Feed
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="w-4 h-4"
+        {/* ======= Page Title as Dropdown ======= */}
+        <div className="relative mb-3" ref={menuRef}>
+          <button
+            type="button"
+            aria-haspopup="listbox"
+            aria-expanded={open}
+            onClick={() => setOpen(v => !v)}
+            className="inline-flex items-center gap-2 text-2xl font-semibold hover:opacity-80 transition-opacity duration-150"
           >
-            <path d="m6 9 6 6 6-6"/>
-          </svg>
-        </h1>
+            <span>{tab}</span>
+            <svg
+              width="16" height="16" viewBox="0 0 20 20"
+              className={`transition-transform ${open ? 'rotate-180' : ''}`}
+            >
+              <path d="M5 7l5 5 5-5" fill="none" stroke="currentColor" strokeWidth="2"/>
+            </svg>
+          </button>
+
+          {open && (
+            <ul
+              role="listbox"
+              className="absolute z-10 mt-2 w-52 rounded-lg border bg-white shadow-md overflow-hidden"
+            >
+              {['Feed', 'Challenges', 'Resources', 'Templates'].filter(t => t !== tab).map((name) => (
+                <li key={name}>
+                  <button
+                    role="option"
+                    aria-selected={false}
+                    onClick={() => { setTab(name); setOpen(false); }}
+                    className="w-full text-left px-3 py-2 hover:bg-gray-100"
+                  >
+                    {name}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
         <p className="text-sm text-[#6A5E53]">See friends’ progress and discover templates & creators.</p>
       </header>
 
+
+
       {/* Stories rail */}
-      <section className="px-3">
+      <section className="px-3 -mt-2">
         <div
-          className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory"
+          className="flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory"
           style={{ WebkitOverflowScrolling: "touch" }}
           aria-label="Today progress stories"
         >
@@ -250,42 +388,15 @@ export default function ConnectPage() {
             </button>
           ))}
         </div>
-        <div className="h-px bg-gray-200 mx-1 mt-2" />
+        <div className="h-px bg-gray-200 mx-1 mt-1" />
       </section>
 
-      {/* Feed / Discover */}
-      <main className="px-4 mt-4 grid gap-4">
-        <FocusAreaPost
-          author="Jordan Lee"
-          handle="@jordan"
-          title="Run"
-          weekLabel="Aug 11–17"
-          color="#7EA2B7"
-          dailyGoalHrs={2}
-          dayRatios={[1, 1, 1, 1, 1, 1, 1]} // hit goal all 7 days
-        />
-
-        <FocusAreaPost
-          author="Chris Park"
-          handle="@chris"
-          title="Study"
-          weekLabel="Aug 11–17"
-          color="#B7A27E"
-          dailyGoalHrs={3}
-          dayRatios={[1, 1.3, 1, 0.5, 1, 1, 1]}
-        />
-
-        <FeedCard title="Student schedules trending" cta="Explore templates">
-          See top-voted daily/weekly schedules shared by students. Duplicate a template and make it yours.
-        </FeedCard>
-
-        <FeedCard title="Creators to follow" cta="See suggestions">
-          Discover coaches and creators sharing focus-area templates (LSAT, fitness, coding, design, etc.).
-        </FeedCard>
-
-        <FeedCard title="Challenges & streaks" cta="Join a challenge">
-          Join 7‑day or 21‑day focus challenges with your friends. Keep streaks alive together.
-        </FeedCard>
+      {/* Tab Content */}
+      <main className="px-4 mt-4">
+        {tab === 'Feed' && <FeedTab />}
+        {tab === 'Challenges' && <ChallengesTab />}
+        {tab === 'Resources' && <ResourcesTab />}
+        {tab === 'Templates' && <TemplatesTab />}
       </main>
 
       {/* Bottom nav (matches your style) */}
