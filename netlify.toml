@@ -1,5 +1,5 @@
 [build]
-  command = "npm run netlify-build"
+  command = "npm run build"
   publish = ".next"
 
 [build.environment]
@@ -8,25 +8,5 @@
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
-# API redirects for serverless functions
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/next"
-  status = 200
-
-# Handle Next.js routing - this should come after API redirects
-[[redirects]]
-  from = "/*"
-  to = "/.netlify/functions/next"
-  status = 200
-
-[[headers]]
-  for = "/sw.js"
-  [headers.values]
-  Cache-Control = "no-store, must-revalidate"
-
-# Optional: prevent over-caching of HTML during debugging
-[[headers]]
-  for = "/*.html"
-  [headers.values]
-  Cache-Control = "no-store"
+# Let the Next.js plugin handle all routing automatically
+# No manual redirects needed - the plugin knows how to route Next.js apps
