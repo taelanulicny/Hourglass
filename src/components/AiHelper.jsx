@@ -16,7 +16,7 @@ function AiHelper({ focusAreaId, focusContext }) {
 
   // --- NEW: ephemeral greeting shown on each open, NOT saved in history ---
   const [showGreeting, setShowGreeting] = useState(true);
-  const greetingText = `How can I help you in "${focusContext?.name ?? "this focus area"}" today?`;
+  const greetingText = `How can I help you in "${focusContext?.name ?? "this focus area"}" right now?`;
 
   // jump to bottom helper
   function scrollToBottom() {
