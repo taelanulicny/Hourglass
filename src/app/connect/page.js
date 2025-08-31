@@ -210,8 +210,23 @@ export default function ConnectPage() {
   return (
     <div className="min-h-screen bg-[#F7F6F3] text-[#4E4034] pb-36">
       {/* Header */}
-      <header className="px-4 pt-4 pb-2">
-        <h1 className="text-xl font-semibold">Connect</h1>
+      <header className="px-4 pt-4 pb-2 text-center">
+        <h1 className="text-xl font-semibold flex items-center justify-center gap-2">
+          Feed
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="w-4 h-4"
+          >
+            <path d="m6 9 6 6 6-6"/>
+          </svg>
+        </h1>
         <p className="text-sm text-[#6A5E53]">See friends’ progress and discover templates & creators.</p>
       </header>
 
@@ -293,9 +308,9 @@ export default function ConnectPage() {
             aria-current="page"
             disabled
         >
-          Connect
+          Discover
           </button>
-      </div>
+        </div>
       </nav>
     </div>
   );
