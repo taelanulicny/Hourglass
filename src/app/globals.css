@@ -106,6 +106,7 @@ body {
 
 .ai-messages {
   @apply max-h-[300px] overflow-y-auto mb-3 space-y-3;
+  scroll-behavior: smooth; /* nice smooth jump */
 }
 
 .ai-messages .msg {

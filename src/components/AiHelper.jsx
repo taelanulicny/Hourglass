@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
@@ -7,6 +7,7 @@ import rehypeSanitize from "rehype-sanitize";
 function AiHelper({ focusAreaId, focusContext }) {
   // unique storage key per focus area
   const STORAGE_KEY = `aiHistory:${focusAreaId}`;
+  const messagesRef = useRef(null);
 
   const defaultGreeting = {
     role: "assistant",
@@ -18,6 +19,24 @@ function AiHelper({ focusAreaId, focusContext }) {
   const [history, setHistory] = useState([defaultGreeting]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Helper to jump to bottom of the thread
+  function scrollToBottom() {
+    const el = messagesRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }
+
+  // On first load of a focus area, jump to bottom (so previous msgs are off-screen)
+  useEffect(() => {
+    // defer until DOM paints
+    const id = setTimeout(scrollToBottom, 0);
+    return () => clearTimeout(id);
+  }, [focusAreaId]);
+
+  // When new messages arrive (assistant/user), keep the view anchored at the bottom
+  useEffect(() => {
+    scrollToBottom();
+  }, [history]);
 
   useEffect(() => {
     try {
@@ -89,7 +108,7 @@ function AiHelper({ focusAreaId, focusContext }) {
         <div className="ai-subtitle">Get personalized advice for "{focusContext?.name ?? "this focus area"}"</div>
       </div>
       
-      <div className="ai-messages">
+      <div className="ai-messages" ref={messagesRef}>
         {history.map((m, i) => (
           <div key={i} className={m.role === "assistant" ? "msg assistant" : "msg user"}>
             {m.role === "assistant" ? (
