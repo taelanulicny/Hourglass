@@ -866,7 +866,7 @@ function CalendarContent() {
   return (
     <div className="min-h-screen bg-white text-[#4E4034] pb-24">
       {/* Top bar */}
-      <header className="sticky top-0 bg-[#F7F6F3] px-4 py-3 shadow-sm z-10 flex items-center justify-between">
+      <header className="sticky top-0 bg-[#F7F6F3] px-4 py-3 shadow-sm z-30 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <button 
             className="text-lg px-2" 
