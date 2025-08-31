@@ -82,8 +82,27 @@ function AiHelper({ focusAreaId, focusContext }) {
 
   // persist this focus area's history only under its own key
   useEffect(() => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(history)); } catch {}
-  }, [STORAGE_KEY, history]);
+    // Only save if we have actual conversation content (not just default greeting)
+    if (history.length > 1 || (history.length === 1 && history[0].content !== defaultGreeting.content)) {
+      try { 
+        console.log(`Saving ${history.length} messages for ${focusAreaId}:`, history);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(history)); 
+      } catch (error) {
+        console.warn('Error saving chat history:', error);
+      }
+    } else {
+      console.log(`Not saving - only default greeting for ${focusAreaId}`);
+    }
+  }, [STORAGE_KEY, history, focusAreaId]);
+
+  // Debug function to check localStorage (remove in production)
+  const debugLocalStorage = () => {
+    console.log('=== LocalStorage Debug ===');
+    console.log('Current STORAGE_KEY:', STORAGE_KEY);
+    console.log('Current history:', history);
+    console.log('Stored data:', localStorage.getItem(STORAGE_KEY));
+    console.log('All localStorage keys:', Object.keys(localStorage).filter(key => key.startsWith('aiHistory:')));
+  };
 
   async function send() {
     if (!input.trim() || loading) return;
@@ -132,6 +151,13 @@ function AiHelper({ focusAreaId, focusContext }) {
           <span className="ai-text">Focus Area Specific AI Assistant</span>
         </div>
         <div className="ai-subtitle">Get personalized advice for "{focusContext?.name ?? "this focus area"}"</div>
+        {/* Debug button - remove in production */}
+        <button 
+          onClick={debugLocalStorage}
+          className="text-xs text-gray-500 hover:text-gray-700 mt-1"
+        >
+          Debug localStorage
+        </button>
       </div>
       
       <div className="ai-messages" ref={messagesRef}>
