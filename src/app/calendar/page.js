@@ -539,16 +539,24 @@ function CalendarContent() {
     stripRef.current.scrollTo({ left, top: 0, behavior: "auto" });
   }, [selectedDate, stripDays]);
 
-  // Scroll focus rings to beginning when focus areas change
+  // Center focus rings when focus areas change
   useEffect(() => {
     if (focusRingsRef.current && focusAreas.length > 0) {
-      // Scroll to the beginning to ensure leftmost ring is visible
-      focusRingsRef.current.scrollTo({ left: 0, top: 0, behavior: "auto" });
+      // Calculate the center position to center the rings
+      const containerWidth = focusRingsRef.current.clientWidth;
+      const contentWidth = focusRingsRef.current.scrollWidth;
+      const scrollLeft = Math.max(0, (contentWidth - containerWidth) / 2);
       
-      // Also try scrolling after a short delay to ensure DOM is fully rendered
+      // Center the rings
+      focusRingsRef.current.scrollTo({ left: scrollLeft, top: 0, behavior: "auto" });
+      
+      // Also try centering after a short delay to ensure DOM is fully rendered
       setTimeout(() => {
         if (focusRingsRef.current) {
-          focusRingsRef.current.scrollTo({ left: 0, top: 0, behavior: "auto" });
+          const updatedContainerWidth = focusRingsRef.current.clientWidth;
+          const updatedContentWidth = focusRingsRef.current.scrollWidth;
+          const updatedScrollLeft = Math.max(0, (updatedContentWidth - updatedContainerWidth) / 2);
+          focusRingsRef.current.scrollTo({ left: updatedScrollLeft, top: 0, behavior: "auto" });
         }
       }, 100);
     }
@@ -1079,7 +1087,7 @@ function CalendarContent() {
         <div className="absolute right-0 top-1/2 -translate-y-1/2 w-6 h-6 bg-gradient-to-l from-white to-transparent pointer-events-none z-10" />
         
         <div ref={focusRingsRef} className="flex flex-row gap-2 px-4 pointer-events-none select-none mt-8 mb-6 overflow-x-auto scroll-smooth scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300">
-          <div className="flex flex-row gap-2 min-w-max px-2 justify-center">
+          <div className="flex flex-row gap-2 min-w-max px-2 justify-center" style={{ margin: '0 auto' }}>
         {[...focusAreas].reverse().map(({ label, timeSpent, goal, days, color }, index) => {
           // Day-aware calculations using TODAY's logged time from `days`
           const todayAbbrev = DAYS[new Date().getDay()];
