@@ -23,20 +23,46 @@ function AiHelper({ focusAreaId, focusContext }) {
   // Helper to jump to bottom of the thread
   function scrollToBottom() {
     const el = messagesRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (el) {
+      // Use requestAnimationFrame to ensure DOM is fully rendered
+      requestAnimationFrame(() => {
+        el.scrollTop = el.scrollHeight;
+      });
+    }
   }
 
   // On first load of a focus area, jump to bottom (so previous msgs are off-screen)
   useEffect(() => {
-    // defer until DOM paints
-    const id = setTimeout(scrollToBottom, 0);
-    return () => clearTimeout(id);
+    // Use multiple timeouts to ensure it works even with slower rendering
+    const id1 = setTimeout(scrollToBottom, 0);
+    const id2 = setTimeout(scrollToBottom, 100);
+    const id3 = setTimeout(scrollToBottom, 500);
+    
+    return () => {
+      clearTimeout(id1);
+      clearTimeout(id2);
+      clearTimeout(id3);
+    };
   }, [focusAreaId]);
 
   // When new messages arrive (assistant/user), keep the view anchored at the bottom
   useEffect(() => {
-    scrollToBottom();
+    // Small delay to ensure the new message is rendered
+    const id = setTimeout(scrollToBottom, 50);
+    return () => clearTimeout(id);
   }, [history]);
+
+  // Additional effect to ensure scroll to bottom after component mounts
+  useEffect(() => {
+    // Force scroll to bottom after everything is rendered
+    const id = setTimeout(() => {
+      scrollToBottom();
+      // Double-check scroll position
+      setTimeout(scrollToBottom, 100);
+    }, 200);
+    
+    return () => clearTimeout(id);
+  }, []); // Run only once on mount
 
   useEffect(() => {
     try {
