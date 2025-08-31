@@ -9,14 +9,14 @@ function AiHelper({ focusAreaId, focusContext }) {
   const STORAGE_KEY = `aiHistory:${focusAreaId}`;
   const messagesRef = useRef(null);
 
-  const defaultGreeting = {
+  // Helper to get the current greeting based on focus context
+  const getGreeting = () => ({
     role: "assistant",
-    content:
-      `Hi! I'm your AI assistant. How can I help you in "${focusContext?.name ?? "this focus area"}" today?`
-  };
+    content: `Hi! I'm your AI assistant. How can I help you in "${focusContext?.name ?? "this focus area"}" today?`
+  });
 
   // load per-area history on mount / focusAreaId change
-  const [history, setHistory] = useState([defaultGreeting]);
+  const [history, setHistory] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -69,21 +69,27 @@ function AiHelper({ focusAreaId, focusContext }) {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length) {
-          setHistory(parsed);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Check if the first message is a greeting and update it if needed
+          let updatedHistory = parsed;
+          if (parsed[0]?.role === "assistant" && parsed[0]?.content.includes("Hi! I'm your AI assistant")) {
+            // Update the greeting to use current focus area name
+            updatedHistory = [getGreeting(), ...parsed.slice(1)];
+          }
+          setHistory(updatedHistory);
           return;
         }
       }
     } catch {}
     // if nothing stored, start fresh for this focus area
-    setHistory([defaultGreeting]);
+    setHistory([getGreeting()]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [focusAreaId]); // <- critical: change history when switching areas
+  }, [focusAreaId, focusContext?.name]); // <- also depend on focusContext.name
 
   // persist this focus area's history only under its own key
   useEffect(() => {
     // Only save if we have actual conversation content (not just default greeting)
-    if (history.length > 1 || (history.length === 1 && history[0].content !== defaultGreeting.content)) {
+    if (history.length > 1 || (history.length === 1 && history[0].content !== getGreeting().content)) {
       try { 
         console.log(`Saving ${history.length} messages for ${focusAreaId}:`, history);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(history)); 
@@ -93,7 +99,7 @@ function AiHelper({ focusAreaId, focusContext }) {
     } else {
       console.log(`Not saving - only default greeting for ${focusAreaId}`);
     }
-  }, [STORAGE_KEY, history, focusAreaId]);
+  }, [STORAGE_KEY, history, focusAreaId, focusContext?.name]);
 
   // Debug function to check localStorage (remove in production)
   const debugLocalStorage = () => {
