@@ -14,10 +14,10 @@
   to = "/.netlify/functions/next"
   status = 200
 
-# Handle Next.js routing
+# Handle Next.js routing - this should come after API redirects
 [[redirects]]
   from = "/*"
-  to = "/index.html"
+  to = "/.netlify/functions/next"
   status = 200
 
 [[headers]]

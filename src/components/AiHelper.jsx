@@ -48,10 +48,7 @@ function AiHelper({ focusAreaId, focusContext }) {
     setLoading(true);
     
     try {
-      // Use dynamic API URL that works both locally and on Netlify
-      const apiUrl = window.location.origin + '/api/ai';
-        
-      const res = await fetch(apiUrl, {
+      const res = await fetch('/api/ai', {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
