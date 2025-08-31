@@ -9,60 +9,33 @@ function AiHelper({ focusAreaId, focusContext }) {
   const STORAGE_KEY = `aiHistory:${focusAreaId}`;
   const messagesRef = useRef(null);
 
-  // Helper to get the current greeting based on focus context
-  const getGreeting = () => ({
-    role: "assistant",
-    content: `Hi! I'm your AI assistant. How can I help you in "${focusContext?.name ?? "this focus area"}" today?`
-  });
-
-  // load per-area history on mount / focusAreaId change
-  const [history, setHistory] = useState([]);
+  // your existing state:
+  const [history, setHistory] = useState([]);   // per-area chat history (already keyed per area)
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Helper to jump to bottom of the thread
+  // --- NEW: ephemeral greeting shown on each open, NOT saved in history ---
+  const [showGreeting, setShowGreeting] = useState(true);
+  const greetingText = `How can I help you in "${focusContext?.name ?? "this focus area"}" today?`;
+
+  // jump to bottom helper
   function scrollToBottom() {
     const el = messagesRef.current;
-    if (el) {
-      // Use requestAnimationFrame to ensure DOM is fully rendered
-      requestAnimationFrame(() => {
-        el.scrollTop = el.scrollHeight;
-      });
-    }
+    if (el) el.scrollTop = el.scrollHeight;
   }
 
-  // On first load of a focus area, jump to bottom (so previous msgs are off-screen)
+  // When switching focus areas: show greeting again and jump to bottom
   useEffect(() => {
-    // Use multiple timeouts to ensure it works even with slower rendering
-    const id1 = setTimeout(scrollToBottom, 0);
-    const id2 = setTimeout(scrollToBottom, 100);
-    const id3 = setTimeout(scrollToBottom, 500);
-    
-    return () => {
-      clearTimeout(id1);
-      clearTimeout(id2);
-      clearTimeout(id3);
-    };
+    setShowGreeting(true);       // show greeting every time you open a focus area
+    // defer scroll until content paints
+    const id = setTimeout(scrollToBottom, 0);
+    return () => clearTimeout(id);
   }, [focusAreaId]);
 
-  // When new messages arrive (assistant/user), keep the view anchored at the bottom
+  // Also scroll when history changes (new messages)
   useEffect(() => {
-    // Small delay to ensure the new message is rendered
-    const id = setTimeout(scrollToBottom, 50);
-    return () => clearTimeout(id);
-  }, [history]);
-
-  // Additional effect to ensure scroll to bottom after component mounts
-  useEffect(() => {
-    // Force scroll to bottom after everything is rendered
-    const id = setTimeout(() => {
-      scrollToBottom();
-      // Double-check scroll position
-      setTimeout(scrollToBottom, 100);
-    }, 200);
-    
-    return () => clearTimeout(id);
-  }, []); // Run only once on mount
+    scrollToBottom();
+  }, [history, loading, showGreeting]);
 
   useEffect(() => {
     try {
@@ -70,26 +43,20 @@ function AiHelper({ focusAreaId, focusContext }) {
       if (raw) {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Check if the first message is a greeting and update it if needed
-          let updatedHistory = parsed;
-          if (parsed[0]?.role === "assistant" && parsed[0]?.content.includes("Hi! I'm your AI assistant")) {
-            // Update the greeting to use current focus area name
-            updatedHistory = [getGreeting(), ...parsed.slice(1)];
-          }
-          setHistory(updatedHistory);
+          setHistory(parsed);
           return;
         }
       }
     } catch {}
     // if nothing stored, start fresh for this focus area
-    setHistory([getGreeting()]);
+    setHistory([]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [focusAreaId, focusContext?.name]); // <- also depend on focusContext.name
+  }, [focusAreaId]); // <- critical: change history when switching areas
 
   // persist this focus area's history only under its own key
   useEffect(() => {
-    // Only save if we have actual conversation content (not just default greeting)
-    if (history.length > 1 || (history.length === 1 && history[0].content !== getGreeting().content)) {
+    // Only save if we have actual conversation content
+    if (history.length > 0) {
       try { 
         console.log(`Saving ${history.length} messages for ${focusAreaId}:`, history);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(history)); 
@@ -97,9 +64,9 @@ function AiHelper({ focusAreaId, focusContext }) {
         console.warn('Error saving chat history:', error);
       }
     } else {
-      console.log(`Not saving - only default greeting for ${focusAreaId}`);
+      console.log(`Not saving - no conversation content for ${focusAreaId}`);
     }
-  }, [STORAGE_KEY, history, focusAreaId, focusContext?.name]);
+  }, [STORAGE_KEY, history, focusAreaId]);
 
   // Debug function to check localStorage (remove in production)
   const debugLocalStorage = () => {
@@ -112,40 +79,30 @@ function AiHelper({ focusAreaId, focusContext }) {
 
   async function send() {
     if (!input.trim() || loading) return;
-    const next = [...history, { role: "user", content: input.trim() }];
-    setHistory(next);
+    const nextHistory = [...history, { role: "user", content: input.trim() }];
+    setHistory(nextHistory);
     setInput("");
     setLoading(true);
-    
     try {
-      const res = await fetch('/api/ai', {
+      const res = await fetch("/api/ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          // only send THIS area's chat history
-          messages: [
-            // prepend a light "style hint" as the user's last message context
-            { role: "system", content: "Format with ### headings, bullet lists (- item), numbered steps (1.), and checklists (- [ ]). Keep it scannable." },
-            ...next.map(m => ({ role: m.role, content: m.content }))
-          ],
-          // readonly context for better advice
-          focusContext: {
-            id: focusAreaId,
-            name: focusContext?.name,
-            goal: focusContext?.goal,
-            weekLogged: focusContext?.weekLogged,
-            leftToday: focusContext?.leftToday
-          }
+          messages: nextHistory.map(m => ({ role: m.role, content: m.content })),
+          focusContext
         })
       });
-      const data = await res.json();
-      const text = data?.text ?? "Sorry—couldn't generate a reply.";
-      
-      setHistory(prev => [...prev, { role: "assistant", content: text }]);
-    } catch (e) {
-      setHistory(prev => [...prev, { role: "assistant", content: "Error. Try again." }]);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setHistory(prev => [...prev, { role: "assistant", content: `Sorry—${data?.error || `Server error ${res.status}`}` }]);
+      } else {
+        setHistory(prev => [...prev, { role: "assistant", content: data.text || "…" }]);
+      }
+    } catch {
+      setHistory(prev => [...prev, { role: "assistant", content: "Sorry—there was an error. Try again." }]);
     } finally {
       setLoading(false);
+      setShowGreeting(false); // hide the ephemeral greeting after first send
     }
   }
 
@@ -166,7 +123,12 @@ function AiHelper({ focusAreaId, focusContext }) {
         </button>
       </div>
       
-      <div className="ai-messages" ref={messagesRef}>
+      <div
+        ref={messagesRef}
+        className="ai-messages"
+        style={{ maxHeight: 320, overflowY: "auto", display: "flex", flexDirection: "column", gap: 6 }}
+      >
+        {/* Render saved conversation */}
         {history.map((m, i) => (
           <div key={i} className={m.role === "assistant" ? "msg assistant" : "msg user"}>
             {m.role === "assistant" ? (
@@ -190,18 +152,23 @@ function AiHelper({ focusAreaId, focusContext }) {
             )}
           </div>
         ))}
-        {loading && (
-          <div className="msg assistant typing-indicator">
-            Thinking…
+
+        {/* Ephemeral greeting bubble (not saved) shows on every open */}
+        {showGreeting && (
+          <div className="msg assistant greeting">
+            {greetingText}
           </div>
         )}
+
+        {/* Optional typing indicator */}
+        {loading && <div className="msg assistant typing-indicator">Thinking…</div>}
       </div>
       
       <div className="ai-input">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={`Ask AI for advice about ${focusContext?.name ?? "this area"}…`}
+          placeholder={`Ask for advice about ${focusContext?.name ?? "this area"}…`}
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); send(); } }}
         />
         <button onClick={send} disabled={loading}>Send</button>

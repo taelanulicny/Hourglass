@@ -133,6 +133,11 @@ body {
   animation: dots 1s steps(5, end) infinite;
 }
 
+/* Ephemeral greeting styling */
+.msg.assistant.greeting { 
+  opacity: 0.9; 
+}
+
 @keyframes dots {
   0%, 20% { content: ''; }
   40% { content: '.'; }
