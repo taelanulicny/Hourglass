@@ -327,8 +327,11 @@ export default function ConnectPage() {
     <div className="min-h-screen bg-[#F7F6F3] text-[#4E4034] pb-36">
       {/* Header */}
       <header className="px-4 py-3">
-        <div className="flex items-center justify-between mb-3">
-          {/* Left: Title dropdown */}
+        <div className="flex items-center justify-between mb-2">
+          {/* Left: Empty space */}
+          <div className="w-10 h-10"></div>
+
+          {/* Center: Title dropdown */}
           <div className="relative" ref={menuRef}>
             <button
               type="button"
@@ -348,7 +351,7 @@ export default function ConnectPage() {
             {open && (
               <ul
                 role="listbox"
-                className="absolute z-10 mt-2 w-40 rounded-lg border bg-white shadow-md"
+                className="absolute z-10 mt-2 w-40 rounded-lg border bg-white shadow-md left-1/2 transform -translate-x-1/2"
               >
                 {['Feed', 'Challenges', 'Resources', 'Templates'].filter(t => t !== tab).map((name) => (
                   <li key={name}>
@@ -381,37 +384,45 @@ export default function ConnectPage() {
               strokeLinejoin="round"
               className="w-5 h-5"
             >
-              <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
-              <circle cx="12" cy="12" r="3" />
+              <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z" />
             </svg>
           </button>
         </div>
-        <p className="text-sm text-[#6A5E53]">See friends' progress and discover templates & creators.</p>
+
+        {/* Subtitle */}
+        <p className="text-sm text-gray-500 mb-2 text-center">
+          See friends' progress and discover templates & creators.
+        </p>
+
+        {/* Divider line right under subtitle */}
+        <hr className="border-gray-200 mb-3" />
       </header>
 
-
-
       {/* Stories rail */}
-      <section className="px-3 -mt-2">
-        <div
-          className="flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory"
-          style={{ WebkitOverflowScrolling: "touch" }}
-          aria-label="Today progress stories"
-        >
-          <StoryRing percent={percentMine} label="My Progress" tint={myToday.color} />
-          {follows.map((f, i) => (
-            <button
-              key={i}
-              className="appearance-none bg-transparent p-0 m-0"
-              title={`${f.name} • ${Math.round(f.percent)}% today`}
-              // TODO: later route to /u/[handle] if public
-              onClick={() => {}}
-            >
-              <StoryRing percent={f.percent} label={f.name} tint={f.color} />
-            </button>
-          ))}
+      <section aria-label="Close friends" className="mb-4 px-3">
+        <div className="rounded-xl border border-gray-200 bg-white px-3 py-3">
+          {/* Module title */}
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">
+            Close Friends
+          </h3>
+
+          {/* Rings row */}
+          <div className="flex items-center gap-4 overflow-x-auto no-scrollbar py-1">
+            <StoryRing percent={percentMine} label="My Progress" tint={myToday.color} />
+            {follows.map((f, i) => (
+              <button
+                key={i}
+                className="appearance-none bg-transparent p-0 m-0"
+                title={`${f.name} • ${Math.round(f.percent)}% today`}
+                // TODO: later route to /u/[handle] if public
+                onClick={() => {}}
+              >
+                <StoryRing percent={f.percent} label={f.name} tint={f.color} />
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="h-px bg-gray-200 mx-1 mt-1" />
       </section>
 
       {/* Tab Content */}
@@ -446,6 +457,12 @@ export default function ConnectPage() {
           </button>
         </div>
       </nav>
+
+      {/* No-scrollbar utility styles */}
+      <style jsx global>{`
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
     </div>
   );
 }
