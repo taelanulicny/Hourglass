@@ -250,7 +250,7 @@ function HomeContent() {
     const end = new Date(startOfWeek);
     end.setDate(startOfWeek.getDate() + 6); // Sunday
     end.setHours(23, 59, 59, 999); // end of day for safe comparisons
-    return startOfWeek;
+    return end;
   }, [startOfWeek]);
   const formatDate = (date) =>
     date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
@@ -2027,7 +2027,7 @@ function HomeContent() {
               {isNextWeek && (
                 <div className="mb-2" aria-hidden="true" role="presentation">
                   <div className="w-full rounded-xl bg-[#8CA4AF] text-white py-3 text-center font-medium shadow-sm select-none">
-                    Plan next week&apos;s Focus Areas
+                    Continue working on last week&apos;s focus areas
                   </div>
                 </div>
               )}

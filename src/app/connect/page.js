@@ -6,9 +6,9 @@ import { useRouter } from "next/navigation";
 // --- Tab Components -----------------------------------------------------
 function FeedTab() { 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       {/* Close Friends section */}
-      <section aria-label="Close friends" className="mb-4">
+      <section aria-label="Close friends" className="mb-2">
         <div className="rounded-xl border border-gray-200 bg-white px-3 py-3">
           {/* Module title */}
           <h3 className="text-sm font-semibold text-gray-700 mb-2">
@@ -18,7 +18,7 @@ function FeedTab() {
           {/* Rings row */}
           <div className="flex items-center gap-4 overflow-x-auto no-scrollbar py-1">
             <StoryRing percent={15} label="My Progress" tint="#7EA2B7" />
-            <StoryRing percent={12} label="Noah R." tint="#7EA2B7" />
+            <StoryRing percent={12} label="Ryan S." tint="#7EA2B7" />
             <StoryRing percent={15} label="Ava M." tint="#7EA2B7" />
             <StoryRing percent={12} label="Noah R." tint="#7EA2B7" />
             <StoryRing percent={34} label="Sam T." tint="#7EA2B7" />
@@ -45,6 +45,8 @@ function FeedTab() {
         dailyGoalHrs={3}
         dayRatios={[1, 1.3, 1, 0.5, 1, 1, 1]}
       />
+
+      <FocusAreaSlideshowPost />
     </div>
   );
 }
@@ -386,6 +388,201 @@ function FocusAreaPost({
                 const isOver = ratio > 1;
                 return (
                   <WeeklyBar key={day} day={day} ratio={ratio} isOver={isOver} />
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="mt-3 flex items-center gap-3 text-sm">
+        <button className="px-3 py-1.5 rounded-lg border border-[#4E4034] text-[#4E4034]">Like</button>
+        <button className="px-3 py-1.5 rounded-lg border border-[#4E4034] text-[#4E4034]">Comment</button>
+        <button className="ml-auto px-3 py-1.5 rounded-lg border border-[#4E4034] text-[#4E4034]">Duplicate</button>
+      </div>
+    </article>
+  );
+}
+
+// --- Instagram-style Slideshow Post with multiple focus areas ---
+function FocusAreaSlideshowPost({
+  author = "Sarah Chen",
+  handle = "@sarah",
+  weekLabel = "Aug 11–17",
+  focusAreas = [
+    {
+      title: "Study",
+      color: "#7EA2B7",
+      dailyGoalHrs: 4,
+      dayRatios: [1, 1, 0.8, 1, 1, 0.5, 1]
+    },
+    {
+      title: "Workout",
+      color: "#B7A27E",
+      dailyGoalHrs: 1,
+      dayRatios: [1, 1, 1, 0, 1, 1, 0.8]
+    },
+    {
+      title: "Reading",
+      color: "#A27EB7",
+      dailyGoalHrs: 1,
+      dayRatios: [0.5, 1, 0.8, 1, 0.6, 1, 1]
+    }
+  ]
+}) {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  
+  // Helper function to convert hex to rgba (matching dashboard)
+  const hexToRGBA = (hex, alpha = 0.4) => {
+    if (!hex) return `rgba(140, 164, 175, ${alpha})`;
+    let h = hex.trim();
+    if (h[0] === '#') h = h.slice(1);
+    if (h.length === 3) h = h.split('').map(ch => ch + ch).join('');
+    const num = parseInt(h, 16);
+    const r = (num >> 16) & 255;
+    const g = (num >> 8) & 255;
+    const b = num & 255;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+
+  // Weekly bar component (exact match to dashboard styling)
+  const WeeklyBar = ({ ratio = 0, day, isOver = false, color }) => {
+    const bottomFraction = 14 / 21;
+    const pct = Math.min(Math.max(ratio, 0), 1);
+    
+    return (
+      <div className="relative flex flex-col items-center">
+        <div className="relative w-5 h-20 flex flex-col items-center justify-end">
+          <div className="absolute bottom-0 w-full h-full flex flex-col justify-end">
+            <div
+              className="w-full h-6 rounded-t-sm border border-[#EAECEC] bg-[#DDE5ED]"
+              style={{ backgroundColor: isOver ? color : '#DDE5ED' }}
+            />
+            <div className="h-1" />
+            <div className="w-full h-14 rounded-b-sm border border-[#EAECEC] bg-[#DDE5ED]" />
+          </div>
+          <div
+            className="absolute bottom-0 w-full rounded-b-sm"
+            style={{
+              height: `${pct * bottomFraction * 100}%`,
+              backgroundColor: hexToRGBA(color, 0.4)
+            }}
+          />
+        </div>
+        <div className="text-xs text-[#4E4034] text-center mt-1">{day}</div>
+        <div className="h-[10px] mt-1" />
+      </div>
+    );
+  };
+
+  const currentFocusArea = focusAreas[currentSlide];
+  const percent = Math.round((currentFocusArea.dayRatios.reduce((a, b) => a + (b >= 1 ? 1 : 0), 0) / 7) * 100);
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % focusAreas.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + focusAreas.length) % focusAreas.length);
+  };
+
+  return (
+    <article className="rounded-xl border border-gray-200 bg-white shadow-sm p-4">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-[#ECEAE6] grid place-items-center text-sm font-semibold text-[#4E4034]">
+            {author.split(" ").map(s => s[0]).join("").slice(0, 2)}
+          </div>
+          <div>
+            <div className="text-sm font-semibold text-[#4E4034]">{author} <span className="text-[#6A5E53] font-normal">{handle}</span></div>
+            <div className="text-xs text-[#6A5E53]">Shared {focusAreas.length} Focus Areas • {weekLabel}</div>
+          </div>
+        </div>
+        <button className="text-xs px-2 py-1 rounded-lg border border-[#4E4034]">Follow</button>
+      </div>
+
+      {/* Slideshow container */}
+      <div className="relative rounded-xl bg-[#F7F6F3] p-3 overflow-hidden">
+        {/* Slide indicators */}
+        <div className="absolute top-2 right-2 z-10 flex gap-1">
+          {focusAreas.map((_, index) => (
+            <div
+              key={index}
+              className={`w-2 h-2 rounded-full ${
+                index === currentSlide ? 'bg-[#4E4034]' : 'bg-gray-300'
+              }`}
+            />
+          ))}
+        </div>
+
+        {/* Navigation arrows */}
+        {focusAreas.length > 1 && (
+          <>
+            <button
+              onClick={prevSlide}
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-sm hover:bg-white transition-colors"
+            >
+              <svg className="w-4 h-4 text-[#4E4034]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <button
+              onClick={nextSlide}
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-sm hover:bg-white transition-colors"
+            >
+              <svg className="w-4 h-4 text-[#4E4034]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </>
+        )}
+
+        {/* Focus area content */}
+        <div className="flex gap-4 items-center">
+          <div className="flex flex-col items-center w-28">
+            <div className="text-sm font-semibold text-[#4E4034] text-center mb-1">{currentFocusArea.title}</div>
+            <div className="relative w-20 h-20">
+              <svg className="w-full h-full" viewBox="0 0 36 36">
+                <path
+                  className="text-gray-300"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  fill="none"
+                  d="M18 2.0845
+                        a 15.9155 15.9155 0 0 1 0 31.831
+                        a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+                <path
+                  stroke={hexToRGBA(currentFocusArea.color, 0.55)}
+                  strokeWidth="3"
+                  strokeDasharray={`${percent}, 100`}
+                  strokeLinecap="round"
+                  fill="none"
+                  transform="rotate(-90 18 18)"
+                  d="M18 2.0845
+                        a 15.9155 15.9155 0 0 1 0 31.831
+                        a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-xs font-bold text-[#4E4034] leading-tight">
+                <div className="text-sm">{percent}%</div>
+                <div className="text-[10px] uppercase text-gray-500">week</div>
+              </div>
+            </div>
+            <div className="text-xs text-gray-500 text-center mt-1">
+              Daily Goal = {currentFocusArea.dailyGoalHrs}hrs
+            </div>
+          </div>
+
+          <div className="flex-1 flex flex-col w-full">
+            <div className="flex justify-between items-end flex-1 mt-2 w-full px-2 py-2">
+              {["M", "Tu", "W", "Th", "F", "Sa", "Su"].map((day, i) => {
+                const ratio = currentFocusArea.dayRatios[i] || 0;
+                const isOver = ratio > 1;
+                return (
+                  <WeeklyBar key={day} day={day} ratio={ratio} isOver={isOver} color={currentFocusArea.color} />
                 );
               })}
             </div>
