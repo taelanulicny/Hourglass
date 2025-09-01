@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 
 export default function SettingsPage() {
   const router = useRouter();
-  const [userName, setUserName] = useState('taelanulicny');
+  const [userName, setUserName] = useState('Your Name');
   const [defaultGoal, setDefaultGoal] = useState('8');
   const [miscHours, setMiscHours] = useState('0');
   const [timeFormat, setTimeFormat] = useState('12');
