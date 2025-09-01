@@ -192,30 +192,7 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        {/* Hourglass Function Section */}
-        <section className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-900">Hourglass Function</h2>
-          </div>
-          <div className="p-6">
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-[#8CA4AF] rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <div className="font-medium text-gray-900">Enable Hourglass</div>
-                  <div className="text-sm text-gray-600">Visual countdown timer for focus sessions</div>
-                </div>
-              </div>
-              <div className="w-12 h-6 bg-gray-300 rounded-full relative cursor-not-allowed opacity-50">
-                <div className="w-5 h-5 bg-white rounded-full absolute top-0.5 left-0.5 shadow-sm"></div>
-              </div>
-            </div>
-          </div>
-        </section>
+
 
         {/* Data Management Section */}
         <section className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">

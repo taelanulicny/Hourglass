@@ -2118,7 +2118,7 @@ function HomeContent() {
       </div>
     </div>
     {/* Bottom navigation: Dashboard | Calendar | Discover */}
-    <div className="fixed bottom-0 left-0 right-0 p-3 pb-7 z-50">
+    <div className="fixed bottom-0 left-0 right-0 p-3 pb-7 z-[9999] bg-white">
       <div className="max-w-md mx-auto grid grid-cols-3 gap-3">
         <button
           className="h-12 w-full rounded-2xl bg-gray-900 text-white font-semibold shadow-lg"
