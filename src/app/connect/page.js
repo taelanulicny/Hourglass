@@ -1,6 +1,7 @@
 "use client";
 import React, { useMemo, useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 // --- Tab Components -----------------------------------------------------
 function FeedTab() { 
@@ -301,6 +302,7 @@ export default function ConnectPage() {
   const [tab, setTab] = useState('Feed');
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
+  const router = useRouter();
 
   // close menu when clicking outside
   useEffect(() => {
@@ -324,46 +326,67 @@ export default function ConnectPage() {
   return (
     <div className="min-h-screen bg-[#F7F6F3] text-[#4E4034] pb-36">
       {/* Header */}
-      <header className="px-4 pt-4 pb-2 text-center">
-        {/* ======= Page Title as Dropdown ======= */}
-        <div className="relative mb-3" ref={menuRef}>
-          <button
-            type="button"
-            aria-haspopup="listbox"
-            aria-expanded={open}
-            onClick={() => setOpen(v => !v)}
-            className="inline-flex items-center gap-2 text-2xl font-semibold hover:opacity-80 transition-opacity duration-150"
-          >
-            <span>{tab}</span>
-            <svg
-              width="16" height="16" viewBox="0 0 20 20"
-              className={`transition-transform ${open ? 'rotate-180' : ''}`}
+      <header className="px-4 py-3">
+        <div className="flex items-center justify-between mb-3">
+          {/* Left: Title dropdown */}
+          <div className="relative" ref={menuRef}>
+            <button
+              type="button"
+              aria-haspopup="listbox"
+              aria-expanded={open}
+              onClick={() => setOpen(v => !v)}
+              className="inline-flex items-center gap-2 text-lg font-semibold"
             >
-              <path d="M5 7l5 5 5-5" fill="none" stroke="currentColor" strokeWidth="2"/>
+              <span>{tab}</span>
+              <svg
+                width="16" height="16" viewBox="0 0 20 20"
+                className={`transition-transform ${open ? 'rotate-180' : ''}`}
+              >
+                <path d="M5 7l5 5 5-5" fill="none" stroke="currentColor" strokeWidth="2"/>
+              </svg>
+            </button>
+            {open && (
+              <ul
+                role="listbox"
+                className="absolute z-10 mt-2 w-40 rounded-lg border bg-white shadow-md"
+              >
+                {['Feed', 'Challenges', 'Resources', 'Templates'].filter(t => t !== tab).map((name) => (
+                  <li key={name}>
+                    <button
+                      onClick={() => { setTab(name); setOpen(false); }}
+                      className="w-full text-left px-3 py-2 hover:bg-gray-100"
+                    >
+                      {name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* Right: Settings button */}
+          <button
+            onClick={() => router.push('/settings')}
+            title="Settings"
+            aria-label="Settings"
+            className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors duration-200"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-5 h-5"
+            >
+              <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+              <circle cx="12" cy="12" r="3" />
             </svg>
           </button>
-
-          {open && (
-            <ul
-              role="listbox"
-              className="absolute z-10 mt-2 w-52 rounded-lg border bg-white shadow-md overflow-hidden"
-            >
-              {['Feed', 'Challenges', 'Resources', 'Templates'].filter(t => t !== tab).map((name) => (
-                <li key={name}>
-                  <button
-                    role="option"
-                    aria-selected={false}
-                    onClick={() => { setTab(name); setOpen(false); }}
-                    className="w-full text-left px-3 py-2 hover:bg-gray-100"
-                  >
-                    {name}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
         </div>
-        <p className="text-sm text-[#6A5E53]">See friends’ progress and discover templates & creators.</p>
+        <p className="text-sm text-[#6A5E53]">See friends' progress and discover templates & creators.</p>
       </header>
 
 
