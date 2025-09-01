@@ -7,6 +7,25 @@ import { useRouter } from "next/navigation";
 function FeedTab() { 
   return (
     <div className="space-y-4">
+      {/* Close Friends section */}
+      <section aria-label="Close friends" className="mb-4">
+        <div className="rounded-xl border border-gray-200 bg-white px-3 py-3">
+          {/* Module title */}
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">
+            Close Friends (coming soon)
+          </h3>
+
+          {/* Rings row */}
+          <div className="flex items-center gap-4 overflow-x-auto no-scrollbar py-1">
+            <StoryRing percent={15} label="My Progress" tint="#7EA2B7" />
+            <StoryRing percent={12} label="Noah R." tint="#7EA2B7" />
+            <StoryRing percent={15} label="Ava M." tint="#7EA2B7" />
+            <StoryRing percent={12} label="Noah R." tint="#7EA2B7" />
+            <StoryRing percent={34} label="Sam T." tint="#7EA2B7" />
+          </div>
+        </div>
+      </section>
+
       <FocusAreaPost
         author="Jordan Lee"
         handle="@jordan"
@@ -34,7 +53,7 @@ function ChallengesTab() {
   return (
     <div className="space-y-4">
       <div className="bg-white rounded-xl border border-gray-200 p-4">
-        <h3 className="text-lg font-semibold mb-3">Active Challenges</h3>
+        <h3 className="text-lg font-semibold mb-3">Active Challenges (coming soon)</h3>
         <div className="space-y-3">
           <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
             <div>
@@ -62,20 +81,69 @@ function ChallengesTab() {
   );
 }
 
-function ResourcesTab() { 
+function ResourcesTab({ focusAreas = [] }) {
+  const DEMO = [{ id:'lsat', name:'LSAT Prep' }, { id:'fitness', name:'Fitness' }];
+  
+  // Convert focus areas to the format expected by the selector
+  const areas = focusAreas.length > 0 
+    ? focusAreas.map(area => ({ id: area.label, name: area.label }))
+    : [];
+    
+  const [selectedId, setSelectedId] = React.useState(areas[0]?.id || '');
+
+  // If no focus areas exist, show message to add them
+  if (focusAreas.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <div className="text-gray-500 mb-2">No focus areas found</div>
+        <div className="text-sm text-gray-400">
+          Go to your dashboard and add a focus area to see personalized resources
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
+      <div className="rounded-xl border bg-white px-3 py-3">
+        <div className="text-xs text-gray-500 mb-1">Choose a focus area</div>
+        <select
+          value={selectedId}
+          onChange={(e)=>setSelectedId(e.target.value)}
+          className="w-full rounded-lg border px-3 py-2"
+        >
+          {areas.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+        </select>
+      </div>
+
       <div className="bg-white rounded-xl border border-gray-200 p-4">
-        <h3 className="text-lg font-semibold mb-3">Focus Area Resources</h3>
-        <div className="space-y-3">
-          <div className="p-3 border border-gray-200 rounded-lg">
-            <div className="font-medium">LSAT Prep</div>
-            <div className="text-sm text-gray-600">Top YouTube channels, Discord groups, and shared templates</div>
-          </div>
-          <div className="p-3 border border-gray-200 rounded-lg">
-            <div className="font-medium">Fitness</div>
-            <div className="text-sm text-gray-600">Workout templates, recommended trackers, credible coaches</div>
-          </div>
+        <h3 className="text-lg font-semibold mb-3">Focus Area Resources (coming soon)</h3>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <h3 className="text-lg font-semibold mb-3">Books</h3>
+        <div className="space-y-2">
+          <ResourceCard title="Atomic Habits" desc="Build good habits and break bad ones" url="https://example.com/atomic-habits" />
+          <ResourceCard title="Deep Work" desc="Rules for focused success in a distracted world" url="https://example.com/deep-work" />
+          <ResourceCard title="The Power of Habit" desc="Why we do what we do in life and business" url="https://example.com/power-of-habit" />
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <h3 className="text-lg font-semibold mb-3">Social Media</h3>
+        <div className="space-y-2">
+          <ResourceCard title="Productivity Twitter" desc="Best accounts for productivity tips" url="https://example.com/productivity-twitter" />
+          <ResourceCard title="StudyTok" desc="Study motivation and tips on TikTok" url="https://example.com/studytok" />
+          <ResourceCard title="LinkedIn Learning" desc="Professional development courses" url="https://example.com/linkedin-learning" />
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <h3 className="text-lg font-semibold mb-3">Links</h3>
+        <div className="space-y-2">
+          <ResourceCard title="Pomodoro Timer" desc="25-minute focused work sessions" url="https://example.com/pomodoro" />
+          <ResourceCard title="Forest App" desc="Stay focused and plant real trees" url="https://example.com/forest" />
+          <ResourceCard title="Notion Templates" desc="Free productivity templates" url="https://example.com/notion-templates" />
         </div>
       </div>
     </div>
@@ -86,16 +154,48 @@ function TemplatesTab() {
   return (
     <div className="space-y-4">
       <div className="bg-white rounded-xl border border-gray-200 p-4">
-        <h3 className="text-lg font-semibold mb-3">Popular Templates</h3>
-        <div className="space-y-3">
-          <div className="p-3 border border-gray-200 rounded-lg">
-            <div className="font-medium">3hr GRE Study Day</div>
-            <div className="text-sm text-gray-600">Optimized study schedule for GRE prep</div>
+        <h3 className="text-lg font-semibold mb-3">Popular Templates (coming soon)</h3>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="p-3 border border-gray-200 rounded-lg aspect-square bg-gray-50">
+            <div className="font-bold text-sm">Daily 3hr GRE Study</div>
+            <div className="text-xs text-gray-600 mt-1">Optimized study schedule for GRE prep</div>
           </div>
-          <div className="p-3 border border-gray-200 rounded-lg">
-            <div className="font-medium">Balanced Work/School Week</div>
-            <div className="text-sm text-gray-600">Perfect balance of work, study, and personal time</div>
+          <div className="p-3 border border-gray-200 rounded-lg aspect-square bg-gray-50">
+            <div className="font-bold text-sm">Balanced Work/School Week</div>
+            <div className="text-xs text-gray-600 mt-1">Perfect balance of work, study, and personal time</div>
           </div>
+          <div className="p-3 border border-gray-200 rounded-lg aspect-square bg-gray-50">
+            <div className="font-bold text-sm">Morning Fitness Routine</div>
+            <div className="text-xs text-gray-600 mt-1">45-minute workout + meditation for productive days</div>
+          </div>
+          <div className="p-3 border border-gray-200 rounded-lg aspect-square bg-gray-50">
+            <div className="font-bold text-sm">Deep Work Focus Blocks</div>
+            <div className="text-xs text-gray-600 mt-1">90-minute concentrated work sessions with breaks</div>
+          </div>
+          <div className="p-3 border border-gray-200 rounded-lg aspect-square bg-gray-50">
+            <div className="font-bold text-sm">Weekly Skill Building</div>
+            <div className="text-xs text-gray-600 mt-1">Daily practice sessions for skill development</div>
+          </div>
+          <div className="p-3 border border-gray-200 rounded-lg aspect-square bg-gray-50">
+            <div className="font-bold text-sm">Language Learning Daily</div>
+            <div className="text-xs text-gray-600 mt-1">30-minute daily practice for consistent progress</div>
+          </div>
+          <div className="p-3 border border-gray-200 rounded-lg aspect-square bg-gray-50">
+            <div className="font-bold text-sm">Creative Project Time</div>
+            <div className="text-xs text-gray-600 mt-1">Dedicated hours for writing, design, or art</div>
+          </div>
+          <div className="p-3 border border-gray-200 rounded-lg aspect-square bg-gray-50">
+            <div className="font-bold text-sm">Social Media Detox</div>
+            <div className="text-xs text-gray-600 mt-1">Reduced screen time for better focus</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <h3 className="text-lg font-semibold mb-3">Create & Share</h3>
+        <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center">
+          <div className="font-bold text-gray-700 mb-2">Publish your own template</div>
+          <div className="text-sm text-gray-600">Share your time management strategies with the community</div>
         </div>
       </div>
     </div>
@@ -150,6 +250,16 @@ function FeedCard({ title, children, cta }) {
         </button>
       )}
     </div>
+  );
+}
+
+function ResourceCard({ title, desc, url }) {
+  return (
+    <a className="block rounded-xl border px-3 py-2 hover:shadow-sm bg-white"
+       href={url} target="_blank" rel="noreferrer">
+      <div className="font-semibold leading-snug">{title}</div>
+      <div className="text-xs text-gray-500 mt-0.5">{desc}</div>
+    </a>
   );
 }
 
@@ -294,15 +404,37 @@ function FocusAreaPost({
 }
 
 export default function ConnectPage() {
-  // --- TODO: replace with real “today” values from your store/localStorage ---
+  // --- TODO: replace with real "today" values from your store/localStorage ---
   const myToday = useMemo(() => ({ goalMins: 240, spentMins: 36, color: "#7EA2B7", name: "My Progress" }), []);
   const percentMine = useMemo(() => (myToday.goalMins ? (myToday.spentMins / myToday.goalMins) * 100 : 0), [myToday]);
   
   // --- Tab state ---
   const [tab, setTab] = useState('Feed');
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const menuRef = useRef(null);
   const router = useRouter();
+
+  // Load user's focus areas from localStorage
+  const [focusAreas, setFocusAreas] = useState([]);
+  
+  // Load focus areas on mount
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("focusCategories");
+      const parsed = raw ? JSON.parse(raw) : [];
+      const areas = Array.isArray(parsed) ? parsed : [];
+      setFocusAreas(areas);
+    } catch (error) {
+      console.warn('Failed to load focus areas:', error);
+      setFocusAreas([]);
+    }
+  }, []);
+
+  // Set mounted after hydration
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // close menu when clicking outside
   useEffect(() => {
@@ -348,7 +480,7 @@ export default function ConnectPage() {
                 <path d="M5 7l5 5 5-5" fill="none" stroke="currentColor" strokeWidth="2"/>
               </svg>
             </button>
-            {open && (
+            {mounted && open && (
               <ul
                 role="listbox"
                 className="absolute z-10 mt-2 w-40 rounded-lg border bg-white shadow-md left-1/2 transform -translate-x-1/2"
@@ -392,44 +524,23 @@ export default function ConnectPage() {
 
         {/* Subtitle */}
         <p className="text-sm text-gray-500 mb-2 text-center">
-          See friends' progress and discover templates & creators.
+          {tab === 'Feed' && "See friends' progress and discover templates & creators."}
+          {tab === 'Challenges' && "Join challenges and track your progress with friends."}
+          {tab === 'Resources' && "Find helpful resources and tools for your focus areas."}
+          {tab === 'Templates' && "Browse and use time management templates from the community."}
         </p>
 
         {/* Divider line right under subtitle */}
         <hr className="border-gray-200 mb-3" />
       </header>
 
-      {/* Stories rail */}
-      <section aria-label="Close friends" className="mb-4 px-3">
-        <div className="rounded-xl border border-gray-200 bg-white px-3 py-3">
-          {/* Module title */}
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">
-            Close Friends
-          </h3>
 
-          {/* Rings row */}
-          <div className="flex items-center gap-4 overflow-x-auto no-scrollbar py-1">
-            <StoryRing percent={percentMine} label="My Progress" tint={myToday.color} />
-            {follows.map((f, i) => (
-              <button
-                key={i}
-                className="appearance-none bg-transparent p-0 m-0"
-                title={`${f.name} • ${Math.round(f.percent)}% today`}
-                // TODO: later route to /u/[handle] if public
-                onClick={() => {}}
-              >
-                <StoryRing percent={f.percent} label={f.name} tint={f.color} />
-              </button>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Tab Content */}
       <main className="px-4 mt-4">
         {tab === 'Feed' && <FeedTab />}
         {tab === 'Challenges' && <ChallengesTab />}
-        {tab === 'Resources' && <ResourcesTab />}
+        {tab === 'Resources' && <ResourcesTab focusAreas={focusAreas} />}
         {tab === 'Templates' && <TemplatesTab />}
       </main>
 
