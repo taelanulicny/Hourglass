@@ -1055,7 +1055,7 @@ function CalendarContent() {
         +
       </button>
 
-      {/* Bottom buttons: Dashboard | Calendar | Connect */}
+      {/* Bottom buttons: Dashboard | Calendar | Discover */}
       <div className="fixed bottom-0 left-0 right-0 p-3 pb-7 z-50">
         <div className="max-w-md mx-auto grid grid-cols-3 gap-3">
           <button
@@ -1075,7 +1075,7 @@ function CalendarContent() {
             onClick={() => router.push('/connect')}
             className="h-12 w-full rounded-2xl bg-white text-gray-700 font-medium border-2 border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
           >
-            Connect
+            Discover
           </button>
         </div>
       </div>
