@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useEffect, useState, useRef, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 // Add client-side only rendering hook to prevent hydration mismatches
@@ -64,7 +64,8 @@ function loadFocusAreas() {
   }
 }
 
-export default function NotesPage() {
+// Notes content component that uses useSearchParams
+function NotesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isClient = useClientOnly(); // Add client-side only rendering
@@ -870,5 +871,21 @@ export default function NotesPage() {
         </div>
       )}
     </div>
+  );
+}
+
+// Main notes page with Suspense
+export default function NotesPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#F7F6F3] flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-lg font-semibold mb-2 text-[#4E4034]">Loading Notes...</div>
+          <div className="text-sm text-gray-500">Please wait while we prepare your notes.</div>
+        </div>
+      </div>
+    }>
+      <NotesContent />
+    </Suspense>
   );
 }
