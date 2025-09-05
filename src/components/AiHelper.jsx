@@ -43,7 +43,12 @@ function AiHelper({ focusAreaId, focusContext }) {
       if (raw) {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          setHistory(parsed);
+          // Filter out any old greeting messages that say "today" instead of "right now"
+          const filteredHistory = parsed.filter(msg => 
+            !(msg.role === "assistant" && 
+              (msg.content.includes("today") || msg.content.includes("Hi! I'm your AI assistant")))
+          );
+          setHistory(filteredHistory);
           return;
         }
       }
