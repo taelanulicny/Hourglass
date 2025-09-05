@@ -672,7 +672,7 @@ function NotesContent() {
               {selectedNote && (
                 <div className="flex-1 flex flex-col">
                   {/* Note Header */}
-                  <div className="p-4 border-b border-gray-200 bg-white">
+                  <div className="p-4 border-b border-gray-200 bg-[#F7F6F3]">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <button
@@ -731,17 +731,17 @@ function NotesContent() {
                   </div>
 
                   {/* Note Content */}
-                  <div className="flex-1 p-4">
+                  <div className="flex-1">
                     {isEditing ? (
                       <textarea
                         ref={textareaRef}
                         value={selectedNote.content}
                         onChange={(e) => updateNote({ content: e.target.value })}
-                        className="w-full h-full resize-none border-none outline-none text-[#4E4034] leading-relaxed"
+                        className="w-full h-full resize-none border-none outline-none text-[#4E4034] leading-relaxed p-4 bg-transparent"
                         placeholder="Start writing your note..."
                       />
                     ) : (
-                      <div className="w-full h-full whitespace-pre-wrap text-[#4E4034] leading-relaxed">
+                      <div className="w-full h-full whitespace-pre-wrap text-[#4E4034] leading-relaxed p-4">
                         {selectedNote.content || <span className="text-gray-400 italic">Empty note</span>}
                       </div>
                     )}
