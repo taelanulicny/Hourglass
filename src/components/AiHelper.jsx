@@ -88,27 +88,16 @@ function AiHelper({ focusAreaId, focusContext }) {
     setHistory(nextHistory);
     setInput("");
     setLoading(true);
-    try {
-      const res = await fetch("/api/ai", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: nextHistory.map(m => ({ role: m.role, content: m.content })),
-          focusContext
-        })
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setHistory(prev => [...prev, { role: "assistant", content: `Sorry—${data?.error || `Server error ${res.status}`}` }]);
-      } else {
-        setHistory(prev => [...prev, { role: "assistant", content: data.text || "…" }]);
-      }
-    } catch {
-      setHistory(prev => [...prev, { role: "assistant", content: "Sorry—there was an error. Try again." }]);
-    } finally {
+    
+    // AI features not available in static export mode
+    setTimeout(() => {
+      setHistory(prev => [...prev, { 
+        role: "assistant", 
+        content: "AI features are not available in static mode. This feature requires server-side processing which isn't supported with static export." 
+      }]);
       setLoading(false);
-      setShowGreeting(false); // hide the ephemeral greeting after first send
-    }
+      setShowGreeting(false);
+    }, 1000);
   }
 
   return (
