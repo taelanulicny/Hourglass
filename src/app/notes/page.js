@@ -716,9 +716,9 @@ function NotesContent() {
                             setIsEditing(false);
                           }}
                         >
-                          <div className="flex items-start justify-between mb-2">
-                            <h3 className="font-medium text-lg truncate">{note.title}</h3>
-                            <span className="text-sm text-gray-500 ml-2">{formatDate(note.updatedAt)}</span>
+                          <div className="mb-2">
+                            <h3 className="font-medium text-lg mb-1">{note.title}</h3>
+                            <span className="text-sm text-gray-500">{formatDate(note.updatedAt)}</span>
                           </div>
                           <p className="text-gray-600 text-sm line-clamp-2">
                             {getNotePreview(note.content)}
