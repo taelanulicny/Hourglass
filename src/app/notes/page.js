@@ -430,7 +430,16 @@ function NotesContent() {
             </button>
             {selectedNote ? (
               <div className="flex items-center gap-3">
-                <h1 className="text-xl font-semibold">{selectedNote.title}</h1>
+                <h1 className="text-xl font-semibold">
+                  {(() => {
+                    const noteFolder = notesData.folders.find(f => f.id === selectedNote.folderId);
+                    if (noteFolder) {
+                      // Show the actual folder name (e.g., "School" for focus area subfolders)
+                      return noteFolder.name;
+                    }
+                    return "Notes";
+                  })()}
+                </h1>
                 <span className="text-sm text-gray-500">{formatDate(selectedNote.updatedAt)}</span>
               </div>
             ) : (
