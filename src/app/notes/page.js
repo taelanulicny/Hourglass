@@ -388,7 +388,11 @@ function NotesContent() {
 
   // Create new folder
   const createFolder = () => {
-    if (!newFolderName.trim()) return;
+    console.log('createFolder called with:', { newFolderName, selectedFolder });
+    if (!newFolderName.trim()) {
+      console.log('No folder name provided');
+      return;
+    }
     
     const newFolder = {
       id: makeId(),
@@ -397,6 +401,7 @@ function NotesContent() {
       parentFolderId: selectedFolder || null, // Set parent if we're in a folder
       createdAt: Date.now()
     };
+    console.log('Creating new folder:', newFolder);
     
     const updatedData = {
       ...notesData,
@@ -813,7 +818,10 @@ function NotesContent() {
           {/* Action Buttons */}
           <div className="p-4 border-t border-gray-200 space-y-2">
             <button
-              onClick={() => setShowNewFolderModal(true)}
+              onClick={() => {
+                console.log('New Folder button clicked');
+                setShowNewFolderModal(true);
+              }}
               className="w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -959,7 +967,10 @@ function NotesContent() {
                 Cancel
               </button>
               <button
-                onClick={createFolder}
+                onClick={() => {
+                  console.log('Create button clicked in modal');
+                  createFolder();
+                }}
                 className="px-4 py-2 bg-[#8CA4AF] text-white rounded-lg hover:bg-[#7A939F] transition-colors"
               >
                 Create
