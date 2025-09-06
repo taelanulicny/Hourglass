@@ -460,6 +460,25 @@ function NotesContent() {
     return notesData.folders.filter(folder => folder.parentFolderId === parentFolderId);
   };
 
+  // Helper function to check if a folder is valid for actions (notes/folders)
+  const isValidFolderForActions = (folderId) => {
+    if (!folderId) return false;
+    
+    // Check if it's a focus area subfolder
+    const isFocusAreaSubfolder = focusAreas.some(area => {
+      const subfolder = notesData.folders.find(f => f.name === area.label && f.parentFolderId === notesData.folders.find(f => f.name === FOCUS_AREAS_FOLDER && !f.parentFolderId)?.id);
+      return subfolder && subfolder.id === folderId;
+    });
+    
+    // Check if it's a custom folder directly under Focus Areas
+    const isCustomFolder = notesData.folders.some(f => f.id === folderId && f.parentFolderId === notesData.folders.find(f => f.name === FOCUS_AREAS_FOLDER && !f.parentFolderId)?.id);
+    
+    // Check if it's a child folder of a focus area subfolder
+    const isChildFolder = notesData.folders.some(f => f.id === folderId && f.parentFolderId && notesData.folders.some(parent => parent.id === f.parentFolderId && parent.parentFolderId === notesData.folders.find(f => f.name === FOCUS_AREAS_FOLDER && !f.parentFolderId)?.id));
+    
+    return isFocusAreaSubfolder || isCustomFolder || isChildFolder;
+  };
+
   return (
     <div className="min-h-screen bg-[#F7F6F3] text-[#4E4034]">
       {/* Header */}
@@ -774,15 +793,9 @@ function NotesContent() {
                 console.log('New Folder button clicked');
                 setShowNewFolderModal(true);
               }}
-              disabled={!selectedFolder || (!focusAreas.some(area => {
-                const subfolder = notesData.folders.find(f => f.name === area.label && f.parentFolderId === notesData.folders.find(f => f.name === FOCUS_AREAS_FOLDER && !f.parentFolderId)?.id);
-                return subfolder && subfolder.id === selectedFolder;
-              }) && !notesData.folders.some(f => f.id === selectedFolder && f.parentFolderId === notesData.folders.find(f => f.name === FOCUS_AREAS_FOLDER && !f.parentFolderId)?.id) && !notesData.folders.some(f => f.id === selectedFolder && f.parentFolderId && notesData.folders.some(parent => parent.id === f.parentFolderId && parent.parentFolderId === notesData.folders.find(f => f.name === FOCUS_AREAS_FOLDER && !f.parentFolderId)?.id)))}
+              disabled={!selectedFolder || !isValidFolderForActions(selectedFolder)}
               className={`w-full py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
-                (!selectedFolder || (!focusAreas.some(area => {
-                  const subfolder = notesData.folders.find(f => f.name === area.label && f.parentFolderId === notesData.folders.find(f => f.name === FOCUS_AREAS_FOLDER && !f.parentFolderId)?.id);
-                  return subfolder && subfolder.id === selectedFolder;
-                }) && !notesData.folders.some(f => f.id === selectedFolder && f.parentFolderId === notesData.folders.find(f => f.name === FOCUS_AREAS_FOLDER && !f.parentFolderId)?.id) && !notesData.folders.some(f => f.id === selectedFolder && f.parentFolderId && notesData.folders.some(parent => parent.id === f.parentFolderId && parent.parentFolderId === notesData.folders.find(f => f.name === FOCUS_AREAS_FOLDER && !f.parentFolderId)?.id)))
+                (!selectedFolder || !isValidFolderForActions(selectedFolder))
                   ? 'bg-gray-50 text-gray-400 cursor-not-allowed'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
@@ -793,10 +806,7 @@ function NotesContent() {
               </svg>
               New Folder
             </button>
-            {selectedFolder && (focusAreas.some(area => {
-              const subfolder = notesData.folders.find(f => f.name === area.label && f.parentFolderId === notesData.folders.find(f => f.name === FOCUS_AREAS_FOLDER && !f.parentFolderId)?.id);
-              return subfolder && subfolder.id === selectedFolder;
-            }) || notesData.folders.some(f => f.id === selectedFolder && f.parentFolderId === notesData.folders.find(f => f.name === FOCUS_AREAS_FOLDER && !f.parentFolderId)?.id) || notesData.folders.some(f => f.id === selectedFolder && f.parentFolderId && notesData.folders.some(parent => parent.id === f.parentFolderId && parent.parentFolderId === notesData.folders.find(f => f.name === FOCUS_AREAS_FOLDER && !f.parentFolderId)?.id))) && (
+            {selectedFolder && isValidFolderForActions(selectedFolder) && (
               <button
                 onClick={() => {
                   console.log('New Note button clicked, selectedFolder:', selectedFolder);
