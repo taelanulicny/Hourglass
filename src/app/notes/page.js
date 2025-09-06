@@ -475,34 +475,22 @@ function NotesContent() {
               </svg>
             </button>
             {selectedNote ? (
-              <div className="flex items-center gap-3">
-                <h1 className="text-xl font-semibold">
-                  {(() => {
-                    const noteFolder = notesData.folders.find(f => f.id === selectedNote.folderId);
-                    if (noteFolder) {
-                      // Show the actual folder name (e.g., "School" for focus area subfolders)
-                      return noteFolder.name;
-                    }
-                    return "Notes";
-                  })()}
-                </h1>
-                <span className="text-sm text-gray-500">{formatDate(selectedNote.updatedAt)}</span>
-              </div>
+              <h1 className="text-xl font-semibold">
+                {(() => {
+                  const noteFolder = notesData.folders.find(f => f.id === selectedNote.folderId);
+                  if (noteFolder) {
+                    // Show the actual folder name (e.g., "School" for focus area subfolders)
+                    return noteFolder.name;
+                  }
+                  return "Notes";
+                })()}
+              </h1>
             ) : (
               <h1 className="text-xl font-semibold">Notes</h1>
             )}
           </div>
           {selectedNote && (
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                title={sidebarCollapsed ? "Show sidebar" : "Hide sidebar"}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={sidebarCollapsed ? "M4 6h16M4 12h16M4 18h16" : "M4 6h16M4 12h8m-8 6h16"} />
-                </svg>
-              </button>
               {isEditing && (
                 <button
                   onClick={() => setIsEditing(false)}
