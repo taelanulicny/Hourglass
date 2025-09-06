@@ -562,10 +562,16 @@ function NotesContent() {
                       }}
                     >
                       <div className="flex items-center gap-3">
-                        <div 
-                          className="w-4 h-4 rounded-full" 
-                          style={{ backgroundColor: folder.color }}
-                        />
+                        <svg 
+                          className="w-5 h-5" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                          style={{ color: folder.color }}
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z" />
+                        </svg>
                         <span className="font-medium">{folder.name}</span>
                         <span className="text-sm opacity-70">
                           ({focusAreas.length})
@@ -610,10 +616,16 @@ function NotesContent() {
                             }}
                           >
                             <div className="flex items-center gap-3">
-                              <div 
-                                className="w-3 h-3 rounded-full" 
-                                style={{ backgroundColor: area.color || "#8CA4AF" }}
-                              />
+                              <svg 
+                                className="w-4 h-4" 
+                                fill="none" 
+                                stroke="currentColor" 
+                                viewBox="0 0 24 24"
+                                style={{ color: area.color || "#8CA4AF" }}
+                              >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z" />
+                              </svg>
                               <span className="font-medium text-sm">{area.label}</span>
                               <span className="text-xs opacity-70">
                                 ({noteCount})
@@ -636,10 +648,16 @@ function NotesContent() {
                               }}
                             >
                               <div className="flex items-center gap-3">
-                                <div 
-                                  className="w-2 h-2 rounded-full" 
-                                  style={{ backgroundColor: childFolder.color }}
-                                />
+                                <svg 
+                                  className="w-3 h-3" 
+                                  fill="none" 
+                                  stroke="currentColor" 
+                                  viewBox="0 0 24 24"
+                                  style={{ color: childFolder.color }}
+                                >
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z" />
+                                </svg>
                                 <span className="font-medium text-xs">{childFolder.name}</span>
                                 <span className={`text-xs ${
                                   selectedFolder === childFolder.id 
@@ -689,10 +707,16 @@ function NotesContent() {
                             }}
                           >
                             <div className="flex items-center gap-3">
-                              <div 
-                                className="w-3 h-3 rounded-full" 
-                                style={{ backgroundColor: customFolder.color }}
-                              />
+                              <svg 
+                                className="w-4 h-4" 
+                                fill="none" 
+                                stroke="currentColor" 
+                                viewBox="0 0 24 24"
+                                style={{ color: customFolder.color }}
+                              >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z" />
+                              </svg>
                               <span className="font-medium text-sm">{customFolder.name}</span>
                               <span className="text-xs opacity-70">
                                 ({notesData.notes.filter(n => n.folderId === customFolder.id).length})
@@ -729,10 +753,16 @@ function NotesContent() {
                               }}
                             >
                               <div className="flex items-center gap-3">
-                                <div 
-                                  className="w-2 h-2 rounded-full" 
-                                  style={{ backgroundColor: childFolder.color }}
-                                />
+                                <svg 
+                                  className="w-3 h-3" 
+                                  fill="none" 
+                                  stroke="currentColor" 
+                                  viewBox="0 0 24 24"
+                                  style={{ color: childFolder.color }}
+                                >
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z" />
+                                </svg>
                                 <span className="font-medium text-xs">{childFolder.name}</span>
                                 <span className={`text-xs ${
                                   selectedFolder === childFolder.id 
