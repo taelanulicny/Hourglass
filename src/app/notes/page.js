@@ -669,6 +669,98 @@ function NotesContent() {
                         </div>
                       );
                     })}
+                    
+                    {/* Custom folders that are direct children of Focus Areas */}
+                    {notesData.folders
+                      .filter(customFolder => 
+                        customFolder.parentFolderId === folder.id && 
+                        !focusAreas.some(area => area.label === customFolder.name)
+                      )
+                      .map(customFolder => (
+                        <div key={customFolder.id}>
+                          <div
+                            className={`flex items-center justify-between p-3 ml-4 rounded-lg cursor-pointer transition-colors ${
+                              selectedFolder === customFolder.id ? 'bg-[#8CA4AF] text-white' : 'hover:bg-gray-100'
+                            }`}
+                            onClick={() => {
+                              setSelectedFolder(customFolder.id);
+                              setSelectedNote(null);
+                              setIsEditing(false);
+                            }}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div 
+                                className="w-3 h-3 rounded-full" 
+                                style={{ backgroundColor: customFolder.color }}
+                              />
+                              <span className="font-medium text-sm">{customFolder.name}</span>
+                              <span className="text-xs opacity-70">
+                                ({notesData.notes.filter(n => n.folderId === customFolder.id).length})
+                              </span>
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setShowDeleteConfirm(customFolder.id);
+                              }}
+                              className={`p-1 rounded ${
+                                selectedFolder === customFolder.id 
+                                  ? 'hover:bg-white/20' 
+                                  : 'hover:bg-gray-200'
+                              }`}
+                            >
+                              <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
+                          
+                          {/* Child folders of this custom folder */}
+                          {(selectedFolder === customFolder.id || getChildFolders(customFolder.id).some(child => child.id === selectedFolder)) && getChildFolders(customFolder.id).map(childFolder => (
+                            <div
+                              key={childFolder.id}
+                              className={`flex items-center justify-between p-3 ml-8 rounded-lg cursor-pointer transition-colors ${
+                                selectedFolder === childFolder.id ? 'bg-[#8CA4AF] text-white' : 'hover:bg-gray-100'
+                              }`}
+                              onClick={() => {
+                                setSelectedFolder(childFolder.id);
+                                setSelectedNote(null);
+                                setIsEditing(false);
+                              }}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div 
+                                  className="w-2 h-2 rounded-full" 
+                                  style={{ backgroundColor: childFolder.color }}
+                                />
+                                <span className="font-medium text-xs">{childFolder.name}</span>
+                                <span className={`text-xs ${
+                                  selectedFolder === childFolder.id 
+                                    ? 'text-white/70' 
+                                    : 'text-gray-500'
+                                }`}>
+                                  ({notesData.notes.filter(n => n.folderId === childFolder.id).length})
+                                </span>
+                              </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setShowDeleteConfirm(childFolder.id);
+                                }}
+                                className={`p-1 rounded ${
+                                  selectedFolder === childFolder.id 
+                                    ? 'hover:bg-white/20' 
+                                    : 'hover:bg-gray-200'
+                                }`}
+                              >
+                                <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      ))}
                   </div>
                 ))}
             </div>
@@ -689,10 +781,10 @@ function NotesContent() {
               </svg>
               New Folder
             </button>
-            {selectedFolder && focusAreas.some(area => {
+            {selectedFolder && (focusAreas.some(area => {
               const subfolder = notesData.folders.find(f => f.name === area.label && f.parentFolderId === notesData.folders.find(f => f.name === FOCUS_AREAS_FOLDER && !f.parentFolderId)?.id);
               return subfolder && subfolder.id === selectedFolder;
-            }) && (
+            }) || notesData.folders.some(f => f.id === selectedFolder && f.parentFolderId === notesData.folders.find(f => f.name === FOCUS_AREAS_FOLDER && !f.parentFolderId)?.id)) && (
               <button
                 onClick={() => {
                   console.log('New Note button clicked, selectedFolder:', selectedFolder);
