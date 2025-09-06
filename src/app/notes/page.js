@@ -127,9 +127,23 @@ function NotesContent() {
       setNotesData(data);
     }
     
-    // If coming from focus area, select the Focus Areas folder
+    // If coming from focus area, select the specific focus area subfolder
     if (focusArea) {
-      setSelectedFolder(focusAreasFolder.id);
+      // Find or create the specific focus area subfolder
+      let focusAreaSubfolder = cleanedFolders.find(f => f.name === focusArea);
+      if (!focusAreaSubfolder) {
+        focusAreaSubfolder = {
+          id: makeId(),
+          name: focusArea,
+          color: "#8CA4AF",
+          createdAt: Date.now()
+        };
+        cleanedFolders.push(focusAreaSubfolder);
+        const updatedData = { ...data, folders: cleanedFolders };
+        setNotesData(updatedData);
+        saveNotes(updatedData);
+      }
+      setSelectedFolder(focusAreaSubfolder.id);
     }
   }, [focusArea, isClient]);
 
