@@ -467,7 +467,17 @@ function NotesContent() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => selectedNote ? (setSelectedNote(null), setIsEditing(false), setSidebarCollapsed(false)) : router.back()}
+              onClick={() => {
+                if (selectedNote) {
+                  if (isEditing) {
+                    setIsEditing(false); // This will trigger auto-save via useEffect
+                  }
+                  setSelectedNote(null);
+                  setSidebarCollapsed(false);
+                } else {
+                  router.back();
+                }
+              }}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -491,14 +501,6 @@ function NotesContent() {
           </div>
           {selectedNote && (
             <div className="flex items-center gap-2">
-              {isEditing && (
-                <button
-                  onClick={() => setIsEditing(false)}
-                  className="px-3 py-1.5 bg-[#8CA4AF] text-white rounded-lg hover:bg-[#7A939F] transition-colors"
-                >
-                  Save
-                </button>
-              )}
               <button
                 onClick={() => setShowDeleteConfirm(selectedNote.id)}
                 className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -865,6 +867,7 @@ function NotesContent() {
                           type="text"
                           value={selectedNote.title}
                           onChange={(e) => updateNote({ title: e.target.value })}
+                          onBlur={() => setIsEditing(false)}
                           className="w-full text-2xl font-semibold bg-transparent border-none outline-none p-4 pb-2 text-[#4E4034]"
                           placeholder="Note title"
                         />
@@ -872,6 +875,7 @@ function NotesContent() {
                           ref={textareaRef}
                           value={selectedNote.content}
                           onChange={(e) => updateNote({ content: e.target.value })}
+                          onBlur={() => setIsEditing(false)}
                           className="w-full h-[calc(100%-4rem)] resize-none border-none outline-none text-[#4E4034] leading-relaxed px-4 pb-4 bg-transparent"
                           placeholder="Start writing your note..."
                         />
