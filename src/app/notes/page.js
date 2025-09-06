@@ -532,7 +532,7 @@ function NotesContent() {
 
       <div className="flex h-[calc(100vh-73px)]">
         {/* Sidebar */}
-        <div className={`${sidebarCollapsed ? 'w-0 overflow-hidden' : 'w-80'} bg-white border-r border-gray-200 flex flex-col transition-all duration-300 ease-in-out`}>
+        <div className={`${sidebarCollapsed ? 'w-0 overflow-hidden' : 'w-64'} bg-white border-r border-gray-200 flex flex-col transition-all duration-300 ease-in-out`}>
           {/* Search */}
           <div className="p-4 border-b border-gray-200">
             <div className="relative">
