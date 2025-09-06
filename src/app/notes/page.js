@@ -64,6 +64,41 @@ function loadFocusAreas() {
   }
 }
 
+// Handle focus area renames by updating existing folders
+function handleFocusAreaRenames(currentAreas, currentFolders) {
+  const updatedFolders = [...currentFolders];
+  let hasChanges = false;
+
+  // Find focus area subfolders (those with parentFolderId pointing to Focus Areas folder)
+  const focusAreasFolder = updatedFolders.find(f => f.name === FOCUS_AREAS_FOLDER);
+  if (!focusAreasFolder) return { updatedFolders, hasChanges };
+
+  const focusAreaSubfolders = updatedFolders.filter(f => f.parentFolderId === focusAreasFolder.id);
+  
+  // Check each current focus area
+  currentAreas.forEach(area => {
+    // Find if there's an existing subfolder for this focus area
+    let existingSubfolder = focusAreaSubfolders.find(f => f.name === area.label);
+    
+    if (!existingSubfolder) {
+      // Check if there's a subfolder with a different name that might be the renamed version
+      // This is a simple approach - in a real app you'd want more sophisticated matching
+      const orphanedSubfolder = focusAreaSubfolders.find(f => 
+        !currentAreas.some(area => area.label === f.name)
+      );
+      
+      if (orphanedSubfolder) {
+        // Update the orphaned folder's name to match the current focus area
+        orphanedSubfolder.name = area.label;
+        orphanedSubfolder.color = area.color || "#8CA4AF";
+        hasChanges = true;
+      }
+    }
+  });
+
+  return { updatedFolders, hasChanges };
+}
+
 // Notes content component that uses useSearchParams
 function NotesContent() {
   const router = useRouter();
@@ -97,7 +132,7 @@ function NotesContent() {
     setFocusAreas(areas);
     
     // Clean up duplicate focus area folders (keep only those that are subfolders)
-    const cleanedFolders = data.folders.filter(folder => {
+    let cleanedFolders = data.folders.filter(folder => {
       // Keep Focus Areas folder
       if (folder.name === FOCUS_AREAS_FOLDER) return true;
       // Keep folders that are NOT focus areas
@@ -118,8 +153,12 @@ function NotesContent() {
       cleanedFolders.unshift(focusAreasFolder);
     }
     
-    // Update data if we cleaned up folders
-    if (cleanedFolders.length !== data.folders.length) {
+    // Handle focus area renames
+    const { updatedFolders, hasChanges } = handleFocusAreaRenames(areas, cleanedFolders);
+    cleanedFolders = updatedFolders;
+    
+    // Update data if we made changes
+    if (hasChanges || cleanedFolders.length !== data.folders.length) {
       const updatedData = { ...data, folders: cleanedFolders };
       setNotesData(updatedData);
       saveNotes(updatedData);
@@ -582,7 +621,7 @@ function NotesContent() {
                     
                     {/* Focus area subfolders */}
                     {focusAreas.map(area => {
-                      let subfolder = notesData.folders.find(f => f.name === area.label);
+                      let subfolder = notesData.folders.find(f => f.name === area.label && f.parentFolderId === folder.id);
                       
                       // Create subfolder if it doesn't exist
                       if (!subfolder) {
