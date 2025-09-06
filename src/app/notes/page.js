@@ -155,6 +155,22 @@ function NotesContent() {
     const { updatedFolders, hasChanges } = handleFocusAreaRenames(areas, cleanedFolders);
     cleanedFolders = updatedFolders;
     
+    // Ensure all focus area subfolders exist
+    areas.forEach(area => {
+      let focusAreaSubfolder = cleanedFolders.find(f => f.name === area.label && f.parentFolderId === focusAreasFolder.id);
+      if (!focusAreaSubfolder) {
+        focusAreaSubfolder = {
+          id: makeId(),
+          name: area.label,
+          color: area.color || "#8CA4AF",
+          parentFolderId: focusAreasFolder.id,
+          createdAt: Date.now()
+        };
+        cleanedFolders.push(focusAreaSubfolder);
+        hasChanges = true;
+      }
+    });
+    
     // Update data if we made changes
     if (hasChanges || cleanedFolders.length !== data.folders.length) {
       const updatedData = { ...data, folders: cleanedFolders };
@@ -300,35 +316,12 @@ function NotesContent() {
     if (!selectedFolder) return;
     
     const title = newNoteTitle.trim() || "New Note";
-    let targetFolderId = selectedFolder;
-    
-    // If creating note in Focus Areas folder, create it in the specific focus area subfolder
-    const currentFolder = notesData.folders.find(f => f.id === selectedFolder);
-    if (currentFolder?.name === FOCUS_AREAS_FOLDER && focusArea) {
-      // Find or create the specific focus area subfolder
-      let focusAreaFolder = notesData.folders.find(f => f.name === focusArea);
-      if (!focusAreaFolder) {
-        focusAreaFolder = {
-          id: makeId(),
-          name: focusArea,
-          color: "#8CA4AF",
-          createdAt: Date.now()
-        };
-        const updatedData = {
-          ...notesData,
-          folders: [...notesData.folders, focusAreaFolder]
-        };
-        setNotesData(updatedData);
-        saveNotes(updatedData);
-      }
-      targetFolderId = focusAreaFolder.id;
-    }
     
     const newNote = {
       id: makeId(),
       title: title,
       content: "",
-      folderId: targetFolderId,
+      folderId: selectedFolder,
       createdAt: Date.now(),
       updatedAt: Date.now()
     };
