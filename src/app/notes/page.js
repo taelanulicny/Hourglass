@@ -592,6 +592,8 @@ function NotesContent() {
                       }
                 
                       const noteCount = notesData.notes.filter(n => n.folderId === subfolder.id).length;
+                      const childFolderCount = getChildFolders(subfolder.id).length;
+                      const totalCount = noteCount + childFolderCount;
                       
                       return (
                         <div key={area.label}>
@@ -618,7 +620,7 @@ function NotesContent() {
                               </svg>
                               <span className="font-medium text-sm">{area.label}</span>
                               <span className="text-xs opacity-70">
-                                ({noteCount})
+                                ({totalCount})
                               </span>
                             </div>
                             {/* Focus area subfolders cannot be deleted */}
@@ -709,7 +711,7 @@ function NotesContent() {
                               </svg>
                               <span className="font-medium text-sm">{customFolder.name}</span>
                               <span className="text-xs opacity-70">
-                                ({notesData.notes.filter(n => n.folderId === customFolder.id).length})
+                                ({notesData.notes.filter(n => n.folderId === customFolder.id).length + getChildFolders(customFolder.id).length})
                               </span>
                             </div>
                             <button
