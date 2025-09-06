@@ -565,6 +565,7 @@ function NotesContent() {
                         selectedFolder === folder.id ? 'bg-[#8CA4AF] text-white' : 'hover:bg-gray-100'
                       }`}
                       onClick={() => {
+                        console.log('Notes folder clicked, ID:', folder.id);
                         setSelectedFolder(folder.id);
                         setSelectedNote(null);
                         setIsEditing(false);
@@ -823,7 +824,10 @@ function NotesContent() {
             </button>
             {selectedFolder && (
               <button
-                onClick={() => setShowNewNoteModal(true)}
+                onClick={() => {
+                  console.log('New Note button clicked, selectedFolder:', selectedFolder);
+                  setShowNewNoteModal(true);
+                }}
                 className="w-full bg-[#8CA4AF] text-white py-3 rounded-lg font-medium hover:bg-[#7A939F] transition-colors flex items-center justify-center gap-2"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
