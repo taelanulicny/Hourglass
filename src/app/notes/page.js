@@ -551,16 +551,7 @@ function NotesContent() {
                 .filter(folder => folder.name === FOCUS_AREAS_FOLDER && !folder.parentFolderId)
                 .map(folder => (
                   <div key={folder.id}>
-                    <div
-                      className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
-                        selectedFolder === folder.id ? 'bg-[#8CA4AF] text-white' : 'hover:bg-gray-100'
-                      }`}
-                      onClick={() => {
-                        setSelectedFolder(folder.id);
-                        setSelectedNote(null);
-                        setIsEditing(false);
-                      }}
-                    >
+                    <div className="flex items-center justify-between p-3 rounded-lg">
                       <div className="flex items-center gap-3">
                         <span className="font-medium">{folder.name}</span>
                         <span className="text-sm opacity-70">
@@ -793,7 +784,18 @@ function NotesContent() {
                 console.log('New Folder button clicked');
                 setShowNewFolderModal(true);
               }}
-              className="w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+              disabled={!selectedFolder || !focusAreas.some(area => {
+                const subfolder = notesData.folders.find(f => f.name === area.label && f.parentFolderId === notesData.folders.find(f => f.name === FOCUS_AREAS_FOLDER && !f.parentFolderId)?.id);
+                return subfolder && subfolder.id === selectedFolder;
+              }) && !notesData.folders.some(f => f.id === selectedFolder && f.parentFolderId === notesData.folders.find(f => f.name === FOCUS_AREAS_FOLDER && !f.parentFolderId)?.id)}
+              className={`w-full py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
+                (!selectedFolder || (!focusAreas.some(area => {
+                  const subfolder = notesData.folders.find(f => f.name === area.label && f.parentFolderId === notesData.folders.find(f => f.name === FOCUS_AREAS_FOLDER && !f.parentFolderId)?.id);
+                  return subfolder && subfolder.id === selectedFolder;
+                }) && !notesData.folders.some(f => f.id === selectedFolder && f.parentFolderId === notesData.folders.find(f => f.name === FOCUS_AREAS_FOLDER && !f.parentFolderId)?.id)))
+                  ? 'bg-gray-50 text-gray-400 cursor-not-allowed'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
