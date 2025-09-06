@@ -574,10 +574,7 @@ function NotesContent() {
                         />
                         <span className="font-medium">{folder.name}</span>
                         <span className="text-sm opacity-70">
-                          ({notesData.notes.filter(note => {
-                            const noteFolder = notesData.folders.find(f => f.id === note.folderId);
-                            return noteFolder && focusAreas.some(area => area.label === noteFolder.name);
-                          }).length})
+                          ({focusAreas.length})
                         </span>
                       </div>
                       {/* Focus Areas folder cannot be deleted */}
