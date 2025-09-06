@@ -403,48 +403,85 @@ function NotesContent() {
   return (
     <div className="min-h-screen bg-[#F7F6F3] text-[#4E4034]">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-4 py-3">
+      <header className="bg-[#F7F6F3] border-b border-gray-200 px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => router.back()}
+              onClick={() => selectedNote ? (setSelectedNote(null), setIsEditing(false), setSidebarCollapsed(false)) : router.back()}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
-            <h1 className="text-xl font-semibold">Notes</h1>
+            {selectedNote ? (
+              <div className="flex items-center gap-3">
+                <h1 className="text-xl font-semibold">{selectedNote.title}</h1>
+                <span className="text-sm text-gray-500">{formatDate(selectedNote.updatedAt)}</span>
+              </div>
+            ) : (
+              <h1 className="text-xl font-semibold">Notes</h1>
+            )}
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              title={sidebarCollapsed ? "Show sidebar" : "Hide sidebar"}
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={sidebarCollapsed ? "M4 6h16M4 12h16M4 18h16" : "M4 6h16M4 12h8m-8 6h16"} />
-              </svg>
-            </button>
-            <button
-              onClick={() => setShowNewFolderModal(true)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              title="New Folder"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-            </button>
-            <button
-              onClick={() => router.push('/')}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              title="Dashboard"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z" />
-              </svg>
-            </button>
+            {selectedNote ? (
+              <>
+                <button
+                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  title={sidebarCollapsed ? "Show sidebar" : "Hide sidebar"}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={sidebarCollapsed ? "M4 6h16M4 12h16M4 18h16" : "M4 6h16M4 12h8m-8 6h16"} />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => setIsEditing(!isEditing)}
+                  className="px-3 py-1.5 bg-[#8CA4AF] text-white rounded-lg hover:bg-[#7A939F] transition-colors"
+                >
+                  {isEditing ? 'Done' : 'Edit'}
+                </button>
+                <button
+                  onClick={() => setShowDeleteConfirm(selectedNote.id)}
+                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  title={sidebarCollapsed ? "Show sidebar" : "Hide sidebar"}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={sidebarCollapsed ? "M4 6h16M4 12h16M4 18h16" : "M4 6h16M4 12h8m-8 6h16"} />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => setShowNewFolderModal(true)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  title="New Folder"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => router.push('/')}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  title="Dashboard"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z" />
+                  </svg>
+                </button>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -671,78 +708,31 @@ function NotesContent() {
               {/* Note Editor */}
               {selectedNote && (
                 <div className="flex-1 flex flex-col">
-                  {/* Note Header */}
-                  <div className="p-4 border-b border-gray-200 bg-[#F7F6F3]">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => {
-                            setSelectedNote(null);
-                            setIsEditing(false);
-                            setSidebarCollapsed(false);
-                          }}
-                          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                          </svg>
-                        </button>
-                        <div>
-                          {isEditing ? (
-                            <input
-                              type="text"
-                              value={selectedNote.title}
-                              onChange={(e) => updateNote({ title: e.target.value })}
-                              className="text-xl font-semibold bg-transparent border-none outline-none"
-                              placeholder="Note title"
-                            />
-                          ) : (
-                            <h2 className="text-xl font-semibold">{selectedNote.title}</h2>
-                          )}
-                          <p className="text-sm text-gray-500">{formatDate(selectedNote.updatedAt)}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                          title={sidebarCollapsed ? "Show sidebar" : "Hide sidebar"}
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={sidebarCollapsed ? "M4 6h16M4 12h16M4 18h16" : "M4 6h16M4 12h8m-8 6h16"} />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => setIsEditing(!isEditing)}
-                          className="px-3 py-1.5 bg-[#8CA4AF] text-white rounded-lg hover:bg-[#7A939F] transition-colors"
-                        >
-                          {isEditing ? 'Done' : 'Edit'}
-                        </button>
-                        <button
-                          onClick={() => setShowDeleteConfirm(selectedNote.id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
                   {/* Note Content */}
                   <div className="flex-1">
                     {isEditing ? (
-                      <textarea
-                        ref={textareaRef}
-                        value={selectedNote.content}
-                        onChange={(e) => updateNote({ content: e.target.value })}
-                        className="w-full h-full resize-none border-none outline-none text-[#4E4034] leading-relaxed p-4 bg-transparent"
-                        placeholder="Start writing your note..."
-                      />
+                      <div className="h-full">
+                        <input
+                          type="text"
+                          value={selectedNote.title}
+                          onChange={(e) => updateNote({ title: e.target.value })}
+                          className="w-full text-2xl font-semibold bg-transparent border-none outline-none p-4 pb-2 text-[#4E4034]"
+                          placeholder="Note title"
+                        />
+                        <textarea
+                          ref={textareaRef}
+                          value={selectedNote.content}
+                          onChange={(e) => updateNote({ content: e.target.value })}
+                          className="w-full h-[calc(100%-4rem)] resize-none border-none outline-none text-[#4E4034] leading-relaxed px-4 pb-4 bg-transparent"
+                          placeholder="Start writing your note..."
+                        />
+                      </div>
                     ) : (
                       <div className="w-full h-full whitespace-pre-wrap text-[#4E4034] leading-relaxed p-4">
-                        {selectedNote.content || <span className="text-gray-400 italic">Empty note</span>}
+                        <h1 className="text-2xl font-semibold mb-4">{selectedNote.title}</h1>
+                        <div>
+                          {selectedNote.content || <span className="text-gray-400 italic">Empty note</span>}
+                        </div>
                       </div>
                     )}
                   </div>
