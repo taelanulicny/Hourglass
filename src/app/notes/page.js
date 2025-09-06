@@ -168,13 +168,14 @@ function NotesContent() {
     
     // If coming from focus area, select the specific focus area subfolder
     if (focusArea) {
-      // Find or create the specific focus area subfolder
-      let focusAreaSubfolder = cleanedFolders.find(f => f.name === focusArea);
+      // Find or create the specific focus area subfolder as a child of Focus Areas
+      let focusAreaSubfolder = cleanedFolders.find(f => f.name === focusArea && f.parentFolderId === focusAreasFolder.id);
       if (!focusAreaSubfolder) {
         focusAreaSubfolder = {
           id: makeId(),
           name: focusArea,
           color: "#8CA4AF",
+          parentFolderId: focusAreasFolder.id, // Make it a child of Focus Areas
           createdAt: Date.now()
         };
         cleanedFolders.push(focusAreaSubfolder);
