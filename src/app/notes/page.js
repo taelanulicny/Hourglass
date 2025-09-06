@@ -458,12 +458,14 @@ function NotesContent() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={sidebarCollapsed ? "M4 6h16M4 12h16M4 18h16" : "M4 6h16M4 12h8m-8 6h16"} />
                   </svg>
                 </button>
-                <button
-                  onClick={() => setIsEditing(!isEditing)}
-                  className="px-3 py-1.5 bg-[#8CA4AF] text-white rounded-lg hover:bg-[#7A939F] transition-colors"
-                >
-                  {isEditing ? 'Done' : 'Edit'}
-                </button>
+                {isEditing && (
+                  <button
+                    onClick={() => setIsEditing(false)}
+                    className="px-3 py-1.5 bg-[#8CA4AF] text-white rounded-lg hover:bg-[#7A939F] transition-colors"
+                  >
+                    Save
+                  </button>
+                )}
                 <button
                   onClick={() => setShowDeleteConfirm(selectedNote.id)}
                   className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -751,7 +753,10 @@ function NotesContent() {
                         />
                       </div>
                     ) : (
-                      <div className="w-full h-full whitespace-pre-wrap text-[#4E4034] leading-relaxed p-4">
+                      <div 
+                        className="w-full h-full whitespace-pre-wrap text-[#4E4034] leading-relaxed p-4 cursor-text"
+                        onClick={() => setIsEditing(true)}
+                      >
                         <h1 className="text-2xl font-semibold mb-4">{selectedNote.title}</h1>
                         <div>
                           {selectedNote.content || <span className="text-gray-400 italic">Empty note</span>}
