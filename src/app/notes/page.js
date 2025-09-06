@@ -824,6 +824,7 @@ function NotesContent() {
                           onClick={() => {
                             setSelectedNote(note);
                             setIsEditing(false);
+                            setSidebarCollapsed(true);
                           }}
                         >
                           <div className="mb-2">
