@@ -135,7 +135,9 @@ function NotesContent() {
       if (folder.name === FOCUS_AREAS_FOLDER) return true;
       // Keep folders that are NOT focus areas
       if (!areas.some(area => area.label === folder.name)) return true;
-      // Remove standalone focus area folders (they should only exist as subfolders)
+      // Keep focus area folders that have notes (don't delete folders with content)
+      if (data.notes.some(note => note.folderId === folder.id)) return true;
+      // Remove empty standalone focus area folders (they should only exist as subfolders)
       return false;
     });
     
@@ -170,6 +172,30 @@ function NotesContent() {
         hasChanges = true;
       }
     });
+    
+    // Migrate notes from old standalone focus area folders to new subfolders
+    const notesToUpdate = [];
+    data.notes.forEach(note => {
+      const noteFolder = cleanedFolders.find(f => f.id === note.folderId);
+      if (noteFolder && !noteFolder.parentFolderId && areas.some(area => area.label === noteFolder.name)) {
+        // This note is in a standalone focus area folder, migrate it to the subfolder
+        const targetSubfolder = cleanedFolders.find(f => f.name === noteFolder.name && f.parentFolderId === focusAreasFolder.id);
+        if (targetSubfolder) {
+          notesToUpdate.push({ ...note, folderId: targetSubfolder.id });
+          hasChanges = true;
+        }
+      }
+    });
+    
+    // Update notes with new folder IDs
+    if (notesToUpdate.length > 0) {
+      const updatedNotes = data.notes.map(note => {
+        const updatedNote = notesToUpdate.find(n => n.id === note.id);
+        return updatedNote || note;
+      });
+      data.notes = updatedNotes;
+      hasChanges = true;
+    }
     
     // Update data if we made changes
     if (hasChanges || cleanedFolders.length !== data.folders.length) {
