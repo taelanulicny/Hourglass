@@ -1,16 +1,14 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
 export async function POST(request) {
   try {
-    const { messages, focusContext } = await request.json();
-
-    console.log('API Key exists:', !!process.env.OPENAI_API_KEY);
-    console.log('API Key length:', process.env.OPENAI_API_KEY?.length || 0);
+    console.log('AI Chat API called');
+    console.log('Environment check:', {
+      hasOpenAIKey: !!process.env.OPENAI_API_KEY,
+      keyLength: process.env.OPENAI_API_KEY?.length || 0,
+      nodeEnv: process.env.NODE_ENV
+    });
 
     if (!process.env.OPENAI_API_KEY) {
       console.error('OpenAI API key not configured');
@@ -19,6 +17,13 @@ export async function POST(request) {
         { status: 500 }
       );
     }
+
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+
+    const { messages, focusContext } = await request.json();
+    console.log('Request data:', { messagesCount: messages?.length, focusContext });
 
     // Create a system message that includes focus area context
     const systemMessage = {
