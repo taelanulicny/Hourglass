@@ -91,7 +91,7 @@ function AiHelper({ focusAreaId, focusContext }) {
     setShowGreeting(false);
     
     try {
-      const response = await fetch('/api/ai/simple-chat', {
+      const response = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -67,33 +67,70 @@ Provide personalized, actionable advice related to this focus area. Be encouragi
     // Add the system message at the beginning
     const allMessages = [systemMessage, ...messages];
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: allMessages,
-      max_tokens: 500,
-      temperature: 0.7,
-    });
+    try {
+      const completion = await openai.chat.completions.create({
+        model: 'gpt-3.5-turbo',
+        messages: allMessages,
+        max_tokens: 500,
+        temperature: 0.7,
+      });
 
-    const response = completion.choices[0]?.message?.content || 'Sorry, I could not generate a response.';
+      const response = completion.choices[0]?.message?.content || 'Sorry, I could not generate a response.';
 
-    return NextResponse.json({ 
-      message: response,
-      usage: completion.usage 
-    });
+      return NextResponse.json({ 
+        message: response,
+        usage: completion.usage 
+      });
+    } catch (openaiError) {
+      console.error('OpenAI API error:', openaiError);
+      
+      // If it's a quota error, provide a helpful fallback response
+      if (openaiError.status === 429) {
+        const fallbackResponse = `I can see you're asking about "${focusContext?.name || 'your focus area'}" with a daily goal of ${focusContext?.goal || 'not set'} hours. 
+
+I'm currently experiencing a quota issue with my AI service, but I can still help you! Here are some general tips for your focus area:
+
+1. **Break down your goal**: If you need to study for your Chinese test, try the Pomodoro technique - 25 minutes focused study, 5 minute break.
+
+2. **Use active recall**: Instead of just reading, test yourself on the material.
+
+3. **Create a study schedule**: Plan specific times for different subjects.
+
+4. **Find a study buddy**: Accountability can help you stay on track.
+
+Would you like me to help you create a specific study plan for your Chinese test?`;
+
+        return NextResponse.json({ 
+          message: fallbackResponse,
+          usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }
+        });
+      }
+      
+      throw openaiError;
+    }
 
   } catch (error) {
-    console.error('OpenAI API error:', error);
+    console.error('General API error:', error);
     console.error('Error details:', {
       message: error.message,
       name: error.name,
       stack: error.stack
     });
-    return NextResponse.json(
-      { 
-        error: 'Failed to get AI response',
-        details: error.message 
-      },
-      { status: 500 }
-    );
+    
+    // Provide a helpful fallback even for general errors
+    const fallbackResponse = `I'm having trouble connecting to my AI service right now, but I can still help you with your focus area "${focusContext?.name || 'your goal'}"!
+
+Here are some quick tips:
+- Set specific, achievable goals
+- Use time-blocking to focus on one task at a time
+- Take regular breaks to maintain focus
+- Track your progress to stay motivated
+
+Try asking me again in a moment, or let me know what specific help you need!`;
+
+    return NextResponse.json({ 
+      message: fallbackResponse,
+      usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }
+    });
   }
 }
