@@ -177,7 +177,8 @@ function NotesContent() {
     }
     
     // Handle focus area renames
-    const { updatedFolders, hasChanges } = handleFocusAreaRenames(areas, cleanedFolders);
+    const { updatedFolders, hasChanges: renameChanges } = handleFocusAreaRenames(areas, cleanedFolders);
+    let hasChanges = renameChanges;
     cleanedFolders = updatedFolders;
     
     // Ensure all focus area subfolders exist
