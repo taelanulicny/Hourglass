@@ -4,26 +4,51 @@ import OpenAI from 'openai';
 export async function POST(request) {
   try {
     console.log('AI Chat API called');
+    
+    // Check environment variables
+    const hasApiKey = !!process.env.OPENAI_API_KEY;
+    const keyLength = process.env.OPENAI_API_KEY?.length || 0;
+    
     console.log('Environment check:', {
-      hasOpenAIKey: !!process.env.OPENAI_API_KEY,
-      keyLength: process.env.OPENAI_API_KEY?.length || 0,
+      hasOpenAIKey: hasApiKey,
+      keyLength: keyLength,
       nodeEnv: process.env.NODE_ENV
     });
 
-    if (!process.env.OPENAI_API_KEY) {
+    if (!hasApiKey) {
       console.error('OpenAI API key not configured');
       return NextResponse.json(
-        { error: 'OpenAI API key not configured' },
+        { 
+          error: 'OpenAI API key not configured',
+          debug: {
+            hasApiKey,
+            keyLength,
+            nodeEnv: process.env.NODE_ENV
+          }
+        },
         { status: 500 }
       );
     }
 
+    // Parse request body
+    let messages, focusContext;
+    try {
+      const body = await request.json();
+      messages = body.messages;
+      focusContext = body.focusContext;
+      console.log('Request data:', { messagesCount: messages?.length, focusContext });
+    } catch (parseError) {
+      console.error('Failed to parse request body:', parseError);
+      return NextResponse.json(
+        { error: 'Invalid JSON in request body' },
+        { status: 400 }
+      );
+    }
+
+    // Initialize OpenAI client
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
-
-    const { messages, focusContext } = await request.json();
-    console.log('Request data:', { messagesCount: messages?.length, focusContext });
 
     // Create a system message that includes focus area context
     const systemMessage = {
