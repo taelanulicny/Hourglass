@@ -88,16 +88,43 @@ function AiHelper({ focusAreaId, focusContext }) {
     setHistory(nextHistory);
     setInput("");
     setLoading(true);
+    setShowGreeting(false);
     
-    // AI features not available in static export mode
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: nextHistory,
+          focusContext: focusContext
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
       setHistory(prev => [...prev, { 
         role: "assistant", 
-        content: "AI features are not available in static mode. This feature requires server-side processing which isn't supported with static export." 
+        content: data.message 
       }]);
+    } catch (error) {
+      console.error('AI request failed:', error);
+      setHistory(prev => [...prev, { 
+        role: "assistant", 
+        content: `Sorry, I'm having trouble connecting right now. Error: ${error.message}` 
+      }]);
+    } finally {
       setLoading(false);
-      setShowGreeting(false);
-    }, 1000);
+    }
   }
 
   return (
