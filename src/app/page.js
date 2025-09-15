@@ -266,6 +266,20 @@ function HomeContent() {
   const STORAGE_PREFIX = "focusCategories:week:";
   const [currentWeekKey] = useState(() => weekKey(new Date()));
   const [viewWeekKey, setViewWeekKey] = useState(() => weekKey(rawDate));
+  
+  // Check for new week on app start and clear old data if needed
+  useEffect(() => {
+    const lastWeekKey = localStorage.getItem("lastProcessedWeekKey");
+    if (lastWeekKey && lastWeekKey !== currentWeekKey) {
+      // New week detected - clear the live data to start fresh
+      console.log("New week detected on app start, clearing old focus categories data");
+      localStorage.removeItem("focusCategories");
+      localStorage.setItem("lastProcessedWeekKey", currentWeekKey);
+    } else if (!lastWeekKey) {
+      // First time running - set the current week as processed
+      localStorage.setItem("lastProcessedWeekKey", currentWeekKey);
+    }
+  }, [currentWeekKey]);
   const nextWeekKey = weekKey(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
   const isCurrentWeek = viewWeekKey === currentWeekKey;
   // Sync isNextWeek state with viewWeekKey
@@ -355,6 +369,18 @@ function HomeContent() {
     let data = [];
     try {
       if (viewWeekKey === currentWeekKey) {
+        // Check if we need to clear old data for a new week
+        const lastWeekKey = localStorage.getItem("lastProcessedWeekKey");
+        if (lastWeekKey && lastWeekKey !== currentWeekKey) {
+          // New week detected - clear the live data to start fresh
+          console.log("New week detected, clearing old focus categories data");
+          localStorage.removeItem("focusCategories");
+          localStorage.setItem("lastProcessedWeekKey", currentWeekKey);
+        } else if (!lastWeekKey) {
+          // First time running - set the current week as processed
+          localStorage.setItem("lastProcessedWeekKey", currentWeekKey);
+        }
+        
         // Prefer live
         const liveRaw = localStorage.getItem("focusCategories");
         if (liveRaw) {
