@@ -9,7 +9,11 @@ export async function POST(request) {
   try {
     const { messages, focusContext } = await request.json();
 
+    console.log('API Key exists:', !!process.env.OPENAI_API_KEY);
+    console.log('API Key length:', process.env.OPENAI_API_KEY?.length || 0);
+
     if (!process.env.OPENAI_API_KEY) {
+      console.error('OpenAI API key not configured');
       return NextResponse.json(
         { error: 'OpenAI API key not configured' },
         { status: 500 }
@@ -49,8 +53,16 @@ Provide personalized, actionable advice related to this focus area. Be encouragi
 
   } catch (error) {
     console.error('OpenAI API error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      name: error.name,
+      stack: error.stack
+    });
     return NextResponse.json(
-      { error: 'Failed to get AI response' },
+      { 
+        error: 'Failed to get AI response',
+        details: error.message 
+      },
       { status: 500 }
     );
   }
