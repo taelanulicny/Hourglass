@@ -27,24 +27,31 @@ function makeId() {
   return `note-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,8)}`;
 }
 
-// Load notes from localStorage
+// Load notes from localStorage (week-specific)
 function loadNotes() {
   try {
-    const raw = localStorage.getItem("notesAppData");
+    const weekKey = getCurrentWeekKey();
+    const raw = localStorage.getItem(`notesAppData:week:${weekKey}`);
+    console.log("Raw data from localStorage for week", weekKey, ":", raw);
     const data = raw ? JSON.parse(raw) : { folders: [], notes: [] };
+    console.log("Parsed notes data:", data);
     return {
       folders: Array.isArray(data.folders) ? data.folders : [],
       notes: Array.isArray(data.notes) ? data.notes : []
     };
-  } catch {
+  } catch (e) {
+    console.warn("Failed to load notes:", e);
     return { folders: [], notes: [] };
   }
 }
 
-// Save notes to localStorage
+// Save notes to localStorage (week-specific)
 function saveNotes(data) {
   try {
-    localStorage.setItem("notesAppData", JSON.stringify(data));
+    const weekKey = getCurrentWeekKey();
+    console.log("Saving notes to localStorage for week", weekKey, ":", data);
+    localStorage.setItem(`notesAppData:week:${weekKey}`, JSON.stringify(data));
+    console.log("Successfully saved notes to localStorage");
   } catch (e) {
     console.warn("Failed to save notes:", e);
   }
@@ -53,12 +60,28 @@ function saveNotes(data) {
 // Default folders
 const FOCUS_AREAS_FOLDER = "Focus Areas";
 
-// Load focus areas from localStorage
+// Get current week key (Monday of current week)
+function getCurrentWeekKey() {
+  const now = new Date();
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - ((now.getDay() + 6) % 7)); // Monday
+  monday.setHours(0, 0, 0, 0);
+  return `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(monday.getDate()).padStart(2, '0')}`;
+}
+
+// Load focus areas from weekly snapshot
 function loadFocusAreas() {
   try {
-    const raw = localStorage.getItem("focusCategories");
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
+    const weekKey = getCurrentWeekKey();
+    const raw = localStorage.getItem(`focusCategories:week:${weekKey}`);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    }
+    // Fallback to global focus categories if no weekly snapshot exists
+    const globalRaw = localStorage.getItem("focusCategories");
+    const globalParsed = globalRaw ? JSON.parse(globalRaw) : [];
+    return Array.isArray(globalParsed) ? globalParsed : [];
   } catch {
     return [];
   }
@@ -227,11 +250,12 @@ function NotesContent() {
     }
   }, [focusArea, isClient]);
 
-  // Listen for focus area changes
+  // Listen for focus area changes (both global and weekly)
   useEffect(() => {
     if (!isClient) return; // Don't run on server
     const handleStorageChange = (e) => {
-      if (e.key === "focusCategories") {
+      const weekKey = getCurrentWeekKey();
+      if (e.key === "focusCategories" || e.key === `focusCategories:week:${weekKey}`) {
         const areas = loadFocusAreas();
         setFocusAreas(areas);
       }
@@ -339,7 +363,10 @@ function NotesContent() {
 
   // Create new note
   const createNote = () => {
-    if (!selectedFolder) return;
+    if (!selectedFolder) {
+      console.log("No selected folder, cannot create note");
+      return;
+    }
     
     const title = newNoteTitle.trim() || "New Note";
     
@@ -352,10 +379,17 @@ function NotesContent() {
       updatedAt: Date.now()
     };
     
+    console.log("Creating note:", newNote);
+    console.log("Selected folder ID:", selectedFolder);
+    console.log("Current notes data:", notesData);
+    
     const updatedData = {
       ...notesData,
       notes: [newNote, ...notesData.notes]
     };
+    
+    console.log("Updated data:", updatedData);
+    
     setNotesData(updatedData);
     saveNotes(updatedData);
     setSelectedNote(newNote);
