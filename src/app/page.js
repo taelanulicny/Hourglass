@@ -274,6 +274,32 @@ function HomeContent() {
       // New week detected - clear the live data to start fresh
       console.log("New week detected on app start, clearing old focus categories data");
       localStorage.removeItem("focusCategories");
+      
+      // Get the focus area definitions (without days data) from the previous week's snapshot
+      const previousWeekKey = lastWeekKey;
+      const previousWeekData = localStorage.getItem(STORAGE_PREFIX + previousWeekKey);
+      let freshFocusAreas = [];
+      
+      if (previousWeekData) {
+        try {
+          const parsed = JSON.parse(previousWeekData);
+          // Create fresh focus areas with empty days objects
+          freshFocusAreas = parsed.map(area => ({
+            ...area,
+            days: {}, // Reset days to empty object
+            timeSpent: 0 // Reset time spent
+          }));
+        } catch (e) {
+          console.warn("Failed to parse previous week data:", e);
+        }
+      }
+      
+      // Save fresh focus areas for the new week
+      if (freshFocusAreas.length > 0) {
+        localStorage.setItem("focusCategories", JSON.stringify(freshFocusAreas));
+        localStorage.setItem(STORAGE_PREFIX + currentWeekKey, JSON.stringify(freshFocusAreas));
+      }
+      
       localStorage.setItem("lastProcessedWeekKey", currentWeekKey);
     } else if (!lastWeekKey) {
       // First time running - set the current week as processed
@@ -375,6 +401,32 @@ function HomeContent() {
           // New week detected - clear the live data to start fresh
           console.log("New week detected, clearing old focus categories data");
           localStorage.removeItem("focusCategories");
+          
+          // Get the focus area definitions (without days data) from the previous week's snapshot
+          const previousWeekKey = lastWeekKey;
+          const previousWeekData = localStorage.getItem(STORAGE_PREFIX + previousWeekKey);
+          let freshFocusAreas = [];
+          
+          if (previousWeekData) {
+            try {
+              const parsed = JSON.parse(previousWeekData);
+              // Create fresh focus areas with empty days objects
+              freshFocusAreas = parsed.map(area => ({
+                ...area,
+                days: {}, // Reset days to empty object
+                timeSpent: 0 // Reset time spent
+              }));
+            } catch (e) {
+              console.warn("Failed to parse previous week data:", e);
+            }
+          }
+          
+          // Save fresh focus areas for the new week
+          if (freshFocusAreas.length > 0) {
+            localStorage.setItem("focusCategories", JSON.stringify(freshFocusAreas));
+            localStorage.setItem(STORAGE_PREFIX + currentWeekKey, JSON.stringify(freshFocusAreas));
+          }
+          
           localStorage.setItem("lastProcessedWeekKey", currentWeekKey);
         } else if (!lastWeekKey) {
           // First time running - set the current week as processed
