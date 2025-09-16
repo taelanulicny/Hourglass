@@ -489,6 +489,18 @@ function NotesContent() {
     return plainText.length > 100 ? plainText.substring(0, 100) + '...' : plainText;
   };
 
+  // Format text with basic markdown-like formatting
+  const formatText = (text) => {
+    if (!text) return '';
+    
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
+      .replace(/\*(.*?)\*/g, '<em>$1</em>') // Italic
+      .replace(/^- (.*$)/gm, '<li class="list-disc ml-4">$1</li>') // Bullet points
+      .replace(/^\d+\. (.*$)/gm, '<li class="list-decimal ml-4">$1</li>') // Numbered lists
+      .replace(/\n/g, '<br>'); // Line breaks
+  };
+
 
 
   return (
@@ -690,7 +702,7 @@ function NotesContent() {
                       {filteredNotes.map(note => (
                         <div
                           key={note.id}
-                          className="p-4 border border-gray-200 rounded-lg mb-3 hover:bg-gray-50 transition-colors relative group"
+                          className="p-4 border border-gray-200 rounded-lg mb-3 hover:bg-gray-50 transition-colors relative"
                         >
                           <div 
                             className="cursor-pointer"
@@ -715,7 +727,7 @@ function NotesContent() {
                               e.stopPropagation(); // Prevent opening the note
                               setShowDeleteConfirm(note.id);
                             }}
-                            className="absolute top-3 right-3 p-1 text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute top-3 right-3 p-1 text-gray-400 hover:text-gray-600 transition-colors"
                             title="Delete note"
                           >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -732,10 +744,191 @@ function NotesContent() {
               {/* Note Editor */}
               {selectedNote && (
                 <div className="flex-1 flex flex-col">
+                  {/* Formatting Toolbar - Always visible */}
+                  <div className="flex items-center gap-2 px-4 py-2 border-b border-gray-200 bg-gray-50">
+                    <button
+                      onClick={() => {
+                        if (!isEditing) {
+                          // Add bold text at the end when not editing
+                          const newText = selectedNote.content + '**bold text**';
+                          updateNote({ content: newText });
+                          setIsEditing(true);
+                        } else {
+                          // Work with selection when editing
+                          const textarea = textareaRef.current;
+                          if (textarea) {
+                            const start = textarea.selectionStart;
+                            const end = textarea.selectionEnd;
+                            const text = selectedNote.content;
+                            const before = text.substring(0, start);
+                            const selected = text.substring(start, end);
+                            const after = text.substring(end);
+                            
+                            // Wrap selected text in ** for bold
+                            const newText = before + '**' + selected + '**' + after;
+                            updateNote({ content: newText });
+                            
+                            // Set cursor position after the bold markers
+                            setTimeout(() => {
+                              textarea.focus();
+                              textarea.setSelectionRange(start + 2, end + 2);
+                            }, 0);
+                          }
+                        }
+                      }}
+                      className="p-2 text-gray-600 hover:bg-gray-200 rounded"
+                      title="Bold"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 4h8a4 4 0 014 4 4 4 0 01-4 4H6z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 12h9a4 4 0 014 4 4 4 0 01-4 4H6z" />
+                      </svg>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        if (!isEditing) {
+                          // Add italic text at the end when not editing
+                          const newText = selectedNote.content + '*italic text*';
+                          updateNote({ content: newText });
+                          setIsEditing(true);
+                        } else {
+                          // Work with selection when editing
+                          const textarea = textareaRef.current;
+                          if (textarea) {
+                            const start = textarea.selectionStart;
+                            const end = textarea.selectionEnd;
+                            const text = selectedNote.content;
+                            const before = text.substring(0, start);
+                            const selected = text.substring(start, end);
+                            const after = text.substring(end);
+                            
+                            // Wrap selected text in * for italic
+                            const newText = before + '*' + selected + '*' + after;
+                            updateNote({ content: newText });
+                            
+                            // Set cursor position after the italic markers
+                            setTimeout(() => {
+                              textarea.focus();
+                              textarea.setSelectionRange(start + 1, end + 1);
+                            }, 0);
+                          }
+                        }
+                      }}
+                      className="p-2 text-gray-600 hover:bg-gray-200 rounded"
+                      title="Italic"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 4h4M8 20h4M12 4v16" />
+                      </svg>
+                    </button>
+                    
+                    <div className="w-px h-6 bg-gray-300"></div>
+                    
+                    <button
+                      onClick={() => {
+                        if (!isEditing) {
+                          // Add bullet point at the end when not editing
+                          const newText = selectedNote.content + '\n- ';
+                          updateNote({ content: newText });
+                          setIsEditing(true);
+                        } else {
+                          // Work with current position when editing
+                          const textarea = textareaRef.current;
+                          if (textarea) {
+                            const start = textarea.selectionStart;
+                            const text = selectedNote.content;
+                            const before = text.substring(0, start);
+                            const after = text.substring(start);
+                            
+                            // Add bullet point at current line
+                            const lines = before.split('\n');
+                            const currentLine = lines[lines.length - 1];
+                            const indent = currentLine.match(/^(\s*)/)[0];
+                            const newText = before + '\n' + indent + '- ' + after;
+                            updateNote({ content: newText });
+                            
+                            // Set cursor position after the bullet
+                            setTimeout(() => {
+                              textarea.focus();
+                              textarea.setSelectionRange(start + indent.length + 3, start + indent.length + 3);
+                            }, 0);
+                          }
+                        }
+                      }}
+                      className="p-2 text-gray-600 hover:bg-gray-200 rounded"
+                      title="Bullet List"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                      </svg>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        if (!isEditing) {
+                          // Add numbered list at the end when not editing
+                          const newText = selectedNote.content + '\n1. ';
+                          updateNote({ content: newText });
+                          setIsEditing(true);
+                        } else {
+                          // Work with current position when editing
+                          const textarea = textareaRef.current;
+                          if (textarea) {
+                            const start = textarea.selectionStart;
+                            const text = selectedNote.content;
+                            const before = text.substring(0, start);
+                            const after = text.substring(start);
+                            
+                            // Add numbered list at current line
+                            const lines = before.split('\n');
+                            const currentLine = lines[lines.length - 1];
+                            const indent = currentLine.match(/^(\s*)/)[0];
+                            const newText = before + '\n' + indent + '1. ' + after;
+                            updateNote({ content: newText });
+                            
+                            // Set cursor position after the number
+                            setTimeout(() => {
+                              textarea.focus();
+                              textarea.setSelectionRange(start + indent.length + 4, start + indent.length + 4);
+                            }, 0);
+                          }
+                        }
+                      }}
+                      className="p-2 text-gray-600 hover:bg-gray-200 rounded"
+                      title="Numbered List"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                      </svg>
+                    </button>
+                    
+                    <div className="w-px h-6 bg-gray-300"></div>
+                    
+                    <select
+                      onChange={(e) => {
+                        if (!isEditing) {
+                          setIsEditing(true);
+                        }
+                        const textarea = textareaRef.current;
+                        if (textarea) {
+                          textarea.style.fontSize = e.target.value;
+                        }
+                      }}
+                      className="text-sm border border-gray-300 rounded px-2 py-1 bg-white"
+                      title="Font Size"
+                    >
+                      <option value="14px">Small</option>
+                      <option value="16px" selected>Normal</option>
+                      <option value="18px">Large</option>
+                      <option value="20px">Extra Large</option>
+                    </select>
+                  </div>
+
                   {/* Note Content */}
                   <div className="flex-1">
                     {isEditing ? (
-                      <div className="h-full">
+                      <div className="h-full flex flex-col">
                         <input
                           type="text"
                           value={selectedNote.title}
@@ -744,24 +937,31 @@ function NotesContent() {
                           className="w-full text-2xl font-semibold bg-transparent border-none outline-none p-4 pb-2 text-[#4E4034]"
                           placeholder="Note title"
                         />
+                        
                         <textarea
                           ref={textareaRef}
                           value={selectedNote.content}
                           onChange={(e) => updateNote({ content: e.target.value })}
                           onBlur={() => setIsEditing(false)}
-                          className="w-full h-[calc(100%-4rem)] resize-none border-none outline-none text-[#4E4034] leading-relaxed px-4 pb-4 bg-transparent"
+                          className="flex-1 resize-none border-none outline-none text-[#4E4034] leading-relaxed px-4 pb-4 bg-transparent"
                           placeholder="Start writing your note..."
+                          style={{ fontSize: '16px' }}
                         />
                       </div>
                     ) : (
                       <div 
-                        className="w-full h-full whitespace-pre-wrap text-[#4E4034] leading-relaxed p-4 cursor-text"
+                        className="w-full h-full text-[#4E4034] leading-relaxed p-4 cursor-text"
                         onClick={() => setIsEditing(true)}
                       >
                         <h1 className="text-2xl font-semibold mb-4">{selectedNote.title}</h1>
-                        <div>
-                          {selectedNote.content || <span className="text-gray-400 italic">Empty note</span>}
-                        </div>
+                        <div 
+                          className="prose prose-sm max-w-none"
+                          dangerouslySetInnerHTML={{ 
+                            __html: selectedNote.content 
+                              ? formatText(selectedNote.content) 
+                              : '<span class="text-gray-400 italic">Empty note</span>' 
+                          }}
+                        />
                       </div>
                     )}
                   </div>
