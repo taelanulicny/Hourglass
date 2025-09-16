@@ -801,9 +801,7 @@ function HomeContent() {
   const selectedDayAbbrev = ["Su","M","Tu","W","Th","F","Sa"][parseYMD(selectedDate).getDay()];
 
   // Button label for add focus area
-  const addBtnLabel = isNextWeek
-    ? "+ Add another Focus Area"
-    : "+ Add another Focus Area";
+  const addBtnLabel = "+ Add another Focus Area";
 
   // --- Timer & manual log state (from old slug page) ---
   const [logHours, setLogHours] = useState("");
@@ -2198,7 +2196,7 @@ function HomeContent() {
                 className="mt-4 w-full rounded-xl bg-[#8CA4AF] text-white py-3 font-semibold shadow-lg hover:bg-[#7A8F9A] active:bg-[#6B7A85] transition-all duration-200"
                 aria-label={addBtnLabel}
               >
-                + Add another Focus Area
+                {addBtnLabel}
               </button>
             </>
           ) : null

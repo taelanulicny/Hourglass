@@ -419,11 +419,18 @@ function NotesContent() {
     if (selectedNote?.id === noteId) {
       setSelectedNote(null);
       setIsEditing(false);
-      setSelectedFolder(null); // Go back to main focus areas view
+      
+      // Go back to main focus areas view - select the Focus Areas folder
+      const focusAreasFolder = notesData.folders.find(f => f.name === FOCUS_AREAS_FOLDER && !f.parentFolderId);
+      if (focusAreasFolder) {
+        setSelectedFolder(focusAreasFolder.id);
+      } else {
+        setSelectedFolder(null);
+      }
+      
+      // Expand sidebar to show focus areas
+      setSidebarCollapsed(false);
     }
-    
-    // Close the delete confirmation modal
-    setShowDeleteConfirm(null);
   };
 
   // Create new folder
@@ -456,9 +463,6 @@ function NotesContent() {
       setSelectedNote(null);
       setIsEditing(false);
     }
-    
-    // Close the delete confirmation modal
-    setShowDeleteConfirm(null);
   };
 
   // Format date
@@ -530,10 +534,11 @@ function NotesContent() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowDeleteConfirm(selectedNote.id)}
-                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Delete note"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                 </svg>
               </button>
             </div>
@@ -685,20 +690,38 @@ function NotesContent() {
                       {filteredNotes.map(note => (
                         <div
                           key={note.id}
-                          className="p-4 border border-gray-200 rounded-lg mb-3 cursor-pointer hover:bg-gray-50 transition-colors"
-                          onClick={() => {
-                            setSelectedNote(note);
-                            setIsEditing(false);
-                            setSidebarCollapsed(true);
-                          }}
+                          className="p-4 border border-gray-200 rounded-lg mb-3 hover:bg-gray-50 transition-colors relative group"
                         >
-                          <div className="mb-2">
-                            <h3 className="font-medium text-lg mb-1">{note.title}</h3>
-                            <span className="text-sm text-gray-500">{formatDate(note.updatedAt)}</span>
+                          <div 
+                            className="cursor-pointer"
+                            onClick={() => {
+                              setSelectedNote(note);
+                              setIsEditing(false);
+                              setSidebarCollapsed(true);
+                            }}
+                          >
+                            <div className="mb-2">
+                              <h3 className="font-medium text-lg mb-1">{note.title}</h3>
+                              <span className="text-sm text-gray-500">{formatDate(note.updatedAt)}</span>
+                            </div>
+                            <p className="text-gray-600 text-sm line-clamp-2">
+                              {getNotePreview(note.content)}
+                            </p>
                           </div>
-                          <p className="text-gray-600 text-sm line-clamp-2">
-                            {getNotePreview(note.content)}
-                          </p>
+                          
+                          {/* Three-dot menu button */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent opening the note
+                              setShowDeleteConfirm(note.id);
+                            }}
+                            className="absolute top-3 right-3 p-1 text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Delete note"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                            </svg>
+                          </button>
                         </div>
                       ))}
                     </div>
@@ -819,6 +842,9 @@ function NotesContent() {
               </button>
               <button
                 onClick={() => {
+                  // Close modal immediately
+                  setShowDeleteConfirm(null);
+                  
                   if (notesData.folders.find(f => f.id === showDeleteConfirm)) {
                     deleteFolder(showDeleteConfirm);
                   } else {
