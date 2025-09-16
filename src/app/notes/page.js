@@ -271,16 +271,18 @@ function NotesContent() {
     if (!isClient || !selectedNote || !isEditing) return; // Don't run on server
     
     const timeoutId = setTimeout(() => {
-      const updatedNotes = notesData.notes.map(note => 
-        note.id === selectedNote.id ? selectedNote : note
-      );
-      const updatedData = { ...notesData, notes: updatedNotes };
-      setNotesData(updatedData);
-      saveNotes(updatedData);
+      setNotesData(prevData => {
+        const updatedNotes = prevData.notes.map(note => 
+          note.id === selectedNote.id ? selectedNote : note
+        );
+        const updatedData = { ...prevData, notes: updatedNotes };
+        saveNotes(updatedData);
+        return updatedData;
+      });
     }, 1000);
 
     return () => clearTimeout(timeoutId);
-  }, [selectedNote, isEditing, notesData, isClient]);
+  }, [selectedNote, isEditing, isClient]);
 
   // Focus textarea when editing and collapse sidebar
   useEffect(() => {
