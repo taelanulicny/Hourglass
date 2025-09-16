@@ -420,6 +420,9 @@ function NotesContent() {
       setSelectedNote(null);
       setIsEditing(false);
     }
+    
+    // Close the delete confirmation modal
+    setShowDeleteConfirm(null);
   };
 
   // Create new folder
@@ -452,6 +455,8 @@ function NotesContent() {
       setSelectedNote(null);
       setIsEditing(false);
     }
+    
+    // Close the delete confirmation modal
     setShowDeleteConfirm(null);
   };
 
