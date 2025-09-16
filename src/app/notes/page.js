@@ -419,6 +419,7 @@ function NotesContent() {
     if (selectedNote?.id === noteId) {
       setSelectedNote(null);
       setIsEditing(false);
+      setSelectedFolder(null); // Go back to main focus areas view
     }
     
     // Close the delete confirmation modal
