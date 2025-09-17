@@ -60,6 +60,26 @@ export default function SettingsPage() {
     }
   };
 
+  const handleClearAIHistory = () => {
+    if (confirm('Are you sure you want to delete all AI conversation history? This cannot be undone.')) {
+      try {
+        // Get all localStorage keys that start with 'aiHistory:'
+        const keys = Object.keys(localStorage);
+        const aiHistoryKeys = keys.filter(key => key.startsWith('aiHistory:'));
+        
+        // Delete all AI history keys
+        aiHistoryKeys.forEach(key => {
+          localStorage.removeItem(key);
+        });
+        
+        alert(`Successfully deleted ${aiHistoryKeys.length} AI conversation histories.`);
+      } catch (error) {
+        console.error('Error clearing AI history:', error);
+        alert('Error clearing AI history. Please try again.');
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-900">
       {/* Header */}
@@ -193,6 +213,34 @@ export default function SettingsPage() {
         </section>
 
 
+
+        {/* AI Data Management Section */}
+        <section className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-100">
+            <h2 className="text-lg font-semibold text-gray-900">AI Data Management</h2>
+          </div>
+          <div className="p-6 space-y-4">
+            <button
+              onClick={handleClearAIHistory}
+              className="w-full flex items-center justify-between p-4 border border-orange-200 rounded-xl hover:bg-orange-50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <div className="font-medium text-orange-900">Clear AI History</div>
+                  <div className="text-sm text-orange-600">Delete all AI conversation histories</div>
+                </div>
+              </div>
+              <svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        </section>
 
         {/* Data Management Section */}
         <section className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">

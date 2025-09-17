@@ -16,26 +16,53 @@ function AiHelper({ focusAreaId, focusContext }) {
 
   // --- NEW: ephemeral greeting shown on each open, NOT saved in history ---
   const [showGreeting, setShowGreeting] = useState(true);
+  const [showHistory, setShowHistory] = useState(false); // Hide history initially
+  const [isAtBottom, setIsAtBottom] = useState(true);
   const greetingText = `How can I help you in "${focusContext?.name ?? "this focus area"}" right now?`;
 
-  // jump to bottom helper
-  function scrollToBottom() {
+  // jump to bottom helper with smooth scrolling
+  function scrollToBottom(smooth = false) {
     const el = messagesRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (el) {
+      if (smooth) {
+        el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+      } else {
+        el.scrollTop = el.scrollHeight;
+      }
+    }
   }
 
-  // When switching focus areas: show greeting again and jump to bottom
+  // When switching focus areas: show greeting again and hide history initially
   useEffect(() => {
     setShowGreeting(true);       // show greeting every time you open a focus area
-    // defer scroll until content paints
-    const id = setTimeout(scrollToBottom, 0);
+    setShowHistory(false);       // hide history initially
+    // defer scroll until content paints, then scroll smoothly
+    const id = setTimeout(() => scrollToBottom(true), 100);
     return () => clearTimeout(id);
   }, [focusAreaId]);
 
-  // Also scroll when history changes (new messages)
+  // Also scroll when history changes (new messages) - smooth scroll for new messages
   useEffect(() => {
-    scrollToBottom();
+    if (history.length > 0 || loading) {
+      scrollToBottom(true);
+    }
   }, [history, loading, showGreeting]);
+
+  // Handle scroll detection with clean view logic
+  const handleScroll = () => {
+    const el = messagesRef.current;
+    if (el) {
+      const isAtBottomNow = el.scrollTop + el.clientHeight >= el.scrollHeight - 10;
+      setIsAtBottom(isAtBottomNow);
+      
+      // If scrolled into the extra space at the bottom, return to clean view
+      if (showHistory && el.scrollTop > el.scrollHeight - el.clientHeight + 20) {
+        setShowHistory(false);
+        setShowGreeting(true);
+        setTimeout(() => scrollToBottom(true), 100);
+      }
+    }
+  };
 
   useEffect(() => {
     try {
@@ -92,6 +119,7 @@ function AiHelper({ focusAreaId, focusContext }) {
     setInput("");
     setLoading(true);
     setShowGreeting(false);
+    setShowHistory(true); // Show history when user starts conversation
     
     try {
       const response = await fetch('/api/ai/chat', {
@@ -160,16 +188,23 @@ function AiHelper({ focusAreaId, focusContext }) {
         <div className="ai-title">
           <span className="ai-text">Focus Area Specific AI Assistant</span>
         </div>
-        <div className="ai-subtitle">Get personalized advice for "{focusContext?.name ?? "this focus area"}"</div>
       </div>
       
-      <div
-        ref={messagesRef}
-        className="ai-messages"
-        style={{ maxHeight: 320, overflowY: "auto", display: "flex", flexDirection: "column", gap: 6 }}
-      >
-        {/* Render saved conversation */}
-        {history.map((m, i) => (
+      <div className="relative">
+        <div
+          ref={messagesRef}
+          className="ai-messages scrollbar-hide"
+          style={{ 
+            maxHeight: 320, 
+            overflowY: "auto", 
+            display: "flex", 
+            flexDirection: "column", 
+            gap: 6
+          }}
+          onScroll={handleScroll}
+        >
+        {/* Render saved conversation - only show when user has started conversation */}
+        {showHistory && history.map((m, i) => (
           <div key={i} className={m.role === "assistant" ? "msg assistant" : "msg user"}>
             {m.role === "assistant" ? (
               <ReactMarkdown
@@ -205,6 +240,45 @@ function AiHelper({ focusAreaId, focusContext }) {
           <div className="msg assistant typing-indicator flex items-center gap-2">
             <div className="ai-loading"></div>
             <span>Thinking…</span>
+          </div>
+        )}
+        
+        {/* Extra scrollable space to trigger clean view */}
+        {showHistory && (
+          <div className="h-32"></div>
+        )}
+        </div>
+        
+        {/* Action buttons - show when there's content */}
+        {((showHistory && history.length > 0) || showGreeting) && (
+          <div className="absolute bottom-2 right-2 flex gap-2 z-10">
+            {/* View history button - show when there's history but not currently visible */}
+            {history.length > 0 && !showHistory && (
+              <button
+                onClick={() => setShowHistory(true)}
+                className="bg-gray-400 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg hover:bg-gray-500 transition-colors"
+                aria-label="View previous conversation"
+                title={`View previous conversation (${history.length} messages)`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                </svg>
+              </button>
+            )}
+            
+            {/* Scroll to bottom button - only show when not at bottom */}
+            {!isAtBottom && (
+              <button
+                onClick={() => scrollToBottom(true)}
+                className="bg-[#8CA4AF] text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg hover:bg-[#7A939F] transition-colors"
+                aria-label="Scroll to bottom"
+                title="Scroll to bottom"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
+              </button>
+            )}
           </div>
         )}
       </div>

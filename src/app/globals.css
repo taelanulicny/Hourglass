@@ -85,7 +85,7 @@ body {
 
 /* AI Helper Header Styles */
 .ai-header {
-  @apply mb-4 pb-3 border-b border-gray-200 bg-gray-50 -m-3 mt-0 p-3 rounded-t-2xl;
+  @apply mb-4 pb-3 border-b border-gray-200 bg-gray-50 -m-3 -mt-3 p-3 rounded-t-2xl;
 }
 
 .ai-title {
