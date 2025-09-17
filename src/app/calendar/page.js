@@ -865,8 +865,10 @@ function CalendarContent() {
 
   return (
     <div className="min-h-screen bg-white text-[#4E4034] pb-24">
-      {/* Top bar */}
-      <header className="sticky top-0 bg-[#F7F6F3] px-4 py-3 shadow-sm z-50 flex items-center justify-between">
+      {/* Fixed header and day selector - LOCKED */}
+      <div className="fixed top-0 left-0 right-0 bg-[#F7F6F3] z-50">
+        {/* Top bar */}
+        <header className="px-4 py-3 shadow-sm flex items-center justify-between">
         <div className="flex items-center gap-2">
           <button 
             className="text-lg px-2" 
@@ -908,10 +910,10 @@ function CalendarContent() {
             </svg>
           </button>
         </div>
-      </header>
+        </header>
 
-      {/* Horizontal day strip (±14 days from today) */}
-      <div ref={stripRef} className="flex gap-2 overflow-x-hidden px-3 pt-2 pb-1 mb-3 bg-[#ECEAE6] rounded-md bg-white z-10 -mt-1">
+        {/* Horizontal day strip (±14 days from today) - LOCKED */}
+        <div ref={stripRef} className="flex gap-2 overflow-x-hidden px-3 pt-2 pb-1 mb-3 bg-[#ECEAE6] rounded-md bg-white">
         {stripDays.map((d, i) => {
           const isSel = selectedDate && d.toDateString() === selectedDate.toDateString();
           const isToday = d.toDateString() === today.toDateString();
@@ -930,10 +932,13 @@ function CalendarContent() {
             </button>
           );
         })}
+        </div>
       </div>
 
-      {/* Day view grid (hours gutter + single day column) */}
-      <div ref={gridRootRef} className="relative px-2 z-10">
+      {/* Scrollable calendar area */}
+      <div className="flex-1 overflow-y-auto pt-24">
+        {/* Day view grid (hours gutter + single day column) */}
+        <div ref={gridRootRef} className="relative px-2">
         <div className="grid grid-cols-[56px_minmax(0,1fr)]">
           {/* Hours gutter */}
           <div className="flex flex-col items-end pr-2">
@@ -1043,6 +1048,7 @@ function CalendarContent() {
               );
             })}
           </div>
+        </div>
         </div>
       </div>
 
