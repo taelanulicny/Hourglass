@@ -73,18 +73,21 @@ function AiHelper({ focusAreaId, focusContext }) {
     }
   }, [STORAGE_KEY, history, focusAreaId]);
 
-  // Debug function to check localStorage (remove in production)
-  const debugLocalStorage = () => {
-    console.log('=== LocalStorage Debug ===');
-    console.log('Current STORAGE_KEY:', STORAGE_KEY);
-    console.log('Current history:', history);
-    console.log('Stored data:', localStorage.getItem(STORAGE_KEY));
-    console.log('All localStorage keys:', Object.keys(localStorage).filter(key => key.startsWith('aiHistory:')));
-  };
 
   async function send() {
     if (!input.trim() || loading) return;
-    const nextHistory = [...history, { role: "user", content: input.trim() }];
+    
+    // Input validation
+    const trimmedInput = input.trim();
+    if (trimmedInput.length > 500) {
+      setHistory(prev => [...prev, { 
+        role: "assistant", 
+        content: "Your message is too long. Please keep it under 500 characters for better responses." 
+      }]);
+      return;
+    }
+    
+    const nextHistory = [...history, { role: "user", content: trimmedInput }];
     setHistory(nextHistory);
     setInput("");
     setLoading(true);
@@ -118,9 +121,32 @@ function AiHelper({ focusAreaId, focusContext }) {
       }]);
     } catch (error) {
       console.error('AI request failed:', error);
+      
+      // Provide user-friendly error messages based on error type
+      let errorMessage = "I'm having trouble connecting right now. ";
+      
+      if (error.message.includes('quota') || error.message.includes('429')) {
+        errorMessage += "It looks like I've reached my usage limit for today. I can still help you with some general advice though! ";
+      } else if (error.message.includes('network') || error.message.includes('fetch')) {
+        errorMessage += "There seems to be a network issue. Please check your connection and try again. ";
+      } else {
+        errorMessage += "Please try again in a moment. ";
+      }
+      
+      // Add helpful fallback advice
+      const focusArea = focusContext?.name || 'your focus area';
+      const dailyGoal = focusContext?.goal || 'your daily goal';
+      
+      errorMessage += `\n\nHere's some quick advice for "${focusArea}":\n\n`;
+      errorMessage += `• Focus on progress over perfection\n`;
+      errorMessage += `• Break your ${dailyGoal}-hour goal into smaller chunks\n`;
+      errorMessage += `• Take breaks to maintain energy\n`;
+      errorMessage += `• Track what works and what doesn't\n\n`;
+      errorMessage += `Try asking me again in a few minutes, or let me know what specific help you need!`;
+      
       setHistory(prev => [...prev, { 
         role: "assistant", 
-        content: `Sorry, I'm having trouble connecting right now. Error: ${error.message}` 
+        content: errorMessage
       }]);
     } finally {
       setLoading(false);
@@ -135,13 +161,6 @@ function AiHelper({ focusAreaId, focusContext }) {
           <span className="ai-text">Focus Area Specific AI Assistant</span>
         </div>
         <div className="ai-subtitle">Get personalized advice for "{focusContext?.name ?? "this focus area"}"</div>
-        {/* Debug button - remove in production */}
-        <button 
-          onClick={debugLocalStorage}
-          className="text-xs text-gray-500 hover:text-gray-700 mt-1"
-        >
-          Debug localStorage
-        </button>
       </div>
       
       <div
@@ -181,18 +200,49 @@ function AiHelper({ focusAreaId, focusContext }) {
           </div>
         )}
 
-        {/* Optional typing indicator */}
-        {loading && <div className="msg assistant typing-indicator">Thinking…</div>}
+        {/* Enhanced loading indicator */}
+        {loading && (
+          <div className="msg assistant typing-indicator flex items-center gap-2">
+            <div className="ai-loading"></div>
+            <span>Thinking…</span>
+          </div>
+        )}
       </div>
       
       <div className="ai-input">
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder={`Ask for advice about ${focusContext?.name ?? "this area"}…`}
-          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); send(); } }}
-        />
-        <button onClick={send} disabled={loading}>Send</button>
+        <div className="relative">
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder={`Ask for advice about ${focusContext?.name ?? "this area"}…`}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); send(); } }}
+            maxLength={500}
+          />
+          {input.length > 400 && (
+            <div className="absolute -top-6 right-0 text-xs text-gray-500">
+              {input.length}/500
+            </div>
+          )}
+        </div>
+        <button 
+          onClick={send} 
+          disabled={loading || !input.trim()}
+          className="flex items-center gap-1"
+        >
+          {loading ? (
+            <>
+              <div className="ai-loading w-3 h-3"></div>
+              <span>Sending...</span>
+            </>
+          ) : (
+            <>
+              <span>Send</span>
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
+            </>
+          )}
+        </button>
       </div>
     </div>
   );

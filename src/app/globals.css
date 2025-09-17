@@ -127,10 +127,88 @@ body {
   margin: 0.25rem 0;
 }
 
-/* If you want animated dots instead of plain text: */
+/* Animated typing indicator with dots */
 .msg.assistant.typing-indicator::after {
-  content: '…';
-  animation: dots 1s steps(5, end) infinite;
+  content: '';
+  animation: dots 1.5s steps(4, end) infinite;
+}
+
+/* Loading spinner for AI responses */
+.ai-loading {
+  @apply inline-block w-4 h-4 border-2 border-gray-300 border-t-[#8CA4AF] rounded-full animate-spin;
+}
+
+/* Smooth transitions for all interactive elements */
+.ai-helper * {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Enhanced button hover effects */
+.ai-input button:hover:not(:disabled) {
+  @apply bg-gray-100 scale-105;
+}
+
+.ai-input button:active:not(:disabled) {
+  @apply scale-95;
+}
+
+/* Improved focus states */
+.ai-input input:focus {
+  @apply ring-2 ring-[#8CA4AF] border-[#8CA4AF];
+  box-shadow: 0 0 0 3px rgba(140, 164, 175, 0.1);
+}
+
+/* Message animations */
+.msg {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Enhanced button styles for the main app */
+.btn-primary {
+  @apply bg-[#8CA4AF] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#7A8F9A] transition-colors focus:outline-none focus:ring-2 focus:ring-[#8CA4AF] focus:ring-offset-2;
+}
+
+.btn-secondary {
+  @apply bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-medium hover:bg-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2;
+}
+
+.btn-danger {
+  @apply bg-red-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-600 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2;
+}
+
+/* Loading states */
+.loading-spinner {
+  @apply inline-block w-4 h-4 border-2 border-gray-300 border-t-[#8CA4AF] rounded-full animate-spin;
+}
+
+/* Enhanced focus area cards */
+.focus-area-card {
+  @apply bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow;
+}
+
+/* Better form inputs */
+.form-input {
+  @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8CA4AF] focus:border-[#8CA4AF] transition-colors;
+}
+
+/* Modal improvements */
+.modal-overlay {
+  @apply fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-50;
+}
+
+.modal-content {
+  @apply bg-white rounded-xl shadow-xl p-6 w-[90%] max-w-md border border-gray-200;
 }
 
 /* Ephemeral greeting styling */
