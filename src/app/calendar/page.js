@@ -911,7 +911,7 @@ function CalendarContent() {
       </header>
 
       {/* Horizontal day strip (±14 days from today) */}
-      <div ref={stripRef} className="flex gap-2 overflow-x-auto px-3 pt-2 pb-1 mb-3 bg-[#ECEAE6] rounded-md bg-white z-10">
+      <div ref={stripRef} className="flex gap-2 overflow-x-hidden px-3 pt-2 pb-1 mb-3 bg-[#ECEAE6] rounded-md bg-white z-10 -mt-1">
         {stripDays.map((d, i) => {
           const isSel = selectedDate && d.toDateString() === selectedDate.toDateString();
           const isToday = d.toDateString() === today.toDateString();
