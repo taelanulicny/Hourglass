@@ -865,8 +865,11 @@ function CalendarContent() {
 
   return (
     <div className="min-h-screen bg-white text-[#4E4034] pb-24">
+      {/* iPhone status bar overlay - solid block to cover everything behind it */}
+      <div className="fixed top-0 left-0 right-0 h-12 bg-[#F7F6F3] z-[9999]"></div>
+      
       {/* Top bar */}
-      <header className="sticky top-0 bg-[#F7F6F3] px-4 py-3 shadow-sm z-50 flex items-center justify-between">
+      <header className="sticky top-0 bg-[#F7F6F3] px-4 py-3 pt-16 shadow-sm z-50 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <button 
             className="text-lg px-2" 
