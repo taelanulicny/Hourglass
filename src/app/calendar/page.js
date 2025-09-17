@@ -911,7 +911,7 @@ function CalendarContent() {
       </header>
 
       {/* Horizontal day strip (±14 days from today) */}
-      <div ref={stripRef} className="flex gap-2 overflow-x-auto px-3 pt-2 pb-1 mb-3 bg-[#ECEAE6] rounded-md bg-white">
+      <div ref={stripRef} className="flex gap-2 overflow-x-auto px-3 pt-2 pb-1 mb-3 bg-[#ECEAE6] rounded-md bg-white z-10">
         {stripDays.map((d, i) => {
           const isSel = selectedDate && d.toDateString() === selectedDate.toDateString();
           const isToday = d.toDateString() === today.toDateString();
@@ -933,7 +933,7 @@ function CalendarContent() {
       </div>
 
       {/* Day view grid (hours gutter + single day column) */}
-      <div ref={gridRootRef} className="relative px-2">
+      <div ref={gridRootRef} className="relative px-2 z-10">
         <div className="grid grid-cols-[56px_minmax(0,1fr)]">
           {/* Hours gutter */}
           <div className="flex flex-col items-end pr-2">
@@ -1081,7 +1081,7 @@ function CalendarContent() {
       </div>
 
       {/* --- Focus Area Rings (Categories) --- */}
-      <div className="relative">
+      <div className="relative z-10">
         {/* Subtle scroll indicators */}
         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-6 h-6 bg-gradient-to-r from-white to-transparent pointer-events-none z-10" />
         <div className="absolute right-0 top-1/2 -translate-y-1/2 w-6 h-6 bg-gradient-to-l from-white to-transparent pointer-events-none z-10" />
