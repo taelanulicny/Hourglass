@@ -1438,77 +1438,6 @@ function HomeContent() {
                 );
               })()}
               
-              {/* Recommended Resources Module */}
-              {(() => {
-                const cat =
-                  (focusArea?.meta && focusArea.meta.category) ||
-                  (categories.find(c => normalizeLabel(c.label) === normalizeLabel(focusArea.label))?.meta?.category) ||
-                  "Other";
-                
-                // Mock data for recommended resources based on category
-                const getRecommendedResources = (category) => {
-                  switch (category.toLowerCase()) {
-                    case "fitness":
-                      return [
-                        { title: "Hal Higdon Training Plans", url: "#", description: "Professional running training programs" },
-                        { title: "Strava Running Groups", url: "#", description: "Join local running communities" },
-                        { title: "YouTube: Jeff Nippard", url: "#", description: "Science-based fitness content" }
-                      ];
-                    case "study":
-                      return [
-                        { title: "Khan Academy LSAT", url: "#", description: "Free LSAT prep materials" },
-                        { title: "7Sage", url: "#", description: "Comprehensive LSAT preparation" },
-                        { title: "Anki Deck Marketplace", url: "#", description: "Flashcard decks for any subject" }
-                      ];
-                    case "business":
-                      return [
-                        { title: "Seth Godin Blog", url: "#", description: "Marketing and business insights" },
-                        { title: "Indie Hackers", url: "#", description: "Community for bootstrapped founders" },
-                        { title: "Y Combinator Startup School", url: "#", description: "Free startup course" }
-                      ];
-                    case "coding":
-                      return [
-                        { title: "freeCodeCamp", url: "#", description: "Learn to code for free" },
-                        { title: "The Odin Project", url: "#", description: "Full-stack web development" },
-                        { title: "Frontend Masters", url: "#", description: "Advanced frontend courses" }
-                      ];
-                    case "design":
-                      return [
-                        { title: "Figma Community", url: "#", description: "Design templates and resources" },
-                        { title: "Dribbble", url: "#", description: "Design inspiration and community" },
-                        { title: "Skillshare Design", url: "#", description: "Creative design courses" }
-                      ];
-                    default:
-                      return [
-                        { title: "Productivity Blog", url: "#", description: "General productivity tips" },
-                        { title: "Time Management Guide", url: "#", description: "Effective time management strategies" },
-                        { title: "Goal Setting Resources", url: "#", description: "Tools for setting and achieving goals" }
-                      ];
-                  }
-                };
-                
-                const resources = getRecommendedResources(cat);
-                
-                return (
-                  <div className="rounded-2xl border-2 border-gray-200 bg-white p-3 mt-3">
-                    <div className="text-[#4E4034] font-semibold text-base mb-2">Recommended for You</div>
-                    <div className="text-[12px] text-gray-600 mb-3">Based on your focus area category</div>
-                    <div className="space-y-2">
-                      {resources.map((resource, index) => (
-                        <a
-                          key={index}
-                          href={resource.url}
-                          className="block rounded-xl border border-gray-200 bg-white shadow-sm p-3 hover:shadow-md transition-shadow cursor-pointer"
-                        >
-                          <div className="font-semibold text-[#4E4034] text-sm mb-1">{resource.title}</div>
-                          <div className="text-[12px] text-[#6A5E53]">{resource.description}</div>
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })()}
-              {/* --- END inserted sections --- */}
               {/* Timeline module - Future Planning Tool */}
               <div className="rounded-2xl border-2 border-gray-200 bg-white p-3 mt-3">
                 <div className="text-[#4E4034] font-semibold text-base mb-2">
@@ -1652,38 +1581,6 @@ function HomeContent() {
                 )}
 
               </div>
-              {/* Notes section (moved here) */}
-              <div className="rounded-2xl border-2 border-gray-200 bg-white p-3 mt-3">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="text-[#4E4034] font-semibold text-base">
-                    Notes
-                  </div>
-                  <button
-                    onClick={() => router.push(`/notes?focus=${encodeURIComponent(selectedFocusArea?.label || '')}`)}
-                    className="px-3 py-1.5 bg-[#8CA4AF] text-white text-sm rounded-lg hover:bg-[#7A939F] transition-colors duration-200 flex items-center gap-1"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                    Open Notes
-                  </button>
-                </div>
-                {canEditWeek ? (
-                  <textarea
-                    className="w-full min-h-[76px] rounded border border-gray-300 px-3 py-2 text-[#4E4034] bg-[#F7F6F3] shadow-inner text-sm focus:outline-none focus:ring-2 focus:ring-[#BCA88F] mb-2"
-                    placeholder="Add strategies, ideas, or action steps for this focus area…"
-                    value={notes}
-                    onChange={e => saveNotes(e.target.value)}
-                  />
-                ) : (
-                  <div className="text-gray-700 text-sm min-h-[76px] whitespace-pre-wrap px-1 py-1">
-                    {notes
-                      ? notes
-                      : <span className="text-gray-400">No notes for this week.</span>
-                    }
-                  </div>
-                )}
-              </div>
 
 
 
@@ -1810,6 +1707,18 @@ function HomeContent() {
             </div>
           )}
         </div>
+
+        {/* Floating notes button for focus area view */}
+        <button
+          onClick={() => router.push('/notes')}
+          className="fixed bottom-20 right-4 bg-[#8CA4AF] text-white rounded-full w-12 h-12 flex items-center justify-center text-2xl shadow-md z-[10000]"
+          aria-label="Go to Notes"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+        </button>
+
 
       </div>
     );
@@ -2481,7 +2390,7 @@ function HomeContent() {
       </div>
     )}
 
-    {/* Floating plus button to link to notes page */}
+    {/* Floating notes button for dashboard view */}
     <button
       onClick={() => router.push('/notes')}
       className="fixed bottom-20 right-4 bg-[#8CA4AF] text-white rounded-full w-12 h-12 flex items-center justify-center text-2xl shadow-md z-[10000]"
@@ -2491,6 +2400,7 @@ function HomeContent() {
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
       </svg>
     </button>
+
     </>
   );
 }
