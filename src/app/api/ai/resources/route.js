@@ -159,10 +159,31 @@ Return your response as a JSON object with this exact structure:
       // Try to parse the JSON response
       let resources;
       try {
+        // Clean up the response first
+        let cleanedResponse = response.trim();
+        
+        // Remove any markdown code blocks if present
+        cleanedResponse = cleanedResponse.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+        
         // Extract JSON from the response (in case there's extra text)
-        const jsonMatch = response.match(/\{[\s\S]*\}/);
+        const jsonMatch = cleanedResponse.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
-          resources = JSON.parse(jsonMatch[0]);
+          // Try to fix common JSON issues
+          let jsonString = jsonMatch[0];
+          
+          // Fix incomplete arrays/objects by removing trailing commas and incomplete elements
+          jsonString = jsonString.replace(/,(\s*[}\]])/g, '$1');
+          
+          // Remove any incomplete object properties at the end
+          jsonString = jsonString.replace(/,\s*"platform":\s*$/, '');
+          jsonString = jsonString.replace(/,\s*"[^"]*":\s*$/, '');
+          
+          // Ensure the JSON ends properly
+          if (!jsonString.endsWith('}')) {
+            jsonString += '}';
+          }
+          
+          resources = JSON.parse(jsonString);
         } else {
           throw new Error('No JSON found in response');
         }
@@ -223,12 +244,72 @@ Return your response as a JSON object with this exact structure:
               { platform: "Website", handle: "richroll.com", url: "https://richroll.com", icon: "Website" }
             ]}
           ];
+        } else if (topic.includes('coding') || topic.includes('programming') || topic.includes('tech')) {
+          fallbackBooks = [
+            { title: `Clean Code`, desc: `A Handbook of Agile Software Craftsmanship`, url: `https://amazon.com/dp/0132350882`, author: "Robert C. Martin" },
+            { title: `The Pragmatic Programmer`, desc: `Your Journey to Mastery`, url: `https://amazon.com/dp/0135957052`, author: "Andrew Hunt, David Thomas" },
+            { title: `Cracking the Coding Interview`, desc: `189 Programming Questions and Solutions`, url: `https://amazon.com/dp/0984782850`, author: "Gayle Laakmann McDowell" },
+            { title: `Python Crash Course`, desc: `A Hands-On, Project-Based Introduction to Programming`, url: `https://amazon.com/dp/1593279280`, author: "Eric Matthes" },
+            { title: `Eloquent JavaScript`, desc: `A Modern Introduction to Programming`, url: `https://eloquentjavascript.net/`, author: "Marijn Haverbeke" }
+          ];
+          fallbackPodcasts = [
+            { title: `Syntax - Tasty Web Development Treats`, desc: `A podcast for web developers covering JavaScript to CSS and beyond`, url: `https://podcasts.apple.com/us/podcast/syntax-tasty-web-development-treats/id1253186678`, spotifyUrl: `https://open.spotify.com/show/7yyfh8ICP5buWnX2a6gudc` },
+            { title: `Software Engineering Daily`, desc: `In-depth interviews and discussions on coding topics and technologies`, url: `https://podcasts.apple.com/us/podcast/software-engineering-daily/id1019576853`, spotifyUrl: `https://open.spotify.com/show/4S3b6g2m6fXf2TJmC6H6WD` },
+            { title: `CodeNewbie Podcast`, desc: `Supportive podcast for people learning to code`, url: `https://podcasts.apple.com/us/podcast/codenewbie-podcast/id919219256`, spotifyUrl: `https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk` },
+            { title: `Programming Throwdown`, desc: `Tech-filled discussion on programming languages and techniques`, url: `https://podcasts.apple.com/us/podcast/programming-throwdown/id427166321`, spotifyUrl: `https://open.spotify.com/show/7z5S5pDnKfF9R7Cg6W58dd` },
+            { title: `Learn to Code With Me`, desc: `Perfect for beginners starting their coding journey`, url: `https://podcasts.apple.com/us/podcast/learn-to-code-with-me/id1312288906`, spotifyUrl: `https://open.spotify.com/show/3ZVhwe8S6mzZeljKg6fE6t` }
+          ];
+          fallbackSocial = [
+            { name: "Elon Musk", desc: "Technology entrepreneur and CEO of Tesla and SpaceX", socialLinks: [
+              { platform: "X", handle: "@elonmusk", url: "https://x.com/elonmusk", icon: "X" },
+              { platform: "LinkedIn", handle: "elonmusk", url: "https://linkedin.com/in/elonmusk", icon: "LinkedIn" },
+              { platform: "YouTube", handle: "Elon Musk", url: "https://youtube.com/user/electricjet", icon: "YouTube" }
+            ]},
+            { name: "Sundar Pichai", desc: "CEO of Google and Alphabet Inc.", socialLinks: [
+              { platform: "X", handle: "@sundarpichai", url: "https://x.com/sundarpichai", icon: "X" },
+              { platform: "LinkedIn", handle: "sundarpichai", url: "https://linkedin.com/in/sundarpichai", icon: "LinkedIn" },
+              { platform: "YouTube", handle: "Sundar Pichai", url: "https://youtube.com/channel/UC6vY5pTJkkDfZmUrDpZVnfg", icon: "YouTube" }
+            ]},
+            { name: "Hadi Partovi", desc: "Tech entrepreneur and CEO of Code.org", socialLinks: [
+              { platform: "X", handle: "@hadip", url: "https://x.com/hadip", icon: "X" },
+              { platform: "LinkedIn", handle: "hadip", url: "https://linkedin.com/in/hadipartovi", icon: "LinkedIn" },
+              { platform: "YouTube", handle: "Code.org", url: "https://youtube.com/user/CodeOrg", icon: "YouTube" }
+            ]},
+            { name: "Reshma Saujani", desc: "Founder of Girls Who Code", socialLinks: [
+              { platform: "X", handle: "@reshmasaujani", url: "https://x.com/reshmasaujani", icon: "X" },
+              { platform: "LinkedIn", handle: "reshmasaujani", url: "https://linkedin.com/in/reshmasaujani", icon: "LinkedIn" },
+              { platform: "Website", handle: "girlswhocode.com", url: "https://girlswhocode.com", icon: "Website" }
+            ]},
+            { name: "Wes Bos", desc: "Full-stack developer and educator", socialLinks: [
+              { platform: "X", handle: "@wesbos", url: "https://x.com/wesbos", icon: "X" },
+              { platform: "LinkedIn", handle: "wesbos", url: "https://linkedin.com/in/wesbos", icon: "LinkedIn" },
+              { platform: "YouTube", handle: "Wes Bos", url: "https://youtube.com/@wesbos", icon: "YouTube" }
+            ]}
+          ];
         } else {
           // Default to entrepreneurship resources
           fallbackBooks = [
             { title: `Atomic Habits`, desc: `Build good habits and break bad ones`, url: `https://amazon.com/dp/0735211299`, author: "James Clear" },
             { title: `Deep Work`, desc: `Rules for focused success in a distracted world`, url: `https://amazon.com/dp/1455586692`, author: "Cal Newport" },
             { title: `The Lean Startup`, desc: `How today's entrepreneurs use continuous innovation`, url: `https://amazon.com/dp/0307887898`, author: "Eric Ries" }
+          ];
+          fallbackPodcasts = [
+            { title: `The Tim Ferriss Show`, desc: `Interviews with world-class performers`, url: `https://podcasts.apple.com/podcast/id863897795`, spotifyUrl: `https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk` },
+            { title: `How I Built This`, desc: `Stories behind successful companies`, url: `https://podcasts.apple.com/podcast/id1154105909`, spotifyUrl: `https://open.spotify.com/show/6E6sTsI8O5j1dpEYFqylx8` }
+          ];
+          fallbackSocial = [
+            { name: "David Goggins", desc: "Former Navy SEAL, ultra-endurance athlete, and motivational speaker", socialLinks: [
+              { platform: "X", handle: "@davidgoggins", url: "https://x.com/davidgoggins", icon: "X" },
+              { platform: "Instagram", handle: "@davidgoggins", url: "https://instagram.com/davidgoggins", icon: "Instagram" },
+              { platform: "YouTube", handle: "David Goggins", url: "https://youtube.com/@DavidGoggins", icon: "YouTube" },
+              { platform: "Website", handle: "davidgoggins.com", url: "https://davidgoggins.com", icon: "Website" }
+            ]},
+            { name: "Alex Hormozi", desc: "Serial entrepreneur, gym owner, and business educator", socialLinks: [
+              { platform: "X", handle: "@AlexHormozi", url: "https://x.com/AlexHormozi", icon: "X" },
+              { platform: "LinkedIn", handle: "alex-hormozi", url: "https://linkedin.com/in/alex-hormozi", icon: "LinkedIn" },
+              { platform: "YouTube", handle: "Alex Hormozi", url: "https://youtube.com/@AlexHormozi", icon: "YouTube" },
+              { platform: "Instagram", handle: "@hormozi", url: "https://instagram.com/hormozi", icon: "Instagram" }
+            ]}
           ];
         }
         
