@@ -443,32 +443,47 @@ function FeedCard({ title, children, cta }) {
 function PodcastPlatformModal({ podcast, isOpen, onClose }) {
   if (!isOpen || !podcast) return null;
 
-  const platforms = [
-    {
+  // Build available platforms based on what URLs we have
+  const availablePlatforms = [];
+  
+  // Always include Apple Podcasts if we have a URL
+  if (podcast.url) {
+    availablePlatforms.push({
       name: 'Apple Podcasts',
       icon: '🍎',
       url: podcast.url,
       color: 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-    },
-    {
+    });
+  }
+  
+  // Include Spotify if we have a Spotify URL
+  if (podcast.spotifyUrl) {
+    availablePlatforms.push({
       name: 'Spotify',
       icon: '🎵',
       url: podcast.spotifyUrl,
       color: 'bg-green-500 hover:bg-green-600 text-white'
-    },
-    {
-      name: 'Google Podcasts',
-      icon: '📱',
-      url: `https://podcasts.google.com/search/${encodeURIComponent(podcast.title)}`,
-      color: 'bg-blue-500 hover:bg-blue-600 text-white'
-    },
-    {
-      name: 'Pocket Casts',
-      icon: '🎧',
-      url: `https://pca.st/search?q=${encodeURIComponent(podcast.title)}`,
-      color: 'bg-orange-500 hover:bg-orange-600 text-white'
-    }
-  ];
+    });
+  }
+  
+  // Always include search-based platforms as fallbacks
+  availablePlatforms.push({
+    name: 'Google Podcasts',
+    icon: '📱',
+    url: `https://podcasts.google.com/search/${encodeURIComponent(podcast.title)}`,
+    color: 'bg-blue-500 hover:bg-blue-600 text-white'
+  });
+  
+  availablePlatforms.push({
+    name: 'Pocket Casts',
+    icon: '🎧',
+    url: `https://pca.st/search?q=${encodeURIComponent(podcast.title)}`,
+    color: 'bg-orange-500 hover:bg-orange-600 text-white'
+  });
+
+  // Determine if we have specific platform URLs (not just search)
+  const hasSpecificPlatforms = podcast.url || podcast.spotifyUrl;
+  const specificPlatformCount = (podcast.url ? 1 : 0) + (podcast.spotifyUrl ? 1 : 0);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -488,8 +503,15 @@ function PodcastPlatformModal({ podcast, isOpen, onClose }) {
 
         {/* Platform buttons */}
         <div className="space-y-3 mb-6">
-          <p className="text-sm text-gray-500 font-medium">Listen on:</p>
-          {platforms.map((platform, index) => (
+          <p className="text-sm text-gray-500 font-medium">
+            {hasSpecificPlatforms && specificPlatformCount === 1 
+              ? "Only available on:" 
+              : hasSpecificPlatforms 
+                ? "Available on:" 
+                : "Search on:"
+            }
+          </p>
+          {availablePlatforms.map((platform, index) => (
             <a
               key={index}
               href={platform.url}
