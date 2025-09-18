@@ -137,7 +137,7 @@ function ResourcesTab({ focusAreas = [] }) {
         <div className="flex gap-2">
           <input
             type="text"
-            placeholder="Try: 'entrepreneurship', 'founders of companies', 'productivity', 'coding', 'fitness'..."
+            placeholder="Try: Entrepreneurship"
             className="flex-1 rounded-lg border px-3 py-2 text-sm"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
