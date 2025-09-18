@@ -394,7 +394,7 @@ function FeedCard({ title, children, cta }) {
               <img 
                 src={thumbnail} 
                 alt={title}
-                className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                className="w-full h-full object-cover"
                 onLoad={() => {
                   console.log(`Image loaded successfully for ${title}: ${thumbnail}`);
                   setImageLoaded(true);
@@ -406,13 +406,13 @@ function FeedCard({ title, children, cta }) {
                 }}
               />
               {!imageLoaded && (
-                <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-2xl">
+                <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-2xl bg-gray-100">
                   {getPlaceholderIcon(type)}
                 </div>
               )}
             </>
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-400 text-2xl">
+            <div className="w-full h-full flex items-center justify-center text-gray-400 text-2xl bg-gray-100">
               {getPlaceholderIcon(type)}
             </div>
           )}
@@ -425,6 +425,12 @@ function FeedCard({ title, children, cta }) {
             <div className="text-sm text-gray-600 line-clamp-1">by {author}</div>
           ) : (
             <div className="text-sm text-gray-500 line-clamp-2">{desc}</div>
+          )}
+          {/* Debug: Show thumbnail URL */}
+          {thumbnail && (
+            <div className="text-xs text-gray-400 mt-1 truncate">
+              {thumbnail}
+            </div>
           )}
           
           {/* Button for all resource types */}
