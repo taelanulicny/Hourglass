@@ -103,7 +103,7 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect }) {
     setIsSearching(true);
     
     try {
-      const response = await fetch('/api/ai/resources', {
+      const response = await fetch('/api/ai/resources/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -222,7 +222,7 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect }) {
           >
             {isSearching ? 'Finding...' : 'Find'}
           </button>
-        </div>
+      </div>
         {searchQuery && (
           <div className="mt-2 flex items-center justify-between">
             <div className="text-xs text-gray-600">
@@ -453,14 +453,14 @@ function FeedCard({ title, children, cta }) {
       )}
     </div>
   );
-  }
+}
 
   // --- Social Media Icon Component ------------------------------------------
   function SocialMediaIcon({ platform, className = "" }) {
     const getLogo = (platform) => {
       switch (platform) {
         case 'X':
-          return (
+  return (
             <svg className={`w-4 h-4 ${className}`} viewBox="0 0 24 24" fill="currentColor">
               <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
             </svg>
@@ -699,11 +699,9 @@ function PersonSocialModal({ person, isOpen, onClose }) {
       <div className="bg-white rounded-2xl max-w-md w-full p-6">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
-          <img 
-            src={person.thumbnail} 
-            alt={person.name}
-            className="w-16 h-16 rounded-full object-cover"
-          />
+          <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-2xl">
+            👤
+          </div>
           <div>
             <h3 className="font-semibold text-xl">{person.name}</h3>
             <p className="text-sm text-gray-600">{person.desc}</p>

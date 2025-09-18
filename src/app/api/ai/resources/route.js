@@ -170,76 +170,72 @@ Return your response as a JSON object with this exact structure:
         console.error('Failed to parse AI response as JSON:', parseError);
         console.log('Raw AI response:', response);
         
-        // Fallback to real resources with working URLs
-        resources = {
-          books: [
+        // Fallback to dynamic resources based on query
+        const topic = query.toLowerCase();
+        let fallbackBooks = [];
+        let fallbackPodcasts = [];
+        let fallbackSocial = [];
+        
+        if (topic.includes('fitness') || topic.includes('health') || topic.includes('workout')) {
+          fallbackBooks = [
             { title: `Atomic Habits`, desc: `Build good habits and break bad ones`, url: `https://amazon.com/dp/0735211299`, author: "James Clear" },
-            { title: `Deep Work`, desc: `Rules for focused success in a distracted world`, url: `https://amazon.com/dp/1455586692`, author: "Cal Newport" },
-            { title: `The Lean Startup`, desc: `How today's entrepreneurs use continuous innovation`, url: `https://amazon.com/dp/0307887898`, author: "Eric Ries" }
-          ],
-          podcasts: [
+            { title: `Can't Hurt Me`, desc: `Master your mind and defy the odds`, url: `https://amazon.com/dp/1544512277`, author: "David Goggins" },
+            { title: `The 4-Hour Body`, desc: `An uncommon guide to rapid fat-loss, incredible sex, and becoming superhuman`, url: `https://amazon.com/dp/030746363X`, author: "Tim Ferriss" },
+            { title: `Bigger Leaner Stronger`, desc: `The simple science of building the ultimate male body`, url: `https://amazon.com/dp/1938895274`, author: "Michael Matthews" },
+            { title: `Starting Strength`, desc: `Basic Barbell Training`, url: `https://amazon.com/dp/0982522738`, author: "Mark Rippetoe" }
+          ];
+          fallbackPodcasts = [
             { title: `The Tim Ferriss Show`, desc: `Interviews with world-class performers`, url: `https://podcasts.apple.com/podcast/id863897795`, spotifyUrl: `https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk` },
-            { title: `How I Built This`, desc: `Stories behind successful companies`, url: `https://podcasts.apple.com/podcast/id1154105909`, spotifyUrl: `https://open.spotify.com/show/6E6sTsI8O5j1dpEYFqylx8` }
-          ],
-        social: [
-          {
-            name: "David Goggins",
-            desc: "Former Navy SEAL, ultra-endurance athlete, and motivational speaker",
-            socialLinks: [
+            { title: `Huberman Lab`, desc: `Neuroscience-based tools for everyday life`, url: `https://podcasts.apple.com/podcast/id1545953110`, spotifyUrl: `https://open.spotify.com/show/7hPULsL7d724y0y0000000` },
+            { title: `The Joe Rogan Experience`, desc: `Long-form conversations with interesting people`, url: `https://podcasts.apple.com/podcast/id360084272`, spotifyUrl: `https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk` },
+            { title: `The Rich Roll Podcast`, desc: `Plant-powered living and endurance sports`, url: `https://podcasts.apple.com/podcast/id444827767`, spotifyUrl: `https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk` },
+            { title: `Mind Pump`, desc: `Fitness, nutrition, and lifestyle advice`, url: `https://podcasts.apple.com/podcast/id618613883`, spotifyUrl: `https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk` }
+          ];
+          fallbackSocial = [
+            { name: "David Goggins", desc: "Former Navy SEAL, ultra-endurance athlete, and motivational speaker", socialLinks: [
               { platform: "X", handle: "@davidgoggins", url: "https://x.com/davidgoggins", icon: "X" },
               { platform: "Instagram", handle: "@davidgoggins", url: "https://instagram.com/davidgoggins", icon: "Instagram" },
               { platform: "YouTube", handle: "David Goggins", url: "https://youtube.com/@DavidGoggins", icon: "YouTube" },
               { platform: "Website", handle: "davidgoggins.com", url: "https://davidgoggins.com", icon: "Website" }
-            ]
-          },
-          {
-            name: "Alex Hormozi",
-            desc: "Serial entrepreneur, gym owner, and business educator",
-            socialLinks: [
-              { platform: "X", handle: "@AlexHormozi", url: "https://x.com/AlexHormozi", icon: "X" },
-              { platform: "LinkedIn", handle: "alex-hormozi", url: "https://linkedin.com/in/alex-hormozi", icon: "LinkedIn" },
-              { platform: "YouTube", handle: "Alex Hormozi", url: "https://youtube.com/@AlexHormozi", icon: "YouTube" },
-              { platform: "Instagram", handle: "@hormozi", url: "https://instagram.com/hormozi", icon: "Instagram" }
-            ]
-          },
-          {
-            name: "Gary Vaynerchuk",
-            desc: "Entrepreneur, CEO of VaynerMedia, and social media expert",
-            socialLinks: [
-              { platform: "X", handle: "@garyvee", url: "https://x.com/garyvee", icon: "X" },
-              { platform: "LinkedIn", handle: "garyvaynerchuk", url: "https://linkedin.com/in/garyvaynerchuk", icon: "LinkedIn" },
-              { platform: "YouTube", handle: "GaryVee", url: "https://youtube.com/@GaryVee", icon: "YouTube" },
-              { platform: "Instagram", handle: "@garyvee", url: "https://instagram.com/garyvee", icon: "Instagram" }
-            ]
-          },
-          {
-            name: "Naval Ravikant",
-            desc: "Entrepreneur, investor, and philosopher",
-            socialLinks: [
-              { platform: "X", handle: "@naval", url: "https://x.com/naval", icon: "X" },
-              { platform: "LinkedIn", handle: "naval-ravikant", url: "https://linkedin.com/in/naval-ravikant", icon: "LinkedIn" },
-              { platform: "YouTube", handle: "Naval Ravikant", url: "https://youtube.com/@naval", icon: "YouTube" }
-            ]
-          },
-          {
-            name: "Paul Graham",
-            desc: "Co-founder of Y Combinator, essayist",
-            socialLinks: [
-              { platform: "X", handle: "@paulg", url: "https://x.com/paulg", icon: "X" },
-              { platform: "Website", handle: "paulgraham.com", url: "https://paulgraham.com", icon: "Website" },
-              { platform: "GitHub", handle: "@paulg", url: "https://github.com/paulg", icon: "GitHub" }
-            ]
-          },
-          {
-            name: "Reid Hoffman",
-            desc: "Co-founder of LinkedIn, entrepreneur and investor",
-            socialLinks: [
-              { platform: "X", handle: "@reidhoffman", url: "https://x.com/reidhoffman", icon: "X" },
-              { platform: "LinkedIn", handle: "reidhoffman", url: "https://linkedin.com/in/reidhoffman", icon: "LinkedIn" },
-              { platform: "Website", handle: "reidhoffman.org", url: "https://reidhoffman.org", icon: "Website" }
-            ]
-          }
-          ]
+            ]},
+            { name: "Tim Ferriss", desc: "Author, entrepreneur, and human guinea pig", socialLinks: [
+              { platform: "X", handle: "@tferriss", url: "https://x.com/tferriss", icon: "X" },
+              { platform: "Instagram", handle: "@timferriss", url: "https://instagram.com/timferriss", icon: "Instagram" },
+              { platform: "YouTube", handle: "Tim Ferriss", url: "https://youtube.com/@timferriss", icon: "YouTube" },
+              { platform: "Website", handle: "tim.blog", url: "https://tim.blog", icon: "Website" }
+            ]},
+            { name: "Andrew Huberman", desc: "Neuroscientist and professor at Stanford", socialLinks: [
+              { platform: "X", handle: "@hubermanlab", url: "https://x.com/hubermanlab", icon: "X" },
+              { platform: "Instagram", handle: "@hubermanlab", url: "https://instagram.com/hubermanlab", icon: "Instagram" },
+              { platform: "YouTube", handle: "Huberman Lab", url: "https://youtube.com/@hubermanlab", icon: "YouTube" },
+              { platform: "Website", handle: "hubermanlab.com", url: "https://hubermanlab.com", icon: "Website" }
+            ]},
+            { name: "Joe Rogan", desc: "Comedian, UFC commentator, and podcast host", socialLinks: [
+              { platform: "X", handle: "@joerogan", url: "https://x.com/joerogan", icon: "X" },
+              { platform: "Instagram", handle: "@joerogan", url: "https://instagram.com/joerogan", icon: "Instagram" },
+              { platform: "YouTube", handle: "PowerfulJRE", url: "https://youtube.com/@PowerfulJRE", icon: "YouTube" },
+              { platform: "Website", handle: "joerogan.com", url: "https://joerogan.com", icon: "Website" }
+            ]},
+            { name: "Rich Roll", desc: "Ultra-endurance athlete and plant-based advocate", socialLinks: [
+              { platform: "X", handle: "@richroll", url: "https://x.com/richroll", icon: "X" },
+              { platform: "Instagram", handle: "@richroll", url: "https://instagram.com/richroll", icon: "Instagram" },
+              { platform: "YouTube", handle: "Rich Roll", url: "https://youtube.com/@richroll", icon: "YouTube" },
+              { platform: "Website", handle: "richroll.com", url: "https://richroll.com", icon: "Website" }
+            ]}
+          ];
+        } else {
+          // Default to entrepreneurship resources
+          fallbackBooks = [
+            { title: `Atomic Habits`, desc: `Build good habits and break bad ones`, url: `https://amazon.com/dp/0735211299`, author: "James Clear" },
+            { title: `Deep Work`, desc: `Rules for focused success in a distracted world`, url: `https://amazon.com/dp/1455586692`, author: "Cal Newport" },
+            { title: `The Lean Startup`, desc: `How today's entrepreneurs use continuous innovation`, url: `https://amazon.com/dp/0307887898`, author: "Eric Ries" }
+          ];
+        }
+        
+        resources = {
+          books: fallbackBooks,
+          podcasts: fallbackPodcasts,
+          social: fallbackSocial
         };
       }
 
