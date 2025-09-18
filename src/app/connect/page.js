@@ -207,7 +207,7 @@ function ResourcesTab({ focusAreas = [] }) {
             { title: "The 7 Habits", desc: "Highly effective people principles", url: "https://example.com/7-habits", thumbnail: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=200&h=200&fit=crop" }
           ]).map((book, index) => (
             <div key={index} className="flex-shrink-0 w-48">
-              <ResourceCard title={book.title} desc={book.desc} url={book.url} thumbnail={book.thumbnail} />
+              <ResourceCard title={book.title} desc={book.desc} url={book.url} thumbnail={book.thumbnail} type="book" />
             </div>
           ))}
         </div>
@@ -224,7 +224,7 @@ function ResourcesTab({ focusAreas = [] }) {
             { title: "YouTube Channels", desc: "Top productivity and study channels", url: "https://example.com/youtube-prod", thumbnail: "https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=200&h=200&fit=crop" }
           ]).map((social, index) => (
             <div key={index} className="flex-shrink-0 w-48">
-              <ResourceCard title={social.title} desc={social.desc} url={social.url} thumbnail={social.thumbnail} />
+              <ResourceCard title={social.title} desc={social.desc} url={social.url} thumbnail={social.thumbnail} type="social" />
             </div>
           ))}
         </div>
@@ -242,7 +242,7 @@ function ResourcesTab({ focusAreas = [] }) {
             { title: "Atomic Habits", desc: "James Clear on building better habits", url: "https://example.com/atomic-habits-podcast", thumbnail: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop" }
           ]).map((podcast, index) => (
             <div key={index} className="flex-shrink-0 w-48">
-              <ResourceCard title={podcast.title} desc={podcast.desc} url={podcast.url} thumbnail={podcast.thumbnail} />
+              <ResourceCard title={podcast.title} desc={podcast.desc} url={podcast.url} thumbnail={podcast.thumbnail} type="podcast" />
             </div>
           ))}
         </div>
@@ -354,7 +354,21 @@ function FeedCard({ title, children, cta }) {
   );
 }
 
-function ResourceCard({ title, desc, url, thumbnail }) {
+function ResourceCard({ title, desc, url, thumbnail, type = 'book' }) {
+  // Determine the appropriate placeholder icon based on type
+  const getPlaceholderIcon = (type) => {
+    switch (type) {
+      case 'book':
+        return '📖';
+      case 'podcast':
+        return '🎧';
+      case 'social':
+        return '👤';
+      default:
+        return '📚';
+    }
+  };
+
   return (
     <a className="block rounded-xl border hover:shadow-sm bg-white h-32 flex flex-col"
        href={url} target="_blank" rel="noreferrer">
@@ -372,7 +386,7 @@ function ResourceCard({ title, desc, url, thumbnail }) {
           />
         ) : null}
         <div className={`w-full h-full flex items-center justify-center text-gray-400 text-2xl ${thumbnail ? 'hidden' : 'flex'}`}>
-          📚
+          {getPlaceholderIcon(type)}
         </div>
       </div>
       

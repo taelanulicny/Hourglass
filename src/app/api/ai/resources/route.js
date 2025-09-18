@@ -15,17 +15,17 @@ export async function POST(request) {
           error: 'OpenAI API key not configured',
         fallback: {
           books: [
-            { title: `${query} - Essential Guide`, desc: `Comprehensive resource for ${query}`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-guide`, thumbnail: `https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=200&h=200&fit=crop` },
-            { title: `Mastering ${query}`, desc: `Advanced techniques and strategies`, url: `https://example.com/mastering-${query.replace(/\s+/g, '-').toLowerCase()}`, thumbnail: `https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=200&h=200&fit=crop` },
-            { title: `${query} for Beginners`, desc: `Perfect starting point for newcomers`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-beginners`, thumbnail: `https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop` }
+            { title: `${query} - Essential Guide`, desc: `Comprehensive resource for ${query}`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-guide`, author: "Unknown Author" },
+            { title: `Mastering ${query}`, desc: `Advanced techniques and strategies`, url: `https://example.com/mastering-${query.replace(/\s+/g, '-').toLowerCase()}`, author: "Expert Author" },
+            { title: `${query} for Beginners`, desc: `Perfect starting point for newcomers`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-beginners`, author: "Beginner Guide" }
           ],
           podcasts: [
-            { title: `${query} Podcast`, desc: `Weekly insights and discussions`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-podcast`, thumbnail: `https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop` },
-            { title: `The ${query} Show`, desc: `Expert interviews and tips`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-show`, thumbnail: `https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=200&h=200&fit=crop` }
+            { title: `${query} Podcast`, desc: `Weekly insights and discussions`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-podcast` },
+            { title: `The ${query} Show`, desc: `Expert interviews and tips`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-show` }
           ],
           social: [
-            { title: `${query} Twitter`, desc: `Best accounts and communities`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-twitter`, thumbnail: `https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200&h=200&fit=crop` },
-            { title: `${query} YouTube`, desc: `Top channels and tutorials`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-youtube`, thumbnail: `https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=200&h=200&fit=crop` }
+            { title: `${query} Twitter`, desc: `Best accounts and communities`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-twitter` },
+            { title: `${query} YouTube`, desc: `Top channels and tutorials`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-youtube` }
           ]
         }
         },
@@ -65,27 +65,27 @@ export async function POST(request) {
       content: `You are a helpful AI assistant that finds high-quality resources for learning topics. When given a topic like "${query}", you should recommend:
 
 1. **Books** - 3-5 specific, well-known books with real titles and authors
-2. **Social Media** - 3-4 specific Twitter accounts, YouTube channels, or LinkedIn profiles
+2. **Social Media** - 3-4 specific Twitter accounts, YouTube channels, or LinkedIn profiles  
 3. **Podcasts** - 3-4 specific podcast shows or episodes
 
 For each resource, provide:
 - A realistic, specific title
 - A brief, helpful description
 - A placeholder URL (use example.com format)
-- A thumbnail URL (use placeholder images from unsplash.com or similar)
+- An author field for books (this helps with cover image lookup)
 
 Make the recommendations relevant, specific, and actually useful for someone learning about "${query}". Use real book titles, podcast names, and social media accounts when possible.
 
 Return your response as a JSON object with this exact structure:
 {
   "books": [
-    {"title": "Book Title", "desc": "Description", "url": "https://example.com/book-url", "thumbnail": "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=200&h=200&fit=crop"}
+    {"title": "Book Title", "desc": "Description", "url": "https://example.com/book-url", "author": "Author Name"}
   ],
   "podcasts": [
-    {"title": "Podcast Name", "desc": "Description", "url": "https://example.com/podcast-url", "thumbnail": "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop"}
+    {"title": "Podcast Name", "desc": "Description", "url": "https://example.com/podcast-url"}
   ],
   "social": [
-    {"title": "Account/Channel Name", "desc": "Description", "url": "https://example.com/social-url", "thumbnail": "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200&h=200&fit=crop"}
+    {"title": "Account/Channel Name", "desc": "Description", "url": "https://example.com/social-url"}
   ]
 }`
     };
@@ -123,19 +123,61 @@ Return your response as a JSON object with this exact structure:
         // Fallback to generated resources
         resources = {
           books: [
-            { title: `${query} - Essential Guide`, desc: `Comprehensive resource for ${query}`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-guide`, thumbnail: `https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=200&h=200&fit=crop` },
-            { title: `Mastering ${query}`, desc: `Advanced techniques and strategies`, url: `https://example.com/mastering-${query.replace(/\s+/g, '-').toLowerCase()}`, thumbnail: `https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=200&h=200&fit=crop` },
-            { title: `${query} for Beginners`, desc: `Perfect starting point for newcomers`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-beginners`, thumbnail: `https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop` }
+            { title: `${query} - Essential Guide`, desc: `Comprehensive resource for ${query}`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-guide`, author: "Unknown Author" },
+            { title: `Mastering ${query}`, desc: `Advanced techniques and strategies`, url: `https://example.com/mastering-${query.replace(/\s+/g, '-').toLowerCase()}`, author: "Expert Author" },
+            { title: `${query} for Beginners`, desc: `Perfect starting point for newcomers`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-beginners`, author: "Beginner Guide" }
           ],
           podcasts: [
-            { title: `${query} Podcast`, desc: `Weekly insights and discussions`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-podcast`, thumbnail: `https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop` },
-            { title: `The ${query} Show`, desc: `Expert interviews and tips`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-show`, thumbnail: `https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=200&h=200&fit=crop` }
+            { title: `${query} Podcast`, desc: `Weekly insights and discussions`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-podcast` },
+            { title: `The ${query} Show`, desc: `Expert interviews and tips`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-show` }
           ],
           social: [
-            { title: `${query} Twitter`, desc: `Best accounts and communities`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-twitter`, thumbnail: `https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200&h=200&fit=crop` },
-            { title: `${query} YouTube`, desc: `Top channels and tutorials`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-youtube`, thumbnail: `https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=200&h=200&fit=crop` }
+            { title: `${query} Twitter`, desc: `Best accounts and communities`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-twitter` },
+            { title: `${query} YouTube`, desc: `Top channels and tutorials`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-youtube` }
           ]
         };
+      }
+
+      // Fetch real cover images for each resource
+      const fetchCoverImage = async (resource, type) => {
+        try {
+          const coverResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/ai/cover-image`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title: resource.title,
+              type: type,
+              author: resource.author
+            })
+          });
+          
+          if (coverResponse.ok) {
+            const coverData = await coverResponse.json();
+            return coverData.imageUrl;
+          }
+        } catch (error) {
+          console.log(`Failed to fetch cover for ${resource.title}:`, error.message);
+        }
+        return null;
+      };
+
+      // Add thumbnails to all resources
+      if (resources.books) {
+        for (const book of resources.books) {
+          book.thumbnail = await fetchCoverImage(book, 'book');
+        }
+      }
+      
+      if (resources.podcasts) {
+        for (const podcast of resources.podcasts) {
+          podcast.thumbnail = await fetchCoverImage(podcast, 'podcast');
+        }
+      }
+      
+      if (resources.social) {
+        for (const social of resources.social) {
+          social.thumbnail = await fetchCoverImage(social, 'social');
+        }
       }
 
       return NextResponse.json({ 
@@ -149,17 +191,17 @@ Return your response as a JSON object with this exact structure:
       // Fallback response for API errors
       const fallbackResources = {
         books: [
-          { title: `${query} - Essential Guide`, desc: `Comprehensive resource for ${query}`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-guide`, thumbnail: `https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=200&h=200&fit=crop` },
-          { title: `Mastering ${query}`, desc: `Advanced techniques and strategies`, url: `https://example.com/mastering-${query.replace(/\s+/g, '-').toLowerCase()}`, thumbnail: `https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=200&h=200&fit=crop` },
-          { title: `${query} for Beginners`, desc: `Perfect starting point for newcomers`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-beginners`, thumbnail: `https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop` }
+          { title: `${query} - Essential Guide`, desc: `Comprehensive resource for ${query}`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-guide`, author: "Unknown Author" },
+          { title: `Mastering ${query}`, desc: `Advanced techniques and strategies`, url: `https://example.com/mastering-${query.replace(/\s+/g, '-').toLowerCase()}`, author: "Expert Author" },
+          { title: `${query} for Beginners`, desc: `Perfect starting point for newcomers`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-beginners`, author: "Beginner Guide" }
         ],
         podcasts: [
-          { title: `${query} Podcast`, desc: `Weekly insights and discussions`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-podcast`, thumbnail: `https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop` },
-          { title: `The ${query} Show`, desc: `Expert interviews and tips`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-show`, thumbnail: `https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=200&h=200&fit=crop` }
+          { title: `${query} Podcast`, desc: `Weekly insights and discussions`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-podcast` },
+          { title: `The ${query} Show`, desc: `Expert interviews and tips`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-show` }
         ],
         social: [
-          { title: `${query} Twitter`, desc: `Best accounts and communities`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-twitter`, thumbnail: `https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200&h=200&fit=crop` },
-          { title: `${query} YouTube`, desc: `Top channels and tutorials`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-youtube`, thumbnail: `https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=200&h=200&fit=crop` }
+          { title: `${query} Twitter`, desc: `Best accounts and communities`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-twitter` },
+          { title: `${query} YouTube`, desc: `Top channels and tutorials`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-youtube` }
         ]
       };
 
@@ -176,17 +218,17 @@ Return your response as a JSON object with this exact structure:
     // Provide a helpful fallback even for general errors
     const fallbackResources = {
       books: [
-        { title: `${query || 'Your Topic'} - Essential Guide`, desc: `Comprehensive resource for ${query || 'your topic'}`, url: `https://example.com/guide`, thumbnail: `https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=200&h=200&fit=crop` },
-        { title: `Mastering ${query || 'Your Topic'}`, desc: `Advanced techniques and strategies`, url: `https://example.com/mastering`, thumbnail: `https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=200&h=200&fit=crop` },
-        { title: `${query || 'Your Topic'} for Beginners`, desc: `Perfect starting point for newcomers`, url: `https://example.com/beginners`, thumbnail: `https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop` }
+        { title: `${query || 'Your Topic'} - Essential Guide`, desc: `Comprehensive resource for ${query || 'your topic'}`, url: `https://example.com/guide`, author: "Unknown Author" },
+        { title: `Mastering ${query || 'Your Topic'}`, desc: `Advanced techniques and strategies`, url: `https://example.com/mastering`, author: "Expert Author" },
+        { title: `${query || 'Your Topic'} for Beginners`, desc: `Perfect starting point for newcomers`, url: `https://example.com/beginners`, author: "Beginner Guide" }
       ],
       podcasts: [
-        { title: `${query || 'Your Topic'} Podcast`, desc: `Weekly insights and discussions`, url: `https://example.com/podcast`, thumbnail: `https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop` },
-        { title: `The ${query || 'Your Topic'} Show`, desc: `Expert interviews and tips`, url: `https://example.com/show`, thumbnail: `https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=200&h=200&fit=crop` }
+        { title: `${query || 'Your Topic'} Podcast`, desc: `Weekly insights and discussions`, url: `https://example.com/podcast` },
+        { title: `The ${query || 'Your Topic'} Show`, desc: `Expert interviews and tips`, url: `https://example.com/show` }
       ],
       social: [
-        { title: `${query || 'Your Topic'} Twitter`, desc: `Best accounts and communities`, url: `https://example.com/twitter`, thumbnail: `https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200&h=200&fit=crop` },
-        { title: `${query || 'Your Topic'} YouTube`, desc: `Top channels and tutorials`, url: `https://example.com/youtube`, thumbnail: `https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=200&h=200&fit=crop` }
+        { title: `${query || 'Your Topic'} Twitter`, desc: `Best accounts and communities`, url: `https://example.com/twitter` },
+        { title: `${query || 'Your Topic'} YouTube`, desc: `Top channels and tutorials`, url: `https://example.com/youtube` }
       ]
     };
 
