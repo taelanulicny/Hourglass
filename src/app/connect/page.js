@@ -418,17 +418,17 @@ function FeedCard({ title, children, cta }) {
   function PersonCard({ person, onClick }) {
     return (
       <div 
-        className="block rounded-xl border hover:shadow-sm bg-white p-4 cursor-pointer"
+        className="block rounded-xl border hover:shadow-sm bg-white p-4 cursor-pointer h-24"
         onClick={() => onClick(person)}
       >
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-3 h-full">
           {/* Icon */}
           <div className="text-2xl flex-shrink-0 mt-0.5">
             👤
           </div>
           
           {/* Content */}
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 flex flex-col justify-center">
             <div className="font-semibold leading-snug text-base line-clamp-1 mb-1">{person.name}</div>
             <div className="text-sm text-gray-500 line-clamp-2">{person.desc}</div>
           </div>
@@ -463,20 +463,20 @@ function FeedCard({ title, children, cta }) {
     };
 
     return (
-      <div className="block rounded-xl border hover:shadow-sm bg-white p-4 cursor-pointer" onClick={handleClick}>
-        <div className="flex items-start gap-3">
+      <div className="block rounded-xl border hover:shadow-sm bg-white p-4 cursor-pointer h-24" onClick={handleClick}>
+        <div className="flex items-start gap-3 h-full">
           {/* Icon */}
           <div className="text-2xl flex-shrink-0 mt-0.5">
             {getIcon(type)}
           </div>
           
           {/* Content */}
-          <div className="flex-1 min-w-0">
-            <div className="font-semibold leading-snug text-base line-clamp-2 mb-1">{title}</div>
+          <div className="flex-1 min-w-0 flex flex-col justify-center">
+            <div className="font-semibold leading-snug text-base line-clamp-1 mb-1">{title}</div>
             {type === 'book' && author ? (
               <div className="text-sm text-gray-600 line-clamp-2">by {author}</div>
             ) : (
-              <div className="text-sm text-gray-500 line-clamp-3">{desc}</div>
+              <div className="text-sm text-gray-500 line-clamp-2">{desc}</div>
             )}
           </div>
         </div>
