@@ -83,7 +83,7 @@ function ChallengesTab() {
   );
 }
 
-function ResourcesTab({ focusAreas = [], onPodcastSelect, onPersonSelect }) {
+function ResourcesTab({ focusAreas = [], onPersonSelect }) {
   const DEMO = [{ id:'lsat', name:'LSAT Prep' }, { id:'fitness', name:'Fitness' }];
   
   // Convert focus areas to the format expected by the selector
@@ -225,7 +225,7 @@ function ResourcesTab({ focusAreas = [], onPodcastSelect, onPersonSelect }) {
             { title: "The Lean Startup", desc: "How today's entrepreneurs use continuous innovation", url: "https://amazon.com/dp/0307887898", author: "Eric Ries" }
           ]).map((book, index) => (
             <div key={index} className="flex-shrink-0 w-64">
-              <ResourceCard title={book.title} desc={book.desc} url={book.url} type="book" author={book.author} spotifyUrl={book.spotifyUrl} onPodcastClick={onPodcastSelect} />
+              <ResourceCard title={book.title} desc={book.desc} url={book.url} type="book" author={book.author} spotifyUrl={book.spotifyUrl} />
             </div>
           ))}
         </div>
@@ -303,7 +303,7 @@ function ResourcesTab({ focusAreas = [], onPodcastSelect, onPersonSelect }) {
             { title: "Masters of Scale", desc: "How great companies grow from zero to a gazillion", url: "https://podcasts.apple.com/podcast/id1227971746", spotifyUrl: "https://open.spotify.com/show/1FcXiMTJ9QrQx3fQ4s8w8i" }
           ]).map((podcast, index) => (
             <div key={index} className="flex-shrink-0 w-64">
-              <ResourceCard title={podcast.title} desc={podcast.desc} url={podcast.url} type="podcast" spotifyUrl={podcast.spotifyUrl} onPodcastClick={onPodcastSelect} />
+              <ResourceCard title={podcast.title} desc={podcast.desc} url={podcast.url} type="podcast" spotifyUrl={podcast.spotifyUrl} />
             </div>
           ))}
         </div>
@@ -437,7 +437,7 @@ function FeedCard({ title, children, cta }) {
     );
   }
 
-  function ResourceCard({ title, desc, url, type = 'book', author, spotifyUrl, onPodcastClick }) {
+  function ResourceCard({ title, desc, url, type = 'book', author, spotifyUrl }) {
     // Determine the appropriate icon based on type
     const getIcon = (type) => {
       switch (type) {
@@ -453,9 +453,11 @@ function FeedCard({ title, children, cta }) {
     };
 
     const handleClick = () => {
-      if (type === 'podcast' && onPodcastClick) {
-        onPodcastClick({ title, desc, url, spotifyUrl });
-      } else if (type !== 'podcast' && url) {
+      if (type === 'podcast' && spotifyUrl) {
+        // For podcasts, always go directly to Spotify
+        window.open(spotifyUrl, '_blank', 'noopener,noreferrer');
+      } else if (url) {
+        // For books and other resources, use the main URL
         window.open(url, '_blank', 'noopener,noreferrer');
       }
     };
@@ -535,103 +537,6 @@ function PersonSocialModal({ person, isOpen, onClose }) {
   );
 }
 
-// --- Podcast Platform Modal ------------------------------------------
-function PodcastPlatformModal({ podcast, isOpen, onClose }) {
-  if (!isOpen || !podcast) return null;
-
-  // Build available platforms based on what URLs we have
-  const availablePlatforms = [];
-  
-  // Always include Apple Podcasts if we have a URL
-  if (podcast.url) {
-    availablePlatforms.push({
-      name: 'Apple Podcasts',
-      icon: '🍎',
-      url: podcast.url,
-      color: 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-    });
-  }
-  
-  // Include Spotify if we have a Spotify URL
-  if (podcast.spotifyUrl) {
-    availablePlatforms.push({
-      name: 'Spotify',
-      icon: '🎵',
-      url: podcast.spotifyUrl,
-      color: 'bg-green-500 hover:bg-green-600 text-white'
-    });
-  }
-  
-  // Always include search-based platforms as fallbacks
-  availablePlatforms.push({
-    name: 'Google Podcasts',
-    icon: '📱',
-    url: `https://podcasts.google.com/search/${encodeURIComponent(podcast.title)}`,
-    color: 'bg-blue-500 hover:bg-blue-600 text-white'
-  });
-  
-  availablePlatforms.push({
-    name: 'Pocket Casts',
-    icon: '🎧',
-    url: `https://pca.st/search?q=${encodeURIComponent(podcast.title)}`,
-    color: 'bg-orange-500 hover:bg-orange-600 text-white'
-  });
-
-  // Determine if we have specific platform URLs (not just search)
-  const hasSpecificPlatforms = podcast.url || podcast.spotifyUrl;
-  const specificPlatformCount = (podcast.url ? 1 : 0) + (podcast.spotifyUrl ? 1 : 0);
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-md w-full p-6">
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-4">
-          <img 
-            src={podcast.thumbnail} 
-            alt={podcast.title}
-            className="w-12 h-12 rounded-lg object-cover"
-          />
-          <div>
-            <h3 className="font-semibold text-lg">{podcast.title}</h3>
-            <p className="text-sm text-gray-600">{podcast.desc}</p>
-          </div>
-        </div>
-
-        {/* Platform buttons */}
-        <div className="space-y-3 mb-6">
-          <p className="text-sm text-gray-500 font-medium">
-            {hasSpecificPlatforms && specificPlatformCount === 1 
-              ? "Only available on:" 
-              : hasSpecificPlatforms 
-                ? "Available on:" 
-                : "Search on:"
-            }
-          </p>
-          {availablePlatforms.map((platform, index) => (
-            <a
-              key={index}
-              href={platform.url}
-              target="_blank"
-              rel="noreferrer"
-              className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${platform.color}`}
-            >
-              <span className="text-xl">{platform.icon}</span>
-              <span className="font-medium">{platform.name}</span>
-            </a>
-          ))}
-        </div>
-
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl font-medium transition-colors"
-        >
-          Close
-        </button>
-      </div>
-    </div>
-  );
-}
 
 // --- Focus Area Post (fake share) ------------------------------------------
 function FocusAreaPost({
@@ -978,7 +883,6 @@ export default function ConnectPage() {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState(null);
-  const [selectedPodcast, setSelectedPodcast] = useState(null);
   const menuRef = useRef(null);
   const router = useRouter();
 
@@ -1107,7 +1011,7 @@ export default function ConnectPage() {
       <main className="px-4 mt-4">
         {tab === 'Close Friends' && <FeedTab />}
         {tab === 'Challenges' && <ChallengesTab />}
-        {tab === 'Resources' && <ResourcesTab focusAreas={focusAreas} onPodcastSelect={setSelectedPodcast} onPersonSelect={setSelectedPerson} />}
+        {tab === 'Resources' && <ResourcesTab focusAreas={focusAreas} onPersonSelect={setSelectedPerson} />}
         {tab === 'Templates' && <TemplatesTab />}
       </main>
 
@@ -1149,12 +1053,6 @@ export default function ConnectPage() {
         onClose={() => setSelectedPerson(null)}
       />
 
-      {/* Podcast Platform Modal */}
-      <PodcastPlatformModal 
-        podcast={selectedPodcast}
-        isOpen={!!selectedPodcast}
-        onClose={() => setSelectedPodcast(null)}
-      />
     </div>
   );
 }
