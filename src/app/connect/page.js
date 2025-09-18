@@ -355,6 +355,9 @@ function FeedCard({ title, children, cta }) {
 }
 
 function ResourceCard({ title, desc, url, thumbnail, type = 'book' }) {
+  const [imageLoaded, setImageLoaded] = React.useState(false);
+  const [imageError, setImageError] = React.useState(false);
+
   // Determine the appropriate placeholder icon based on type
   const getPlaceholderIcon = (type) => {
     switch (type) {
@@ -373,21 +376,30 @@ function ResourceCard({ title, desc, url, thumbnail, type = 'book' }) {
     <a className="block rounded-xl border hover:shadow-sm bg-white h-32 flex flex-col"
        href={url} target="_blank" rel="noreferrer">
       {/* Thumbnail */}
-      <div className="h-16 bg-gray-100 rounded-t-xl flex items-center justify-center overflow-hidden">
-        {thumbnail ? (
-          <img 
-            src={thumbnail} 
-            alt={title}
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              e.target.style.display = 'none';
-              e.target.nextSibling.style.display = 'flex';
-            }}
-          />
-        ) : null}
-        <div className={`w-full h-full flex items-center justify-center text-gray-400 text-2xl ${thumbnail ? 'hidden' : 'flex'}`}>
-          {getPlaceholderIcon(type)}
-        </div>
+      <div className="h-16 bg-gray-100 rounded-t-xl flex items-center justify-center overflow-hidden relative">
+        {thumbnail && !imageError ? (
+          <>
+            <img 
+              src={thumbnail} 
+              alt={title}
+              className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+              onLoad={() => setImageLoaded(true)}
+              onError={() => {
+                setImageError(true);
+                setImageLoaded(false);
+              }}
+            />
+            {!imageLoaded && (
+              <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-2xl">
+                {getPlaceholderIcon(type)}
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-gray-400 text-2xl">
+            {getPlaceholderIcon(type)}
+          </div>
+        )}
       </div>
       
       {/* Content */}
