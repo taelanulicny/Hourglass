@@ -157,54 +157,59 @@ Return your response as a JSON object with this exact structure:
             { title: `The Tim Ferriss Show`, desc: `Interviews with world-class performers`, url: `https://podcasts.apple.com/podcast/id863897795`, spotifyUrl: `https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk` },
             { title: `How I Built This`, desc: `Stories behind successful companies`, url: `https://podcasts.apple.com/podcast/id1154105909`, spotifyUrl: `https://open.spotify.com/show/6E6sTsI8O5j1dpEYFqylx8` }
           ],
-          social: [
-            { 
-              name: "Alex Hormozi", 
-              desc: "Serial entrepreneur, gym owner, and business educator", 
-              socialLinks: [
-                { platform: "Twitter", handle: "@AlexHormozi", url: "https://twitter.com/AlexHormozi", icon: "🐦" },
-                { platform: "LinkedIn", handle: "alex-hormozi", url: "https://linkedin.com/in/alex-hormozi", icon: "💼" },
-                { platform: "YouTube", handle: "Alex Hormozi", url: "https://youtube.com/@AlexHormozi", icon: "📺" },
-                { platform: "Instagram", handle: "@AlexHormozi", url: "https://instagram.com/alexhormozi", icon: "📸" }
-              ]
-            },
-            { 
-              name: "Gary Vaynerchuk", 
-              desc: "Entrepreneur, CEO of VaynerMedia, and social media expert", 
-              socialLinks: [
-                { platform: "Twitter", handle: "@garyvee", url: "https://twitter.com/garyvee", icon: "🐦" },
-                { platform: "LinkedIn", handle: "garyvaynerchuk", url: "https://linkedin.com/in/garyvaynerchuk", icon: "💼" },
-                { platform: "YouTube", handle: "GaryVee", url: "https://youtube.com/@GaryVee", icon: "📺" },
-                { platform: "Instagram", handle: "@garyvee", url: "https://instagram.com/garyvee", icon: "📸" }
-              ]
-            },
-            { 
-              name: "Naval Ravikant", 
-              desc: "Entrepreneur, investor, and philosopher", 
-              socialLinks: [
-                { platform: "Twitter", handle: "@naval", url: "https://twitter.com/naval", icon: "🐦" },
-                { platform: "LinkedIn", handle: "naval-ravikant", url: "https://linkedin.com/in/naval-ravikant", icon: "💼" },
-                { platform: "YouTube", handle: "Naval Ravikant", url: "https://youtube.com/@naval", icon: "📺" }
-              ]
-            },
-            { 
-              name: "Paul Graham", 
-              desc: "Co-founder of Y Combinator, essayist", 
-              socialLinks: [
-                { platform: "Twitter", handle: "@paulg", url: "https://twitter.com/paulg", icon: "🐦" },
-                { platform: "Website", handle: "paulgraham.com", url: "https://paulgraham.com", icon: "🌐" },
-                { platform: "GitHub", handle: "@paulg", url: "https://github.com/paulg", icon: "💻" }
-              ]
-            },
-            { 
-              name: "Reid Hoffman", 
-              desc: "Co-founder of LinkedIn, entrepreneur and investor", 
-              socialLinks: [
-                { platform: "Twitter", handle: "@reidhoffman", url: "https://twitter.com/reidhoffman", icon: "🐦" },
-                { platform: "LinkedIn", handle: "reidhoffman", url: "https://linkedin.com/in/reidhoffman", icon: "💼" },
-                { platform: "Website", handle: "reidhoffman.org", url: "https://reidhoffman.org", icon: "🌐" }
-              ]
-            }
+        social: [
+          {
+            name: "Alex Hormozi",
+            desc: "Serial entrepreneur, gym owner, and business educator",
+            thumbnail: "https://pbs.twimg.com/profile_images/1535460360/alex_hormozi_profile_400x400.jpg",
+            socialLinks: [
+              { platform: "Twitter", handle: "@AlexHormozi", url: "https://twitter.com/AlexHormozi", icon: "🐦" },
+              { platform: "LinkedIn", handle: "alex-hormozi", url: "https://linkedin.com/in/alex-hormozi", icon: "💼" },
+              { platform: "YouTube", handle: "Alex Hormozi", url: "https://youtube.com/@AlexHormozi", icon: "📺" },
+              { platform: "Instagram", handle: "@AlexHormozi", url: "https://instagram.com/alexhormozi", icon: "📸" }
+            ]
+          },
+          {
+            name: "Gary Vaynerchuk",
+            desc: "Entrepreneur, CEO of VaynerMedia, and social media expert",
+            thumbnail: "https://pbs.twimg.com/profile_images/1208177780842733568/2Tg1WAVI_400x400.jpg",
+            socialLinks: [
+              { platform: "Twitter", handle: "@garyvee", url: "https://twitter.com/garyvee", icon: "🐦" },
+              { platform: "LinkedIn", handle: "garyvaynerchuk", url: "https://linkedin.com/in/garyvaynerchuk", icon: "💼" },
+              { platform: "YouTube", handle: "GaryVee", url: "https://youtube.com/@GaryVee", icon: "📺" },
+              { platform: "Instagram", handle: "@garyvee", url: "https://instagram.com/garyvee", icon: "📸" }
+            ]
+          },
+          {
+            name: "Naval Ravikant",
+            desc: "Entrepreneur, investor, and philosopher",
+            thumbnail: "https://pbs.twimg.com/profile_images/1256841238298292232/ycqwaMI2_400x400.jpg",
+            socialLinks: [
+              { platform: "Twitter", handle: "@naval", url: "https://twitter.com/naval", icon: "🐦" },
+              { platform: "LinkedIn", handle: "naval-ravikant", url: "https://linkedin.com/in/naval-ravikant", icon: "💼" },
+              { platform: "YouTube", handle: "Naval Ravikant", url: "https://youtube.com/@naval", icon: "📺" }
+            ]
+          },
+          {
+            name: "Paul Graham",
+            desc: "Co-founder of Y Combinator, essayist",
+            thumbnail: "https://pbs.twimg.com/profile_images/986375074993606656/7Bk7cFC5_400x400.jpg",
+            socialLinks: [
+              { platform: "Twitter", handle: "@paulg", url: "https://twitter.com/paulg", icon: "🐦" },
+              { platform: "Website", handle: "paulgraham.com", url: "https://paulgraham.com", icon: "🌐" },
+              { platform: "GitHub", handle: "@paulg", url: "https://github.com/paulg", icon: "💻" }
+            ]
+          },
+          {
+            name: "Reid Hoffman",
+            desc: "Co-founder of LinkedIn, entrepreneur and investor",
+            thumbnail: "https://pbs.twimg.com/profile_images/1247268824048787457/3vjJgX8f_400x400.jpg",
+            socialLinks: [
+              { platform: "Twitter", handle: "@reidhoffman", url: "https://twitter.com/reidhoffman", icon: "🐦" },
+              { platform: "LinkedIn", handle: "reidhoffman", url: "https://linkedin.com/in/reidhoffman", icon: "💼" },
+              { platform: "Website", handle: "reidhoffman.org", url: "https://reidhoffman.org", icon: "🌐" }
+            ]
+          }
           ]
         };
       }

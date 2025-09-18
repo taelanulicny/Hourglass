@@ -106,26 +106,48 @@ export async function POST(request) {
         const searchQuery = encodeURIComponent(title);
         console.log(`Searching for social media: ${searchQuery}`);
         
-        // Try Unsplash with more specific queries
-        const unsplashResponse = await fetch(
-          `https://api.unsplash.com/search/photos?query=${searchQuery}&per_page=1&orientation=square`,
-          {
-            headers: {
-              'Authorization': `Client-ID ${process.env.UNSPLASH_ACCESS_KEY || 'demo'}`
-            }
-          }
-        );
+        // First, check if this is a well-known entrepreneur with a known profile picture
+        const knownProfiles = {
+          'alex hormozi': 'https://pbs.twimg.com/profile_images/1535460360/alex_hormozi_profile_400x400.jpg',
+          'gary vaynerchuk': 'https://pbs.twimg.com/profile_images/1208177780842733568/2Tg1WAVI_400x400.jpg',
+          'gary vee': 'https://pbs.twimg.com/profile_images/1208177780842733568/2Tg1WAVI_400x400.jpg',
+          'naval ravikant': 'https://pbs.twimg.com/profile_images/1256841238298292232/ycqwaMI2_400x400.jpg',
+          'tim ferriss': 'https://pbs.twimg.com/profile_images/1235850430616756224/szR3kkew_400x400.jpg',
+          'paul graham': 'https://pbs.twimg.com/profile_images/986375074993606656/7Bk7cFC5_400x400.jpg',
+          'reid hoffman': 'https://pbs.twimg.com/profile_images/1247268824048787457/3vjJgX8f_400x400.jpg'
+        };
         
-        if (unsplashResponse.ok) {
-          const data = await unsplashResponse.json();
-          console.log(`Unsplash response:`, data.results?.length || 0, 'results found');
-          
-          if (data.results && data.results.length > 0) {
-            imageUrl = data.results[0].urls.small;
-            console.log(`Found social media image: ${imageUrl}`);
+        const titleLower = title.toLowerCase();
+        for (const [name, profileUrl] of Object.entries(knownProfiles)) {
+          if (titleLower.includes(name)) {
+            imageUrl = profileUrl;
+            console.log(`Found known profile for: ${title}`);
+            break;
           }
-        } else {
-          console.log(`Unsplash API error: ${unsplashResponse.status}`);
+        }
+        
+        // If we didn't find a known profile, try Unsplash with more specific queries
+        if (!imageUrl) {
+          const unsplashResponse = await fetch(
+            `https://api.unsplash.com/search/photos?query=${searchQuery}&per_page=1&orientation=square`,
+            {
+              headers: {
+                'Authorization': `Client-ID ${process.env.UNSPLASH_ACCESS_KEY || 'demo'}`
+              }
+            }
+          );
+          
+          if (unsplashResponse.ok) {
+            const data = await unsplashResponse.json();
+            console.log(`Unsplash response:`, data.results?.length || 0, 'results found');
+            
+            if (data.results && data.results.length > 0) {
+              imageUrl = data.results[0].urls.small;
+              console.log(`Found social media image: ${imageUrl}`);
+            }
+          } else {
+            console.log(`Unsplash API error: ${unsplashResponse.status}`);
+          }
         }
       }
 
