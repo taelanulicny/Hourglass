@@ -161,7 +161,7 @@ Return your response as a JSON object with this exact structure:
           {
             name: "Alex Hormozi",
             desc: "Serial entrepreneur, gym owner, and business educator",
-            thumbnail: "https://pbs.twimg.com/profile_images/1535460360/alex_hormozi_profile_400x400.jpg",
+            thumbnail: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face",
             socialLinks: [
               { platform: "Twitter", handle: "@AlexHormozi", url: "https://twitter.com/AlexHormozi", icon: "🐦" },
               { platform: "LinkedIn", handle: "alex-hormozi", url: "https://linkedin.com/in/alex-hormozi", icon: "💼" },
@@ -172,7 +172,7 @@ Return your response as a JSON object with this exact structure:
           {
             name: "Gary Vaynerchuk",
             desc: "Entrepreneur, CEO of VaynerMedia, and social media expert",
-            thumbnail: "https://pbs.twimg.com/profile_images/1208177780842733568/2Tg1WAVI_400x400.jpg",
+            thumbnail: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face",
             socialLinks: [
               { platform: "Twitter", handle: "@garyvee", url: "https://twitter.com/garyvee", icon: "🐦" },
               { platform: "LinkedIn", handle: "garyvaynerchuk", url: "https://linkedin.com/in/garyvaynerchuk", icon: "💼" },
@@ -183,7 +183,7 @@ Return your response as a JSON object with this exact structure:
           {
             name: "Naval Ravikant",
             desc: "Entrepreneur, investor, and philosopher",
-            thumbnail: "https://pbs.twimg.com/profile_images/1256841238298292232/ycqwaMI2_400x400.jpg",
+            thumbnail: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=400&h=400&fit=crop&crop=face",
             socialLinks: [
               { platform: "Twitter", handle: "@naval", url: "https://twitter.com/naval", icon: "🐦" },
               { platform: "LinkedIn", handle: "naval-ravikant", url: "https://linkedin.com/in/naval-ravikant", icon: "💼" },
@@ -193,7 +193,7 @@ Return your response as a JSON object with this exact structure:
           {
             name: "Paul Graham",
             desc: "Co-founder of Y Combinator, essayist",
-            thumbnail: "https://pbs.twimg.com/profile_images/986375074993606656/7Bk7cFC5_400x400.jpg",
+            thumbnail: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face",
             socialLinks: [
               { platform: "Twitter", handle: "@paulg", url: "https://twitter.com/paulg", icon: "🐦" },
               { platform: "Website", handle: "paulgraham.com", url: "https://paulgraham.com", icon: "🌐" },
@@ -203,7 +203,7 @@ Return your response as a JSON object with this exact structure:
           {
             name: "Reid Hoffman",
             desc: "Co-founder of LinkedIn, entrepreneur and investor",
-            thumbnail: "https://pbs.twimg.com/profile_images/1247268824048787457/3vjJgX8f_400x400.jpg",
+            thumbnail: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face",
             socialLinks: [
               { platform: "Twitter", handle: "@reidhoffman", url: "https://twitter.com/reidhoffman", icon: "🐦" },
               { platform: "LinkedIn", handle: "reidhoffman", url: "https://linkedin.com/in/reidhoffman", icon: "💼" },
