@@ -913,7 +913,7 @@ function CalendarContent() {
         </header>
 
         {/* Horizontal day strip (±14 days from today) - LOCKED */}
-        <div ref={stripRef} className="flex gap-2 overflow-x-hidden px-3 pt-2 pb-1 mb-3 bg-[#ECEAE6] rounded-md bg-white -mt-1">
+        <div ref={stripRef} className="flex gap-2 overflow-x-hidden px-3 pt-2 pb-1 -mt-1">
         {stripDays.map((d, i) => {
           const isSel = selectedDate && d.toDateString() === selectedDate.toDateString();
           const isToday = d.toDateString() === today.toDateString();
@@ -936,7 +936,7 @@ function CalendarContent() {
       </div>
 
       {/* Scrollable calendar area */}
-      <div className="flex-1 overflow-y-auto pt-24">
+      <div className="flex-1 overflow-y-auto pt-32">
         {/* Day view grid (hours gutter + single day column) */}
         <div ref={gridRootRef} className="relative px-2">
         <div className="grid grid-cols-[56px_minmax(0,1fr)]">
