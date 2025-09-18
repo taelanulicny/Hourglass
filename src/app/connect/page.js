@@ -606,7 +606,7 @@ export default function ConnectPage() {
   const percentMine = useMemo(() => (myToday.goalMins ? (myToday.spentMins / myToday.goalMins) * 100 : 0), [myToday]);
   
   // --- Tab state ---
-  const [tab, setTab] = useState('Close Friends');
+  const [tab, setTab] = useState('Resources');
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const menuRef = useRef(null);
