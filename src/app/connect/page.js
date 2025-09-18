@@ -91,10 +91,10 @@ function ResourcesTab({ focusAreas = [], onPodcastSelect }) {
     ? focusAreas.map(area => ({ id: area.label, name: area.label }))
     : [];
     
-  const [selectedId, setSelectedId] = React.useState(areas[0]?.id || '');
-  const [searchQuery, setSearchQuery] = React.useState('');
-  const [searchResults, setSearchResults] = React.useState(null);
-  const [isSearching, setIsSearching] = React.useState(false);
+  const [selectedId, setSelectedId] = useState(areas[0]?.id || '');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState(null);
+  const [isSearching, setIsSearching] = useState(false);
 
   // Handle AI search for resources
   const handleSearch = async () => {
@@ -414,8 +414,8 @@ function FeedCard({ title, children, cta }) {
 }
 
   function PersonCard({ person, onClick }) {
-    const [imageLoaded, setImageLoaded] = React.useState(false);
-    const [imageError, setImageError] = React.useState(false);
+    const [imageLoaded, setImageLoaded] = useState(false);
+    const [imageError, setImageError] = useState(false);
 
     return (
       <div 
@@ -456,8 +456,8 @@ function FeedCard({ title, children, cta }) {
   }
 
   function ResourceCard({ title, desc, url, thumbnail, type = 'book', author, spotifyUrl, onPodcastClick }) {
-    const [imageLoaded, setImageLoaded] = React.useState(false);
-    const [imageError, setImageError] = React.useState(false);
+    const [imageLoaded, setImageLoaded] = useState(false);
+    const [imageError, setImageError] = useState(false);
 
     // Determine the appropriate placeholder icon based on type
     const getPlaceholderIcon = (type) => {
@@ -480,7 +480,7 @@ function FeedCard({ title, children, cta }) {
     };
 
     // Debug logging
-    React.useEffect(() => {
+    useEffect(() => {
       if (thumbnail) {
         console.log(`ResourceCard ${title}: thumbnail = ${thumbnail}`);
       }
