@@ -133,11 +133,11 @@ function ResourcesTab({ focusAreas = [] }) {
   return (
     <div className="space-y-4">
       <div className="rounded-xl border bg-white px-3 py-3">
-        <div className="text-xs text-gray-500 mb-1">AI Resource Helper</div>
+        <div className="text-xs text-gray-500 mb-1">Tell your AI Assistant what you want to learn more about, and it will pull resources for you to choose from</div>
         <div className="flex gap-2">
           <input
             type="text"
-            placeholder="Ask for resources... (e.g., 'productivity books', 'coding tutorials', 'fitness podcasts')"
+            placeholder="Try: 'entrepreneurship', 'founders of companies', 'productivity', 'coding', 'fitness'..."
             className="flex-1 rounded-lg border px-3 py-2 text-sm"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
