@@ -65,7 +65,7 @@ export async function POST(request) {
     content: `You are a helpful AI assistant that finds high-quality resources for learning topics. When given a topic like "${query}", you should recommend:
 
 1. **Books** - 3-5 specific, well-known books with real titles and authors
-2. **Social Media** - 3-4 specific Twitter accounts, YouTube channels, or LinkedIn profiles  
+2. **People** - 3-4 influential people in the field with their social media links
 3. **Podcasts** - 3-4 specific podcast shows or episodes
 
 For each resource, provide:
@@ -77,9 +77,9 @@ For each resource, provide:
 IMPORTANT: Use real URLs that work:
 - For books: Use Amazon, Goodreads, or publisher URLs
 - For podcasts: Provide BOTH Apple Podcasts AND Spotify URLs when possible
-- For social media: Use the actual Twitter, YouTube, LinkedIn, or Instagram profile URLs
+- For people: Include their real social media profiles (Twitter, LinkedIn, YouTube, etc.)
 
-Make the recommendations relevant, specific, and actually useful for someone learning about "${query}". Use real book titles, podcast names, and social media accounts when possible.
+Make the recommendations relevant, specific, and actually useful for someone learning about "${query}". Use real book titles, podcast names, and actual people when possible.
 
 Return your response as a JSON object with this exact structure:
 {
@@ -90,7 +90,15 @@ Return your response as a JSON object with this exact structure:
     {"title": "Podcast Name", "desc": "Description", "url": "https://podcasts.apple.com/podcast/PODCAST_ID", "spotifyUrl": "https://open.spotify.com/show/SPOTIFY_ID"}
   ],
   "social": [
-    {"title": "Account/Channel Name", "desc": "Description", "url": "https://twitter.com/username"}
+    {
+      "name": "Person Name", 
+      "desc": "Their role/expertise", 
+      "socialLinks": [
+        {"platform": "Twitter", "handle": "@username", "url": "https://twitter.com/username", "icon": "🐦"},
+        {"platform": "LinkedIn", "handle": "person-name", "url": "https://linkedin.com/in/person-name", "icon": "💼"},
+        {"platform": "YouTube", "handle": "Channel Name", "url": "https://youtube.com/@channel", "icon": "📺"}
+      ]
+    }
   ]
 }`
   };
@@ -137,8 +145,24 @@ Return your response as a JSON object with this exact structure:
             { title: `How I Built This`, desc: `Stories behind successful companies`, url: `https://podcasts.apple.com/podcast/id1154105909`, spotifyUrl: `https://open.spotify.com/show/6E6sTsI8O5j1dpEYFqylx8` }
           ],
           social: [
-            { title: `@naval`, desc: `Naval Ravikant on entrepreneurship and philosophy`, url: `https://twitter.com/naval` },
-            { title: `@paulg`, desc: `Paul Graham on startups and programming`, url: `https://twitter.com/paulg` }
+            { 
+              name: "Naval Ravikant", 
+              desc: "Entrepreneur, investor, and philosopher", 
+              socialLinks: [
+                { platform: "Twitter", handle: "@naval", url: "https://twitter.com/naval", icon: "🐦" },
+                { platform: "LinkedIn", handle: "naval-ravikant", url: "https://linkedin.com/in/naval-ravikant", icon: "💼" },
+                { platform: "YouTube", handle: "Naval Ravikant", url: "https://youtube.com/@naval", icon: "📺" }
+              ]
+            },
+            { 
+              name: "Paul Graham", 
+              desc: "Co-founder of Y Combinator, essayist", 
+              socialLinks: [
+                { platform: "Twitter", handle: "@paulg", url: "https://twitter.com/paulg", icon: "🐦" },
+                { platform: "Website", handle: "paulgraham.com", url: "https://paulgraham.com", icon: "🌐" },
+                { platform: "GitHub", handle: "@paulg", url: "https://github.com/paulg", icon: "💻" }
+              ]
+            }
           ]
         };
       }
@@ -205,8 +229,24 @@ Return your response as a JSON object with this exact structure:
           { title: `How I Built This`, desc: `Stories behind successful companies`, url: `https://podcasts.apple.com/podcast/id1154105909`, spotifyUrl: `https://open.spotify.com/show/6E6sTsI8O5j1dpEYFqylx8` }
         ],
         social: [
-          { title: `@naval`, desc: `Naval Ravikant on entrepreneurship and philosophy`, url: `https://twitter.com/naval` },
-          { title: `@paulg`, desc: `Paul Graham on startups and programming`, url: `https://twitter.com/paulg` }
+          { 
+            name: "Naval Ravikant", 
+            desc: "Entrepreneur, investor, and philosopher", 
+            socialLinks: [
+              { platform: "Twitter", handle: "@naval", url: "https://twitter.com/naval", icon: "🐦" },
+              { platform: "LinkedIn", handle: "naval-ravikant", url: "https://linkedin.com/in/naval-ravikant", icon: "💼" },
+              { platform: "YouTube", handle: "Naval Ravikant", url: "https://youtube.com/@naval", icon: "📺" }
+            ]
+          },
+          { 
+            name: "Paul Graham", 
+            desc: "Co-founder of Y Combinator, essayist", 
+            socialLinks: [
+              { platform: "Twitter", handle: "@paulg", url: "https://twitter.com/paulg", icon: "🐦" },
+              { platform: "Website", handle: "paulgraham.com", url: "https://paulgraham.com", icon: "🌐" },
+              { platform: "GitHub", handle: "@paulg", url: "https://github.com/paulg", icon: "💻" }
+            ]
+          }
         ]
       };
 
@@ -231,10 +271,26 @@ Return your response as a JSON object with this exact structure:
         { title: `The Tim Ferriss Show`, desc: `Interviews with world-class performers`, url: `https://podcasts.apple.com/podcast/id863897795`, spotifyUrl: `https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk` },
         { title: `How I Built This`, desc: `Stories behind successful companies`, url: `https://podcasts.apple.com/podcast/id1154105909`, spotifyUrl: `https://open.spotify.com/show/6E6sTsI8O5j1dpEYFqylx8` }
       ],
-      social: [
-        { title: `@naval`, desc: `Naval Ravikant on entrepreneurship and philosophy`, url: `https://twitter.com/naval` },
-        { title: `@paulg`, desc: `Paul Graham on startups and programming`, url: `https://twitter.com/paulg` }
-      ]
+        social: [
+          { 
+            name: "Naval Ravikant", 
+            desc: "Entrepreneur, investor, and philosopher", 
+            socialLinks: [
+              { platform: "Twitter", handle: "@naval", url: "https://twitter.com/naval", icon: "🐦" },
+              { platform: "LinkedIn", handle: "naval-ravikant", url: "https://linkedin.com/in/naval-ravikant", icon: "💼" },
+              { platform: "YouTube", handle: "Naval Ravikant", url: "https://youtube.com/@naval", icon: "📺" }
+            ]
+          },
+          { 
+            name: "Paul Graham", 
+            desc: "Co-founder of Y Combinator, essayist", 
+            socialLinks: [
+              { platform: "Twitter", handle: "@paulg", url: "https://twitter.com/paulg", icon: "🐦" },
+              { platform: "Website", handle: "paulgraham.com", url: "https://paulgraham.com", icon: "🌐" },
+              { platform: "GitHub", handle: "@paulg", url: "https://github.com/paulg", icon: "💻" }
+            ]
+          }
+        ]
     };
 
     return NextResponse.json({ 

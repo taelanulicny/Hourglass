@@ -133,8 +133,26 @@ function ResourcesTab({ focusAreas = [], onPodcastSelect }) {
           { title: `The ${searchQuery} Show`, desc: `Expert interviews and tips`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-show`, thumbnail: `https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=200&h=200&fit=crop` }
         ],
         social: [
-          { title: `${searchQuery} Twitter`, desc: `Best accounts and communities`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-twitter`, thumbnail: `https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200&h=200&fit=crop` },
-          { title: `${searchQuery} YouTube`, desc: `Top channels and tutorials`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-youtube`, thumbnail: `https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=200&h=200&fit=crop` }
+          { 
+            name: `${searchQuery} Expert 1`, 
+            desc: `Leading expert in ${searchQuery}`, 
+            thumbnail: `https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200&h=200&fit=crop`,
+            socialLinks: [
+              { platform: "Twitter", handle: `@${searchQuery.toLowerCase().replace(/\s+/g, '')}1`, url: `https://twitter.com/${searchQuery.toLowerCase().replace(/\s+/g, '')}1`, icon: "🐦" },
+              { platform: "LinkedIn", handle: `${searchQuery.toLowerCase().replace(/\s+/g, '-')}-expert`, url: `https://linkedin.com/in/${searchQuery.toLowerCase().replace(/\s+/g, '-')}-expert`, icon: "💼" },
+              { platform: "YouTube", handle: `${searchQuery} Expert`, url: `https://youtube.com/@${searchQuery.toLowerCase().replace(/\s+/g, '')}expert`, icon: "📺" }
+            ]
+          },
+          { 
+            name: `${searchQuery} Expert 2`, 
+            desc: `Thought leader in ${searchQuery}`, 
+            thumbnail: `https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=200&h=200&fit=crop`,
+            socialLinks: [
+              { platform: "Twitter", handle: `@${searchQuery.toLowerCase().replace(/\s+/g, '')}2`, url: `https://twitter.com/${searchQuery.toLowerCase().replace(/\s+/g, '')}2`, icon: "🐦" },
+              { platform: "Instagram", handle: `@${searchQuery.toLowerCase().replace(/\s+/g, '')}expert`, url: `https://instagram.com/${searchQuery.toLowerCase().replace(/\s+/g, '')}expert`, icon: "📷" },
+              { platform: "Website", handle: `${searchQuery.toLowerCase().replace(/\s+/g, '')}expert.com`, url: `https://${searchQuery.toLowerCase().replace(/\s+/g, '')}expert.com`, icon: "🌐" }
+            ]
+          }
         ]
       });
     } finally {
@@ -213,18 +231,54 @@ function ResourcesTab({ focusAreas = [], onPodcastSelect }) {
         </div>
       </div>
 
-      {/* Social Media Section */}
+      {/* People & Social Media Section */}
       <div className="bg-white rounded-xl border border-gray-200 p-4">
-        <h3 className="text-lg font-semibold mb-3">Social Media</h3>
+        <h3 className="text-lg font-semibold mb-3">People & Social Media</h3>
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
           {(searchResults?.social || [
-            { title: "@naval", desc: "Naval Ravikant on entrepreneurship and philosophy", url: "https://twitter.com/naval", thumbnail: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200&h=200&fit=crop" },
-            { title: "@paulg", desc: "Paul Graham on startups and programming", url: "https://twitter.com/paulg", thumbnail: "https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=200&h=200&fit=crop" },
-            { title: "@tferriss", desc: "Tim Ferriss on productivity and lifestyle design", url: "https://twitter.com/tferriss", thumbnail: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200&h=200&fit=crop" },
-            { title: "LinkedIn Learning", desc: "Professional development courses", url: "https://linkedin.com/learning", thumbnail: "https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=200&h=200&fit=crop" }
-          ]).map((social, index) => (
+            { 
+              name: "Naval Ravikant", 
+              desc: "Entrepreneur, investor, and philosopher", 
+              thumbnail: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200&h=200&fit=crop",
+              socialLinks: [
+                { platform: "Twitter", handle: "@naval", url: "https://twitter.com/naval", icon: "🐦" },
+                { platform: "LinkedIn", handle: "naval-ravikant", url: "https://linkedin.com/in/naval-ravikant", icon: "💼" },
+                { platform: "YouTube", handle: "Naval Ravikant", url: "https://youtube.com/@naval", icon: "📺" }
+              ]
+            },
+            { 
+              name: "Paul Graham", 
+              desc: "Co-founder of Y Combinator, essayist", 
+              thumbnail: "https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=200&h=200&fit=crop",
+              socialLinks: [
+                { platform: "Twitter", handle: "@paulg", url: "https://twitter.com/paulg", icon: "🐦" },
+                { platform: "Website", handle: "paulgraham.com", url: "https://paulgraham.com", icon: "🌐" },
+                { platform: "GitHub", handle: "@paulg", url: "https://github.com/paulg", icon: "💻" }
+              ]
+            },
+            { 
+              name: "Tim Ferriss", 
+              desc: "Author, podcaster, and lifestyle designer", 
+              thumbnail: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200&h=200&fit=crop",
+              socialLinks: [
+                { platform: "Twitter", handle: "@tferriss", url: "https://twitter.com/tferriss", icon: "🐦" },
+                { platform: "Instagram", handle: "@timferriss", url: "https://instagram.com/timferriss", icon: "📷" },
+                { platform: "YouTube", handle: "Tim Ferriss", url: "https://youtube.com/@timferriss", icon: "📺" }
+              ]
+            },
+            { 
+              name: "Sahil Lavingia", 
+              desc: "Founder of Gumroad, investor", 
+              thumbnail: "https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=200&h=200&fit=crop",
+              socialLinks: [
+                { platform: "Twitter", handle: "@shl", url: "https://twitter.com/shl", icon: "🐦" },
+                { platform: "LinkedIn", handle: "sahil-lavingia", url: "https://linkedin.com/in/sahil-lavingia", icon: "💼" },
+                { platform: "Website", handle: "sahillavingia.com", url: "https://sahillavingia.com", icon: "🌐" }
+              ]
+            }
+          ]).map((person, index) => (
             <div key={index} className="flex-shrink-0 w-64">
-              <ResourceCard title={social.title} desc={social.desc} url={social.url} thumbnail={social.thumbnail} type="social" spotifyUrl={social.spotifyUrl} onPodcastClick={onPodcastSelect} />
+              <PersonCard person={person} />
             </div>
           ))}
         </div>
@@ -353,6 +407,67 @@ function FeedCard({ title, children, cta }) {
     </div>
   );
 }
+
+  function PersonCard({ person }) {
+    const [imageLoaded, setImageLoaded] = React.useState(false);
+    const [imageError, setImageError] = React.useState(false);
+
+    return (
+      <div className="block rounded-xl border hover:shadow-sm bg-white h-32 flex flex-row cursor-pointer">
+        {/* Profile picture on the left */}
+        <div className="w-24 h-full bg-gray-100 rounded-l-xl flex items-center justify-center overflow-hidden relative flex-shrink-0">
+          {person.thumbnail && !imageError ? (
+            <img 
+              src={person.thumbnail} 
+              alt={person.name}
+              className="w-full h-full object-cover"
+              onLoad={() => {
+                console.log(`Image loaded successfully for ${person.name}: ${person.thumbnail}`);
+                setImageLoaded(true);
+              }}
+              onError={(e) => {
+                console.log(`Image failed to load for ${person.name}: ${person.thumbnail}`, e);
+                setImageError(true);
+                setImageLoaded(false);
+              }}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-gray-400 text-2xl bg-gray-100">
+              👤
+            </div>
+          )}
+        </div>
+        
+        {/* Content on the right */}
+        <div className="p-4 flex-1 flex flex-col justify-center">
+          <div className="font-semibold leading-snug text-base line-clamp-1 mb-1">{person.name}</div>
+          <div className="text-sm text-gray-500 line-clamp-1 mb-2">{person.desc}</div>
+          
+          {/* Social media links */}
+          <div className="flex gap-1 flex-wrap">
+            {person.socialLinks.slice(0, 3).map((link, index) => (
+              <a
+                key={index}
+                href={link.url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded transition-colors"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <span>{link.icon}</span>
+                <span className="truncate max-w-16">{link.platform}</span>
+              </a>
+            ))}
+            {person.socialLinks.length > 3 && (
+              <span className="text-xs text-gray-400 px-2 py-1">
+                +{person.socialLinks.length - 3} more
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   function ResourceCard({ title, desc, url, thumbnail, type = 'book', author, spotifyUrl, onPodcastClick }) {
     const [imageLoaded, setImageLoaded] = React.useState(false);
