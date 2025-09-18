@@ -118,9 +118,6 @@ function ResourcesTab({ focusAreas = [] }) {
         </select>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
-        <h3 className="text-lg font-semibold mb-3">Focus Area Resources (coming soon)</h3>
-      </div>
 
       <div className="bg-white rounded-xl border border-gray-200 p-4">
         <h3 className="text-lg font-semibold mb-3">Books</h3>
