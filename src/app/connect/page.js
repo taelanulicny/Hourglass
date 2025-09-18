@@ -83,7 +83,7 @@ function ChallengesTab() {
   );
 }
 
-function ResourcesTab({ focusAreas = [] }) {
+function ResourcesTab({ focusAreas = [], onPodcastSelect }) {
   const DEMO = [{ id:'lsat', name:'LSAT Prep' }, { id:'fitness', name:'Fitness' }];
   
   // Convert focus areas to the format expected by the selector
@@ -95,7 +95,6 @@ function ResourcesTab({ focusAreas = [] }) {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [searchResults, setSearchResults] = React.useState(null);
   const [isSearching, setIsSearching] = React.useState(false);
-  const [selectedPodcast, setSelectedPodcast] = React.useState(null);
 
   // Handle AI search for resources
   const handleSearch = async () => {
@@ -208,7 +207,7 @@ function ResourcesTab({ focusAreas = [] }) {
             { title: "The 7 Habits", desc: "Highly effective people principles", url: "https://amazon.com/dp/1982137274", thumbnail: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=200&h=200&fit=crop", author: "Stephen Covey" }
           ]).map((book, index) => (
             <div key={index} className="flex-shrink-0 w-64">
-              <ResourceCard title={book.title} desc={book.desc} url={book.url} thumbnail={book.thumbnail} type="book" author={book.author} spotifyUrl={book.spotifyUrl} onPodcastClick={setSelectedPodcast} />
+              <ResourceCard title={book.title} desc={book.desc} url={book.url} thumbnail={book.thumbnail} type="book" author={book.author} spotifyUrl={book.spotifyUrl} onPodcastClick={onPodcastSelect} />
             </div>
           ))}
         </div>
@@ -225,7 +224,7 @@ function ResourcesTab({ focusAreas = [] }) {
             { title: "LinkedIn Learning", desc: "Professional development courses", url: "https://linkedin.com/learning", thumbnail: "https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=200&h=200&fit=crop" }
           ]).map((social, index) => (
             <div key={index} className="flex-shrink-0 w-64">
-              <ResourceCard title={social.title} desc={social.desc} url={social.url} thumbnail={social.thumbnail} type="social" spotifyUrl={social.spotifyUrl} onPodcastClick={setSelectedPodcast} />
+              <ResourceCard title={social.title} desc={social.desc} url={social.url} thumbnail={social.thumbnail} type="social" spotifyUrl={social.spotifyUrl} onPodcastClick={onPodcastSelect} />
             </div>
           ))}
         </div>
@@ -243,7 +242,7 @@ function ResourcesTab({ focusAreas = [] }) {
             { title: "Smart Passive Income", desc: "Pat Flynn on online business", url: "https://podcasts.apple.com/podcast/id383651043", spotifyUrl: "https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk", thumbnail: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop" }
           ]).map((podcast, index) => (
             <div key={index} className="flex-shrink-0 w-64">
-              <ResourceCard title={podcast.title} desc={podcast.desc} url={podcast.url} thumbnail={podcast.thumbnail} type="podcast" spotifyUrl={podcast.spotifyUrl} onPodcastClick={setSelectedPodcast} />
+              <ResourceCard title={podcast.title} desc={podcast.desc} url={podcast.url} thumbnail={podcast.thumbnail} type="podcast" spotifyUrl={podcast.spotifyUrl} onPodcastClick={onPodcastSelect} />
             </div>
           ))}
         </div>
@@ -860,6 +859,7 @@ export default function ConnectPage() {
   const [tab, setTab] = useState('Resources');
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [selectedPodcast, setSelectedPodcast] = useState(null);
   const menuRef = useRef(null);
   const router = useRouter();
 
@@ -988,7 +988,7 @@ export default function ConnectPage() {
       <main className="px-4 mt-4">
         {tab === 'Close Friends' && <FeedTab />}
         {tab === 'Challenges' && <ChallengesTab />}
-        {tab === 'Resources' && <ResourcesTab focusAreas={focusAreas} />}
+        {tab === 'Resources' && <ResourcesTab focusAreas={focusAreas} onPodcastSelect={setSelectedPodcast} />}
         {tab === 'Templates' && <TemplatesTab />}
       </main>
 
