@@ -218,11 +218,11 @@ function ResourcesTab({ focusAreas = [], onPodcastSelect, onPersonSelect }) {
         <h3 className="text-lg font-semibold mb-3">Books</h3>
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
           {(searchResults?.books || [
-            { title: "Atomic Habits", desc: "Build good habits and break bad ones", url: "https://amazon.com/dp/0735211299", thumbnail: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=200&h=200&fit=crop", author: "James Clear" },
-            { title: "Deep Work", desc: "Rules for focused success in a distracted world", url: "https://amazon.com/dp/1455586692", thumbnail: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=200&h=200&fit=crop", author: "Cal Newport" },
-            { title: "The Power of Habit", desc: "Why we do what we do in life and business", url: "https://amazon.com/dp/1400069289", thumbnail: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop", author: "Charles Duhigg" },
-            { title: "Getting Things Done", desc: "The art of stress-free productivity", url: "https://amazon.com/dp/0143126560", thumbnail: "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=200&h=200&fit=crop", author: "David Allen" },
-            { title: "The 7 Habits", desc: "Highly effective people principles", url: "https://amazon.com/dp/1982137274", thumbnail: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=200&h=200&fit=crop", author: "Stephen Covey" }
+            { title: "$100M Offers", desc: "How to make offers so good people feel stupid saying no", url: "https://amazon.com/dp/1737475715", thumbnail: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=200&h=200&fit=crop", author: "Alex Hormozi" },
+            { title: "$100M Leads", desc: "How to get strangers to want to buy your stuff", url: "https://amazon.com/dp/1737475723", thumbnail: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=200&h=200&fit=crop", author: "Alex Hormozi" },
+            { title: "Atomic Habits", desc: "Build good habits and break bad ones", url: "https://amazon.com/dp/0735211299", thumbnail: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop", author: "James Clear" },
+            { title: "Deep Work", desc: "Rules for focused success in a distracted world", url: "https://amazon.com/dp/1455586692", thumbnail: "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=200&h=200&fit=crop", author: "Cal Newport" },
+            { title: "The Lean Startup", desc: "How today's entrepreneurs use continuous innovation", url: "https://amazon.com/dp/0307887898", thumbnail: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=200&h=200&fit=crop", author: "Eric Ries" }
           ]).map((book, index) => (
             <div key={index} className="flex-shrink-0 w-64">
               <ResourceCard title={book.title} desc={book.desc} url={book.url} thumbnail={book.thumbnail} type="book" author={book.author} spotifyUrl={book.spotifyUrl} onPodcastClick={onPodcastSelect} />
@@ -241,44 +241,51 @@ function ResourcesTab({ focusAreas = [], onPodcastSelect, onPersonSelect }) {
               desc: "Serial entrepreneur, gym owner, and business educator", 
               thumbnail: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop",
               socialLinks: [
-                { platform: "X (Twitter)", handle: "@AlexHormozi", url: "https://twitter.com/AlexHormozi", icon: "🐦" },
-                { platform: "Instagram", handle: "@alexhormozi", url: "https://instagram.com/alexhormozi", icon: "📷" },
-                { platform: "YouTube", handle: "Alex Hormozi", url: "https://youtube.com/@AlexHormozi", icon: "📺" },
+                { platform: "Twitter", handle: "@AlexHormozi", url: "https://twitter.com/AlexHormozi", icon: "🐦" },
                 { platform: "LinkedIn", handle: "alex-hormozi", url: "https://linkedin.com/in/alex-hormozi", icon: "💼" },
-                { platform: "TikTok", handle: "@alexhormozi", url: "https://tiktok.com/@alexhormozi", icon: "🎵" }
+                { platform: "YouTube", handle: "Alex Hormozi", url: "https://youtube.com/@AlexHormozi", icon: "📺" },
+                { platform: "Instagram", handle: "@AlexHormozi", url: "https://instagram.com/alexhormozi", icon: "📸" }
+              ]
+            },
+            { 
+              name: "Gary Vaynerchuk", 
+              desc: "Entrepreneur, CEO of VaynerMedia, and social media expert", 
+              thumbnail: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200&h=200&fit=crop",
+              socialLinks: [
+                { platform: "Twitter", handle: "@garyvee", url: "https://twitter.com/garyvee", icon: "🐦" },
+                { platform: "LinkedIn", handle: "garyvaynerchuk", url: "https://linkedin.com/in/garyvaynerchuk", icon: "💼" },
+                { platform: "YouTube", handle: "GaryVee", url: "https://youtube.com/@GaryVee", icon: "📺" },
+                { platform: "Instagram", handle: "@garyvee", url: "https://instagram.com/garyvee", icon: "📸" }
               ]
             },
             { 
               name: "Naval Ravikant", 
               desc: "Entrepreneur, investor, and philosopher", 
-              thumbnail: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200&h=200&fit=crop",
+              thumbnail: "https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=200&h=200&fit=crop",
               socialLinks: [
-                { platform: "X (Twitter)", handle: "@naval", url: "https://twitter.com/naval", icon: "🐦" },
+                { platform: "Twitter", handle: "@naval", url: "https://twitter.com/naval", icon: "🐦" },
                 { platform: "LinkedIn", handle: "naval-ravikant", url: "https://linkedin.com/in/naval-ravikant", icon: "💼" },
                 { platform: "YouTube", handle: "Naval Ravikant", url: "https://youtube.com/@naval", icon: "📺" }
               ]
             },
             { 
-              name: "Tim Ferriss", 
-              desc: "Author, podcaster, and lifestyle designer", 
-              thumbnail: "https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=200&h=200&fit=crop",
+              name: "Paul Graham", 
+              desc: "Co-founder of Y Combinator, essayist", 
+              thumbnail: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop",
               socialLinks: [
-                { platform: "X (Twitter)", handle: "@tferriss", url: "https://twitter.com/tferriss", icon: "🐦" },
-                { platform: "Instagram", handle: "@timferriss", url: "https://instagram.com/timferriss", icon: "📷" },
-                { platform: "YouTube", handle: "Tim Ferriss", url: "https://youtube.com/@timferriss", icon: "📺" },
-                { platform: "LinkedIn", handle: "tim-ferriss", url: "https://linkedin.com/in/tim-ferriss", icon: "💼" }
+                { platform: "Twitter", handle: "@paulg", url: "https://twitter.com/paulg", icon: "🐦" },
+                { platform: "Website", handle: "paulgraham.com", url: "https://paulgraham.com", icon: "🌐" },
+                { platform: "GitHub", handle: "@paulg", url: "https://github.com/paulg", icon: "💻" }
               ]
             },
             { 
-              name: "Gary Vaynerchuk", 
-              desc: "CEO of VaynerMedia, social media expert", 
+              name: "Reid Hoffman", 
+              desc: "Co-founder of LinkedIn, entrepreneur and investor", 
               thumbnail: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop",
               socialLinks: [
-                { platform: "X (Twitter)", handle: "@garyvee", url: "https://twitter.com/garyvee", icon: "🐦" },
-                { platform: "Instagram", handle: "@garyvee", url: "https://instagram.com/garyvee", icon: "📷" },
-                { platform: "YouTube", handle: "GaryVee", url: "https://youtube.com/@GaryVee", icon: "📺" },
-                { platform: "LinkedIn", handle: "garyvaynerchuk", url: "https://linkedin.com/in/garyvaynerchuk", icon: "💼" },
-                { platform: "TikTok", handle: "@garyvee", url: "https://tiktok.com/@garyvee", icon: "🎵" }
+                { platform: "Twitter", handle: "@reidhoffman", url: "https://twitter.com/reidhoffman", icon: "🐦" },
+                { platform: "LinkedIn", handle: "reidhoffman", url: "https://linkedin.com/in/reidhoffman", icon: "💼" },
+                { platform: "Website", handle: "reidhoffman.org", url: "https://reidhoffman.org", icon: "🌐" }
               ]
             }
           ]).map((person, index) => (
@@ -294,11 +301,11 @@ function ResourcesTab({ focusAreas = [], onPodcastSelect, onPersonSelect }) {
         <h3 className="text-lg font-semibold mb-3">Podcasts</h3>
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
           {(searchResults?.podcasts || [
-            { title: "The Tim Ferriss Show", desc: "Interviews with world-class performers", url: "https://podcasts.apple.com/podcast/id863897795", spotifyUrl: "https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk", thumbnail: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop" },
-            { title: "How I Built This", desc: "Stories behind successful companies", url: "https://podcasts.apple.com/podcast/id1154105909", spotifyUrl: "https://open.spotify.com/show/6E6sTsI8O5j1dpEYFqylx8", thumbnail: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=200&h=200&fit=crop" },
-            { title: "Huberman Lab", desc: "Neuroscience-based tools for everyday life", url: "https://podcasts.apple.com/podcast/id1545953110", spotifyUrl: "https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk", thumbnail: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop" },
-            { title: "Deep Questions", desc: "Cal Newport on digital minimalism", url: "https://podcasts.apple.com/podcast/id1515788106", spotifyUrl: "https://open.spotify.com/show/6E6sTsI8O5j1dpEYFqylx8", thumbnail: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=200&h=200&fit=crop" },
-            { title: "Smart Passive Income", desc: "Pat Flynn on online business", url: "https://podcasts.apple.com/podcast/id383651043", spotifyUrl: "https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk", thumbnail: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop" }
+            { title: "Founders", desc: "Biographies of the world's greatest entrepreneurs by David Senra", url: "https://podcasts.apple.com/podcast/id1151430296", spotifyUrl: "https://open.spotify.com/show/6E6sTsI8O5j1dpEYFqylx8", thumbnail: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop" },
+            { title: "The Tim Ferriss Show", desc: "Interviews with world-class performers", url: "https://podcasts.apple.com/podcast/id863897795", spotifyUrl: "https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk", thumbnail: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=200&h=200&fit=crop" },
+            { title: "How I Built This", desc: "Stories behind successful companies", url: "https://podcasts.apple.com/podcast/id1154105909", spotifyUrl: "https://open.spotify.com/show/6E6sTsI8O5j1dpEYFqylx8", thumbnail: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop" },
+            { title: "The GaryVee Audio Experience", desc: "Business insights and motivational content", url: "https://podcasts.apple.com/podcast/id928159684", spotifyUrl: "https://open.spotify.com/show/1fMUGyV3eLqF4Lk7HdYp6h", thumbnail: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=200&h=200&fit=crop" },
+            { title: "Masters of Scale", desc: "How great companies grow from zero to a gazillion", url: "https://podcasts.apple.com/podcast/id1227971746", spotifyUrl: "https://open.spotify.com/show/1FcXiMTJ9QrQx3fQ4s8w8i", thumbnail: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop" }
           ]).map((podcast, index) => (
             <div key={index} className="flex-shrink-0 w-64">
               <ResourceCard title={podcast.title} desc={podcast.desc} url={podcast.url} thumbnail={podcast.thumbnail} type="podcast" spotifyUrl={podcast.spotifyUrl} onPodcastClick={onPodcastSelect} />
