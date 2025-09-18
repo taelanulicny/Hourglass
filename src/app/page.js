@@ -599,9 +599,6 @@ function HomeContent() {
   // Preset colors for focus areas
   const PRESET_COLORS = ["#8CA4AF", "#BCA88F", "#9ACD32", "#E46C6C", "#7D7ACF", "#F2C94C", "#56CCF2"];
   const [newColor, setNewColor] = useState("#8CA4AF");
-  // New: category for AI/recommendations
-  const CATEGORY_OPTIONS = ["Study", "Fitness", "Career", "Creative", "Finance", "Health", "Language", "Other"];
-  const [newCategory, setNewCategory] = useState("Other");
 
 
 
@@ -662,7 +659,6 @@ function HomeContent() {
   useEffect(() => {
     if (showModal) {
       setNewColor("#8CA4AF");
-      setNewCategory("Other");
     }
   }, [showModal]);
 
@@ -2062,24 +2058,12 @@ function HomeContent() {
               </label>
             </div>
           </div>
-          <div className="mb-4 mt-2">
-            <div className="text-sm text-black mb-2">Category</div>
-            <select
-              value={newCategory}
-              onChange={(e) => setNewCategory(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-black"
-            >
-              {CATEGORY_OPTIONS.map(opt => (
-                <option key={opt} value={opt}>{opt}</option>
-              ))}
-            </select>
-          </div>
           {formError ? (
             <div className="mb-3 text-sm text-red-600" role="alert">{formError}</div>
           ) : null}
           <div className="flex justify-end gap-3">
             <button
-              onClick={() => { setFormError(""); setShowModal(false); setNewCategory("Other"); }}
+              onClick={() => { setFormError(""); setShowModal(false); }}
               className="px-4 py-2 bg-gray-300 rounded"
             >
               Cancel
@@ -2102,8 +2086,7 @@ function HomeContent() {
                     timeSpent: 0,
                     goal: goalNum,
                     days: [],
-                    color: newColor,
-                    meta: { category: newCategory }
+                    color: newColor
                   },
                 ];
                 setCategories(updated);
@@ -2112,7 +2095,6 @@ function HomeContent() {
                 setNewLabel("");
                 setNewGoal("");
                 setFormError("");
-                setNewCategory("Other");
               }}
               className="px-4 py-2 bg-[#BCA88F] text-white rounded"
             >
