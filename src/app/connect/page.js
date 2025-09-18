@@ -378,6 +378,13 @@ function FeedCard({ title, children, cta }) {
       }
     };
 
+    // Debug logging
+    React.useEffect(() => {
+      if (thumbnail) {
+        console.log(`ResourceCard ${title}: thumbnail = ${thumbnail}`);
+      }
+    }, [thumbnail, title]);
+
     return (
       <div className="block rounded-xl border hover:shadow-sm bg-white h-32 flex flex-row cursor-pointer" onClick={handleClick}>
         {/* Thumbnail on the left */}
@@ -388,8 +395,12 @@ function FeedCard({ title, children, cta }) {
                 src={thumbnail} 
                 alt={title}
                 className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
-                onLoad={() => setImageLoaded(true)}
-                onError={() => {
+                onLoad={() => {
+                  console.log(`Image loaded successfully for ${title}: ${thumbnail}`);
+                  setImageLoaded(true);
+                }}
+                onError={(e) => {
+                  console.log(`Image failed to load for ${title}: ${thumbnail}`, e);
                   setImageError(true);
                   setImageLoaded(false);
                 }}
