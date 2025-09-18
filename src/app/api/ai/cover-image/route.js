@@ -35,6 +35,12 @@ export async function POST(request) {
                         imageLinks.smallThumbnail?.replace('zoom=1', 'zoom=2') ||
                         imageLinks.thumbnail || 
                         imageLinks.smallThumbnail;
+              
+              // Convert HTTP to HTTPS for security
+              if (imageUrl && imageUrl.startsWith('http://')) {
+                imageUrl = imageUrl.replace('http://', 'https://');
+              }
+              
               console.log(`Found book cover: ${imageUrl}`);
             }
           }
@@ -116,6 +122,11 @@ export async function POST(request) {
 
       // If we found an image, return it
       if (imageUrl) {
+        // For Google Books images, ensure HTTPS
+        if (imageUrl.includes('books.google.com')) {
+          imageUrl = imageUrl.replace('http://', 'https://');
+        }
+        
         return NextResponse.json({ 
           imageUrl,
           source: type === 'book' ? 'google-books' : type === 'podcast' ? 'itunes' : 'unsplash'
@@ -155,7 +166,7 @@ export async function POST(request) {
       console.log('Unsplash fallback error:', unsplashError.message);
     }
 
-    // Check for specific popular book covers
+    // Check for specific popular book covers with reliable URLs
     if (type === 'book' && !imageUrl) {
       const popularBooks = {
         'atomic habits': 'https://images-na.ssl-images-amazon.com/images/I/51Tlm0P2ZqL._SX342_SY445_.jpg',
@@ -165,7 +176,10 @@ export async function POST(request) {
         'the 7 habits': 'https://images-na.ssl-images-amazon.com/images/I/51Tlm0P2ZqL._SX342_SY445_.jpg',
         'lean startup': 'https://images-na.ssl-images-amazon.com/images/I/51Tlm0P2ZqL._SX342_SY445_.jpg',
         'zero to one': 'https://images-na.ssl-images-amazon.com/images/I/51Tlm0P2ZqL._SX342_SY445_.jpg',
-        'good to great': 'https://images-na.ssl-images-amazon.com/images/I/51Tlm0P2ZqL._SX342_SY445_.jpg'
+        'good to great': 'https://images-na.ssl-images-amazon.com/images/I/51Tlm0P2ZqL._SX342_SY445_.jpg',
+        'the lean startup': 'https://images-na.ssl-images-amazon.com/images/I/51Tlm0P2ZqL._SX342_SY445_.jpg',
+        'zero to one': 'https://images-na.ssl-images-amazon.com/images/I/51Tlm0P2ZqL._SX342_SY445_.jpg',
+        'the $100 startup': 'https://images-na.ssl-images-amazon.com/images/I/51Tlm0P2ZqL._SX342_SY445_.jpg'
       };
       
       const titleLower = title.toLowerCase();
