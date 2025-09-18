@@ -95,6 +95,8 @@ function ResourcesTab({ focusAreas = [], onPodcastSelect }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [selectedPerson, setSelectedPerson] = useState(null);
+  const [selectedPodcast, setSelectedPodcast] = useState(null);
 
   // Handle AI search for resources
   const handleSearch = async () => {
@@ -1039,8 +1041,6 @@ export default function ConnectPage() {
   const [tab, setTab] = useState('Resources');
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [selectedPodcast, setSelectedPodcast] = useState(null);
-  const [selectedPerson, setSelectedPerson] = useState(null);
   const menuRef = useRef(null);
   const router = useRouter();
 
