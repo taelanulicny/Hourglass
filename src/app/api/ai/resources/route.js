@@ -77,6 +77,10 @@ SPECIAL INSTRUCTIONS FOR ENTREPRENEURS:
 - Focus on people who are actively sharing content and have significant social media presence
 - Ensure you provide 5 different people, 5 different books, and 5 different podcasts
 
+TOP PODCAST RECOMMENDATIONS:
+- Always include "Founders" by David Senra as the first podcast recommendation for entrepreneurship topics
+- Founders features biographies of the world's greatest entrepreneurs and is highly regarded in the business community
+
 For each resource, provide:
 - A realistic, specific title
 - A brief, helpful description
@@ -265,11 +269,11 @@ Return your response as a JSON object with this exact structure:
           { title: `The Lean Startup`, desc: `How today's entrepreneurs use continuous innovation`, url: `https://amazon.com/dp/0307887898`, author: "Eric Ries" }
         ],
         podcasts: [
+          { title: `Founders`, desc: `Biographies of the world's greatest entrepreneurs by David Senra`, url: `https://podcasts.apple.com/podcast/id1151430296`, spotifyUrl: `https://open.spotify.com/show/6E6sTsI8O5j1dpEYFqylx8` },
           { title: `The Tim Ferriss Show`, desc: `Interviews with world-class performers`, url: `https://podcasts.apple.com/podcast/id863897795`, spotifyUrl: `https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk` },
           { title: `How I Built This`, desc: `Stories behind successful companies`, url: `https://podcasts.apple.com/podcast/id1154105909`, spotifyUrl: `https://open.spotify.com/show/6E6sTsI8O5j1dpEYFqylx8` },
           { title: `The GaryVee Audio Experience`, desc: `Business insights and motivational content`, url: `https://podcasts.apple.com/podcast/id928159684`, spotifyUrl: `https://open.spotify.com/show/1fMUGyV3eLqF4Lk7HdYp6h` },
-          { title: `Masters of Scale`, desc: `How great companies grow from zero to a gazillion`, url: `https://podcasts.apple.com/podcast/id1227971746`, spotifyUrl: `https://open.spotify.com/show/1FcXiMTJ9QrQx3fQ4s8w8i` },
-          { title: `The Smart Passive Income Podcast`, desc: `Online business strategies and passive income`, url: `https://podcasts.apple.com/podcast/id383275001`, spotifyUrl: `https://open.spotify.com/show/2fQn6l6p6Fcj8vJO3vbyZ7` }
+          { title: `Masters of Scale`, desc: `How great companies grow from zero to a gazillion`, url: `https://podcasts.apple.com/podcast/id1227971746`, spotifyUrl: `https://open.spotify.com/show/1FcXiMTJ9QrQx3fQ4s8w8i` }
         ],
         social: [
           { 
