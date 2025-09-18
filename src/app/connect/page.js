@@ -390,27 +390,20 @@ function FeedCard({ title, children, cta }) {
         {/* Thumbnail on the left */}
         <div className="w-24 h-full bg-gray-100 rounded-l-xl flex items-center justify-center overflow-hidden relative flex-shrink-0">
           {thumbnail && !imageError ? (
-            <>
-              <img 
-                src={thumbnail} 
-                alt={title}
-                className="w-full h-full object-cover"
-                onLoad={() => {
-                  console.log(`Image loaded successfully for ${title}: ${thumbnail}`);
-                  setImageLoaded(true);
-                }}
-                onError={(e) => {
-                  console.log(`Image failed to load for ${title}: ${thumbnail}`, e);
-                  setImageError(true);
-                  setImageLoaded(false);
-                }}
-              />
-              {!imageLoaded && (
-                <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-2xl bg-gray-100">
-                  {getPlaceholderIcon(type)}
-                </div>
-              )}
-            </>
+            <img 
+              src={thumbnail} 
+              alt={title}
+              className="w-full h-full object-cover"
+              onLoad={() => {
+                console.log(`Image loaded successfully for ${title}: ${thumbnail}`);
+                setImageLoaded(true);
+              }}
+              onError={(e) => {
+                console.log(`Image failed to load for ${title}: ${thumbnail}`, e);
+                setImageError(true);
+                setImageLoaded(false);
+              }}
+            />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-gray-400 text-2xl bg-gray-100">
               {getPlaceholderIcon(type)}
@@ -425,12 +418,6 @@ function FeedCard({ title, children, cta }) {
             <div className="text-sm text-gray-600 line-clamp-1">by {author}</div>
           ) : (
             <div className="text-sm text-gray-500 line-clamp-2">{desc}</div>
-          )}
-          {/* Debug: Show thumbnail URL */}
-          {thumbnail && (
-            <div className="text-xs text-gray-400 mt-1 truncate">
-              {thumbnail}
-            </div>
           )}
           
           {/* Button for all resource types */}
