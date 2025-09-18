@@ -120,23 +120,27 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect }) {
     } catch (error) {
       console.error('Error fetching resources:', error);
       
-      // Fallback to simulated results if API fails
+      // Fallback to simulated results if API fails - now provides 5 items per category
       setSearchResults({
         query: searchQuery,
         books: [
-          { title: `${searchQuery} - Essential Guide`, desc: `Comprehensive resource for ${searchQuery}`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-guide`, thumbnail: `https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=200&h=200&fit=crop` },
-          { title: `Mastering ${searchQuery}`, desc: `Advanced techniques and strategies`, url: `https://example.com/mastering-${searchQuery.replace(/\s+/g, '-').toLowerCase()}`, thumbnail: `https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=200&h=200&fit=crop` },
-          { title: `${searchQuery} for Beginners`, desc: `Perfect starting point for newcomers`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-beginners`, thumbnail: `https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop` }
+          { title: `${searchQuery} - Essential Guide`, desc: `Comprehensive resource for ${searchQuery}`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-guide` },
+          { title: `Mastering ${searchQuery}`, desc: `Advanced techniques and strategies`, url: `https://example.com/mastering-${searchQuery.replace(/\s+/g, '-').toLowerCase()}` },
+          { title: `${searchQuery} for Beginners`, desc: `Perfect starting point for newcomers`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-beginners` },
+          { title: `The Complete Guide to ${searchQuery}`, desc: `Everything you need to know`, url: `https://example.com/complete-${searchQuery.replace(/\s+/g, '-').toLowerCase()}` },
+          { title: `${searchQuery} Best Practices`, desc: `Proven methods and techniques`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-best-practices` }
         ],
         podcasts: [
-          { title: `${searchQuery} Podcast`, desc: `Weekly insights and discussions`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-podcast`, thumbnail: `https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop` },
-          { title: `The ${searchQuery} Show`, desc: `Expert interviews and tips`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-show`, thumbnail: `https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=200&h=200&fit=crop` }
+          { title: `${searchQuery} Podcast`, desc: `Weekly insights and discussions`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-podcast`, spotifyUrl: `https://open.spotify.com/search/${encodeURIComponent(searchQuery)}` },
+          { title: `The ${searchQuery} Show`, desc: `Expert interviews and tips`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-show`, spotifyUrl: `https://open.spotify.com/search/${encodeURIComponent(searchQuery)}%20show` },
+          { title: `${searchQuery} Talks`, desc: `Deep dives and conversations`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-talks`, spotifyUrl: `https://open.spotify.com/search/${encodeURIComponent(searchQuery)}%20talks` },
+          { title: `${searchQuery} Weekly`, desc: `Latest updates and trends`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-weekly`, spotifyUrl: `https://open.spotify.com/search/${encodeURIComponent(searchQuery)}%20weekly` },
+          { title: `${searchQuery} Insights`, desc: `Expert analysis and commentary`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-insights`, spotifyUrl: `https://open.spotify.com/search/${encodeURIComponent(searchQuery)}%20insights` }
         ],
         social: [
           { 
             name: `${searchQuery} Expert 1`, 
             desc: `Leading expert in ${searchQuery}`, 
-            thumbnail: `https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200&h=200&fit=crop`,
             socialLinks: [
               { platform: "X", handle: `@${searchQuery.toLowerCase().replace(/\s+/g, '')}1`, url: `https://x.com/${searchQuery.toLowerCase().replace(/\s+/g, '')}1`, icon: "X" },
               { platform: "LinkedIn", handle: `${searchQuery.toLowerCase().replace(/\s+/g, '-')}-expert`, url: `https://linkedin.com/in/${searchQuery.toLowerCase().replace(/\s+/g, '-')}-expert`, icon: "LinkedIn" },
@@ -146,11 +150,37 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect }) {
           { 
             name: `${searchQuery} Expert 2`, 
             desc: `Thought leader in ${searchQuery}`, 
-            thumbnail: `https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=200&h=200&fit=crop`,
             socialLinks: [
               { platform: "X", handle: `@${searchQuery.toLowerCase().replace(/\s+/g, '')}2`, url: `https://x.com/${searchQuery.toLowerCase().replace(/\s+/g, '')}2`, icon: "X" },
               { platform: "Instagram", handle: `@${searchQuery.toLowerCase().replace(/\s+/g, '')}expert`, url: `https://instagram.com/${searchQuery.toLowerCase().replace(/\s+/g, '')}expert`, icon: "Instagram" },
               { platform: "Website", handle: `${searchQuery.toLowerCase().replace(/\s+/g, '')}expert.com`, url: `https://${searchQuery.toLowerCase().replace(/\s+/g, '')}expert.com`, icon: "Website" }
+            ]
+          },
+          { 
+            name: `${searchQuery} Expert 3`, 
+            desc: `Innovator in ${searchQuery}`, 
+            socialLinks: [
+              { platform: "X", handle: `@${searchQuery.toLowerCase().replace(/\s+/g, '')}3`, url: `https://x.com/${searchQuery.toLowerCase().replace(/\s+/g, '')}3`, icon: "X" },
+              { platform: "LinkedIn", handle: `${searchQuery.toLowerCase().replace(/\s+/g, '-')}-innovator`, url: `https://linkedin.com/in/${searchQuery.toLowerCase().replace(/\s+/g, '-')}-innovator`, icon: "LinkedIn" },
+              { platform: "Website", handle: `${searchQuery.toLowerCase().replace(/\s+/g, '')}innovator.com`, url: `https://${searchQuery.toLowerCase().replace(/\s+/g, '')}innovator.com`, icon: "Website" }
+            ]
+          },
+          { 
+            name: `${searchQuery} Expert 4`, 
+            desc: `Educator and mentor in ${searchQuery}`, 
+            socialLinks: [
+              { platform: "X", handle: `@${searchQuery.toLowerCase().replace(/\s+/g, '')}4`, url: `https://x.com/${searchQuery.toLowerCase().replace(/\s+/g, '')}4`, icon: "X" },
+              { platform: "LinkedIn", handle: `${searchQuery.toLowerCase().replace(/\s+/g, '-')}-educator`, url: `https://linkedin.com/in/${searchQuery.toLowerCase().replace(/\s+/g, '-')}-educator`, icon: "LinkedIn" },
+              { platform: "YouTube", handle: `${searchQuery} Educator`, url: `https://youtube.com/@${searchQuery.toLowerCase().replace(/\s+/g, '')}educator`, icon: "YouTube" }
+            ]
+          },
+          { 
+            name: `${searchQuery} Expert 5`, 
+            desc: `Community leader in ${searchQuery}`, 
+            socialLinks: [
+              { platform: "X", handle: `@${searchQuery.toLowerCase().replace(/\s+/g, '')}5`, url: `https://x.com/${searchQuery.toLowerCase().replace(/\s+/g, '')}5`, icon: "X" },
+              { platform: "Instagram", handle: `@${searchQuery.toLowerCase().replace(/\s+/g, '')}leader`, url: `https://instagram.com/${searchQuery.toLowerCase().replace(/\s+/g, '')}leader`, icon: "Instagram" },
+              { platform: "Website", handle: `${searchQuery.toLowerCase().replace(/\s+/g, '')}community.com`, url: `https://${searchQuery.toLowerCase().replace(/\s+/g, '')}community.com`, icon: "Website" }
             ]
           }
         ]
