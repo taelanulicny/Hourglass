@@ -606,7 +606,7 @@ export default function ConnectPage() {
   const percentMine = useMemo(() => (myToday.goalMins ? (myToday.spentMins / myToday.goalMins) * 100 : 0), [myToday]);
   
   // --- Tab state ---
-  const [tab, setTab] = useState('Feed');
+  const [tab, setTab] = useState('Close Friends');
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const menuRef = useRef(null);
@@ -682,7 +682,7 @@ export default function ConnectPage() {
                 role="listbox"
                 className="absolute z-10 mt-2 w-40 rounded-lg border bg-white shadow-md left-1/2 transform -translate-x-1/2"
               >
-                {['Feed', 'Challenges', 'Resources', 'Templates'].filter(t => t !== tab).map((name) => (
+                {['Close Friends', 'Challenges', 'Resources', 'Templates'].filter(t => t !== tab).map((name) => (
                   <li key={name}>
                     <button
                       onClick={() => { setTab(name); setOpen(false); }}
@@ -721,7 +721,7 @@ export default function ConnectPage() {
 
         {/* Subtitle */}
         <p className="text-sm text-gray-500 mb-2 text-center">
-          {tab === 'Feed' && "See friends' progress and discover templates & creators."}
+          {tab === 'Close Friends' && "See friends' progress and discover templates & creators."}
           {tab === 'Challenges' && "Join challenges and track your progress with friends."}
           {tab === 'Resources' && "Find helpful resources and tools for your focus areas."}
           {tab === 'Templates' && "Browse and use time management templates from the community."}
@@ -735,7 +735,7 @@ export default function ConnectPage() {
 
       {/* Tab Content */}
       <main className="px-4 mt-4">
-        {tab === 'Feed' && <FeedTab />}
+        {tab === 'Close Friends' && <FeedTab />}
         {tab === 'Challenges' && <ChallengesTab />}
         {tab === 'Resources' && <ResourcesTab focusAreas={focusAreas} />}
         {tab === 'Templates' && <TemplatesTab />}

@@ -186,37 +186,7 @@ function ymd(date) {
   return `${y}-${m}-${day}`;
 }
 
-// ---- Friends (MVP) helpers ----
-// friend object shape (stored in localStorage under "friends:v1"):
-// { id, name, avatar?, categories: [{ label, goal, days: {M,Tu,W,Th,F,Sa,Su} }] }
-function loadFriends() {
-  try {
-    const raw = localStorage.getItem("friends:v1");
-    const arr = raw ? safeJsonParse(raw, []) : [];
-    return Array.isArray(arr) ? arr : [];
-  } catch {
-    return [];
-  }
-}
-function saveFriends(arr) {
-  try { localStorage.setItem("friends:v1", JSON.stringify(arr || [])); } catch {}
-}
 
-// Compute a friend's weekly totals and percent toward weekly goal based on their categories
-function friendWeeklyStats(friend, mondayDateLike) {
-  const monday = new Date(mondayDateLike);
-  monday.setHours(0,0,0,0);
-  // Sum all categories' logged hours across the 7 days
-  const weekDays = ["M","Tu","W","Th","F","Sa","Su"];
-  const totalLogged = (friend?.categories || []).reduce((sum, c) => {
-    const sub = weekDays.reduce((s, d) => s + (Number(c?.days?.[d] || 0)), 0);
-    return sum + sub;
-  }, 0);
-  // Weekly goal is sum of (daily goal * 7) across categories
-  const weeklyGoal = (friend?.categories || []).reduce((sum, c) => sum + (Number(c?.goal || 0) * 7), 0);
-  const pct = weeklyGoal > 0 ? Math.min(100, (totalLogged / weeklyGoal) * 100) : 0;
-  return { totalLogged, weeklyGoal, pct: Math.round(pct) };
-}
 
 // Component that uses search params (needs Suspense)
 function HomeContent() {
@@ -633,38 +603,7 @@ function HomeContent() {
   const CATEGORY_OPTIONS = ["Study", "Fitness", "Career", "Creative", "Finance", "Health", "Language", "Other"];
   const [newCategory, setNewCategory] = useState("Other");
 
-  // ---- Friends (MVP) state ----
-  const [friends, setFriends] = useState([]);
-  useEffect(() => {
-    setFriends(loadFriends());
-  }, []);
 
-  function seedDemoFriends() {
-    const demo = [
-      {
-        id: "f1",
-        name: "Ava M.",
-        categories: [
-          { label: "LSAT", goal: 2, days: { M: 1.2, Tu: 1.0, W: 0, Th: 0, F: 0, Sa: 0, Su: 0 } },
-          { label: "Gym", goal: 1, days: { M: 0.5, Tu: 0.5, W: 0, Th: 0, F: 0, Sa: 0, Su: 0 } },
-        ],
-      },
-      {
-        id: "f2",
-        name: "Noah R.",
-        categories: [
-          { label: "Design", goal: 3, days: { M: 2.0, Tu: 0.5, W: 0, Th: 0, F: 0, Sa: 0, Su: 0 } },
-        ],
-      },
-    ];
-    saveFriends(demo);
-    setFriends(demo);
-  }
-
-  function removeSampleFriends() {
-    saveFriends([]);
-    setFriends([]);
-  }
 
   // Seeds for future "Recommended" module and AI prompt hints
   const RECOMMENDATION_SEEDS = {
@@ -1780,75 +1719,6 @@ function HomeContent() {
         </div>
       </header>
 
-      {/* Friends (beta) */}
-      <section className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-gray-900">Friends (beta)</h2>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={friends.length === 0 ? seedDemoFriends : removeSampleFriends}
-              className={`text-sm px-4 py-2 rounded-xl border transition-colors duration-200 ${
-                friends.length === 0 
-                  ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100' 
-                  : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
-              }`}
-              title={friends.length === 0 ? "Add sample friends to preview the module" : "Remove sample friends"}
-              type="button"
-            >
-              {friends.length === 0 ? 'Add sample' : 'Remove samples'}
-            </button>
-          </div>
-        </div>
-
-        {friends.length === 0 ? (
-          <div className="rounded-xl border border-gray-200 bg-white text-gray-600 px-4 py-4 text-sm">
-            No friends yet. Tap <span className="font-semibold text-gray-700">Add sample</span> to preview how this looks.
-          </div>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {friends.map((f) => {
-              const stats = friendWeeklyStats(f, startOfWeek);
-              return (
-                <div key={f.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 w-full flex flex-row items-center gap-4 hover:shadow-md transition-shadow duration-200">
-                  {/* Initials avatar */}
-                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 text-blue-700 font-bold text-sm">
-                    {String(f.name || "?").split(" ").map(s=>s[0]).join("").slice(0,2).toUpperCase()}
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-base font-semibold text-gray-900">{f.name}</div>
-                    <div className="text-sm text-gray-600">
-                      This week: {formatHoursAndMinutes(stats.totalLogged)} / {formatHoursAndMinutes(stats.weeklyGoal)}
-                    </div>
-                  </div>
-                  {/* Mini progress ring */}
-                  <div className="relative w-14 h-14">
-                    <svg className="w-full h-full" viewBox="0 0 36 36" aria-hidden="true">
-                      <path
-                        stroke="#E5E7EB"
-                        strokeWidth="3"
-                        fill="none"
-                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                      />
-                      <path
-                        stroke="#3B82F6"
-                        strokeWidth="3"
-                        strokeDasharray={`${stats.pct}, 100`}
-                        strokeLinecap="round"
-                        fill="none"
-                        transform="rotate(-90 18 18)"
-                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-gray-900">
-                      {stats.pct}%
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
 
       <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
         <div className="flex justify-between items-center mb-4">
