@@ -68,6 +68,12 @@ export async function POST(request) {
 2. **People** - 3-4 influential people in the field with their social media links
 3. **Podcasts** - 3-4 specific podcast shows or episodes
 
+SPECIAL INSTRUCTIONS FOR ENTREPRENEURS:
+- If the query mentions "entrepreneurship", "entrepreneurs", or specific entrepreneur names like "Alex Hormozi", prioritize well-known entrepreneurs
+- For Alex Hormozi specifically, include his real social media profiles and books
+- Always include the most prominent, recognizable people in the field
+- Focus on people who are actively sharing content and have significant social media presence
+
 For each resource, provide:
 - A realistic, specific title
 - A brief, helpful description
@@ -146,6 +152,16 @@ Return your response as a JSON object with this exact structure:
           ],
           social: [
             { 
+              name: "Alex Hormozi", 
+              desc: "Serial entrepreneur, gym owner, and business educator", 
+              socialLinks: [
+                { platform: "Twitter", handle: "@AlexHormozi", url: "https://twitter.com/AlexHormozi", icon: "🐦" },
+                { platform: "LinkedIn", handle: "alex-hormozi", url: "https://linkedin.com/in/alex-hormozi", icon: "💼" },
+                { platform: "YouTube", handle: "Alex Hormozi", url: "https://youtube.com/@AlexHormozi", icon: "📺" },
+                { platform: "Instagram", handle: "@AlexHormozi", url: "https://instagram.com/alexhormozi", icon: "📸" }
+              ]
+            },
+            { 
               name: "Naval Ravikant", 
               desc: "Entrepreneur, investor, and philosopher", 
               socialLinks: [
@@ -220,9 +236,10 @@ Return your response as a JSON object with this exact structure:
       // Fallback response for API errors
       const fallbackResources = {
         books: [
+          { title: `$100M Offers`, desc: `How to make offers so good people feel stupid saying no`, url: `https://amazon.com/dp/1737475715`, author: "Alex Hormozi" },
+          { title: `$100M Leads`, desc: `How to get strangers to want to buy your stuff`, url: `https://amazon.com/dp/1737475723`, author: "Alex Hormozi" },
           { title: `Atomic Habits`, desc: `Build good habits and break bad ones`, url: `https://amazon.com/dp/0735211299`, author: "James Clear" },
-          { title: `Deep Work`, desc: `Rules for focused success in a distracted world`, url: `https://amazon.com/dp/1455586692`, author: "Cal Newport" },
-          { title: `The Lean Startup`, desc: `How today's entrepreneurs use continuous innovation`, url: `https://amazon.com/dp/0307887898`, author: "Eric Ries" }
+          { title: `Deep Work`, desc: `Rules for focused success in a distracted world`, url: `https://amazon.com/dp/1455586692`, author: "Cal Newport" }
         ],
         podcasts: [
           { title: `The Tim Ferriss Show`, desc: `Interviews with world-class performers`, url: `https://podcasts.apple.com/podcast/id863897795`, spotifyUrl: `https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk` },
