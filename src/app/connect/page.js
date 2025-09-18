@@ -132,8 +132,8 @@ function ResourcesTab({ focusAreas = [] }) {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border bg-white px-3 py-3">
-        <div className="text-xs text-gray-500 mb-1">Tell your AI Assistant what you want to learn more about, and it will pull resources for you to choose from</div>
+      <div className="rounded-xl border bg-white px-3 py-2">
+        <div className="text-xs text-gray-500 mb-2">Tell your AI Assistant what you want to learn more about, and it will pull resources for you to choose from</div>
         <div className="flex gap-2">
           <input
             type="text"
