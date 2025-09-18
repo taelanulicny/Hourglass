@@ -200,14 +200,14 @@ function ResourcesTab({ focusAreas = [] }) {
         <h3 className="text-lg font-semibold mb-3">Books</h3>
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
           {(searchResults?.books || [
-            { title: "Atomic Habits", desc: "Build good habits and break bad ones", url: "https://example.com/atomic-habits", thumbnail: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=200&h=200&fit=crop" },
-            { title: "Deep Work", desc: "Rules for focused success in a distracted world", url: "https://example.com/deep-work", thumbnail: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=200&h=200&fit=crop" },
-            { title: "The Power of Habit", desc: "Why we do what we do in life and business", url: "https://example.com/power-of-habit", thumbnail: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop" },
-            { title: "Getting Things Done", desc: "The art of stress-free productivity", url: "https://example.com/gtd", thumbnail: "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=200&h=200&fit=crop" },
-            { title: "The 7 Habits", desc: "Highly effective people principles", url: "https://example.com/7-habits", thumbnail: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=200&h=200&fit=crop" }
+            { title: "Atomic Habits", desc: "Build good habits and break bad ones", url: "https://example.com/atomic-habits", thumbnail: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=200&h=200&fit=crop", author: "James Clear" },
+            { title: "Deep Work", desc: "Rules for focused success in a distracted world", url: "https://example.com/deep-work", thumbnail: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=200&h=200&fit=crop", author: "Cal Newport" },
+            { title: "The Power of Habit", desc: "Why we do what we do in life and business", url: "https://example.com/power-of-habit", thumbnail: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop", author: "Charles Duhigg" },
+            { title: "Getting Things Done", desc: "The art of stress-free productivity", url: "https://example.com/gtd", thumbnail: "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=200&h=200&fit=crop", author: "David Allen" },
+            { title: "The 7 Habits", desc: "Highly effective people principles", url: "https://example.com/7-habits", thumbnail: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=200&h=200&fit=crop", author: "Stephen Covey" }
           ]).map((book, index) => (
-            <div key={index} className="flex-shrink-0 w-48">
-              <ResourceCard title={book.title} desc={book.desc} url={book.url} thumbnail={book.thumbnail} type="book" />
+            <div key={index} className="flex-shrink-0 w-64">
+              <ResourceCard title={book.title} desc={book.desc} url={book.url} thumbnail={book.thumbnail} type="book" author={book.author} />
             </div>
           ))}
         </div>
@@ -223,7 +223,7 @@ function ResourcesTab({ focusAreas = [] }) {
             { title: "LinkedIn Learning", desc: "Professional development courses", url: "https://example.com/linkedin-learning", thumbnail: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200&h=200&fit=crop" },
             { title: "YouTube Channels", desc: "Top productivity and study channels", url: "https://example.com/youtube-prod", thumbnail: "https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=200&h=200&fit=crop" }
           ]).map((social, index) => (
-            <div key={index} className="flex-shrink-0 w-48">
+            <div key={index} className="flex-shrink-0 w-64">
               <ResourceCard title={social.title} desc={social.desc} url={social.url} thumbnail={social.thumbnail} type="social" />
             </div>
           ))}
@@ -241,7 +241,7 @@ function ResourcesTab({ focusAreas = [] }) {
             { title: "The Productivity Show", desc: "Tips and strategies for getting things done", url: "https://example.com/productivity-show", thumbnail: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=200&h=200&fit=crop" },
             { title: "Atomic Habits", desc: "James Clear on building better habits", url: "https://example.com/atomic-habits-podcast", thumbnail: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop" }
           ]).map((podcast, index) => (
-            <div key={index} className="flex-shrink-0 w-48">
+            <div key={index} className="flex-shrink-0 w-64">
               <ResourceCard title={podcast.title} desc={podcast.desc} url={podcast.url} thumbnail={podcast.thumbnail} type="podcast" />
             </div>
           ))}
@@ -354,7 +354,7 @@ function FeedCard({ title, children, cta }) {
   );
 }
 
-function ResourceCard({ title, desc, url, thumbnail, type = 'book' }) {
+function ResourceCard({ title, desc, url, thumbnail, type = 'book', author }) {
   const [imageLoaded, setImageLoaded] = React.useState(false);
   const [imageError, setImageError] = React.useState(false);
 
@@ -373,10 +373,10 @@ function ResourceCard({ title, desc, url, thumbnail, type = 'book' }) {
   };
 
   return (
-    <a className="block rounded-xl border hover:shadow-sm bg-white h-32 flex flex-col"
+    <a className="block rounded-xl border hover:shadow-sm bg-white h-32 flex flex-row"
        href={url} target="_blank" rel="noreferrer">
-      {/* Thumbnail */}
-      <div className="h-16 bg-gray-100 rounded-t-xl flex items-center justify-center overflow-hidden relative">
+      {/* Thumbnail on the left */}
+      <div className="w-24 h-full bg-gray-100 rounded-l-xl flex items-center justify-center overflow-hidden relative flex-shrink-0">
         {thumbnail && !imageError ? (
           <>
             <img 
@@ -402,10 +402,14 @@ function ResourceCard({ title, desc, url, thumbnail, type = 'book' }) {
         )}
       </div>
       
-      {/* Content */}
-      <div className="p-3 flex-1 flex flex-col">
-        <div className="font-semibold leading-snug text-sm line-clamp-2">{title}</div>
-        <div className="text-xs text-gray-500 mt-1 line-clamp-2 flex-1">{desc}</div>
+      {/* Content on the right */}
+      <div className="p-4 flex-1 flex flex-col justify-center">
+        <div className="font-semibold leading-snug text-base line-clamp-2 mb-1">{title}</div>
+        {type === 'book' && author ? (
+          <div className="text-sm text-gray-600 line-clamp-1">by {author}</div>
+        ) : (
+          <div className="text-sm text-gray-500 line-clamp-2">{desc}</div>
+        )}
       </div>
     </a>
   );
