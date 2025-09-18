@@ -83,7 +83,7 @@ function ChallengesTab() {
   );
 }
 
-function ResourcesTab({ focusAreas = [], onPodcastSelect }) {
+function ResourcesTab({ focusAreas = [], onPodcastSelect, onPersonSelect }) {
   const DEMO = [{ id:'lsat', name:'LSAT Prep' }, { id:'fitness', name:'Fitness' }];
   
   // Convert focus areas to the format expected by the selector
@@ -95,8 +95,6 @@ function ResourcesTab({ focusAreas = [], onPodcastSelect }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
-  const [selectedPerson, setSelectedPerson] = useState(null);
-  const [selectedPodcast, setSelectedPodcast] = useState(null);
 
   // Handle AI search for resources
   const handleSearch = async () => {
@@ -285,7 +283,7 @@ function ResourcesTab({ focusAreas = [], onPodcastSelect }) {
             }
           ]).map((person, index) => (
             <div key={index} className="flex-shrink-0 w-64">
-              <PersonCard person={person} onClick={setSelectedPerson} />
+              <PersonCard person={person} onClick={onPersonSelect} />
             </div>
           ))}
         </div>
@@ -1041,6 +1039,8 @@ export default function ConnectPage() {
   const [tab, setTab] = useState('Resources');
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [selectedPerson, setSelectedPerson] = useState(null);
+  const [selectedPodcast, setSelectedPodcast] = useState(null);
   const menuRef = useRef(null);
   const router = useRouter();
 
@@ -1169,7 +1169,7 @@ export default function ConnectPage() {
       <main className="px-4 mt-4">
         {tab === 'Close Friends' && <FeedTab />}
         {tab === 'Challenges' && <ChallengesTab />}
-        {tab === 'Resources' && <ResourcesTab focusAreas={focusAreas} onPodcastSelect={setSelectedPodcast} />}
+        {tab === 'Resources' && <ResourcesTab focusAreas={focusAreas} onPodcastSelect={setSelectedPodcast} onPersonSelect={setSelectedPerson} />}
         {tab === 'Templates' && <TemplatesTab />}
       </main>
 
