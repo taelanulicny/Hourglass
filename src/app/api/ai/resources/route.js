@@ -161,7 +161,6 @@ Return your response as a JSON object with this exact structure:
           {
             name: "Alex Hormozi",
             desc: "Serial entrepreneur, gym owner, and business educator",
-            thumbnail: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face",
             socialLinks: [
               { platform: "Twitter", handle: "@AlexHormozi", url: "https://twitter.com/AlexHormozi", icon: "🐦" },
               { platform: "LinkedIn", handle: "alex-hormozi", url: "https://linkedin.com/in/alex-hormozi", icon: "💼" },
@@ -172,7 +171,6 @@ Return your response as a JSON object with this exact structure:
           {
             name: "Gary Vaynerchuk",
             desc: "Entrepreneur, CEO of VaynerMedia, and social media expert",
-            thumbnail: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face",
             socialLinks: [
               { platform: "Twitter", handle: "@garyvee", url: "https://twitter.com/garyvee", icon: "🐦" },
               { platform: "LinkedIn", handle: "garyvaynerchuk", url: "https://linkedin.com/in/garyvaynerchuk", icon: "💼" },
@@ -183,7 +181,6 @@ Return your response as a JSON object with this exact structure:
           {
             name: "Naval Ravikant",
             desc: "Entrepreneur, investor, and philosopher",
-            thumbnail: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=400&h=400&fit=crop&crop=face",
             socialLinks: [
               { platform: "Twitter", handle: "@naval", url: "https://twitter.com/naval", icon: "🐦" },
               { platform: "LinkedIn", handle: "naval-ravikant", url: "https://linkedin.com/in/naval-ravikant", icon: "💼" },
@@ -193,7 +190,6 @@ Return your response as a JSON object with this exact structure:
           {
             name: "Paul Graham",
             desc: "Co-founder of Y Combinator, essayist",
-            thumbnail: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face",
             socialLinks: [
               { platform: "Twitter", handle: "@paulg", url: "https://twitter.com/paulg", icon: "🐦" },
               { platform: "Website", handle: "paulgraham.com", url: "https://paulgraham.com", icon: "🌐" },
@@ -203,7 +199,6 @@ Return your response as a JSON object with this exact structure:
           {
             name: "Reid Hoffman",
             desc: "Co-founder of LinkedIn, entrepreneur and investor",
-            thumbnail: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face",
             socialLinks: [
               { platform: "Twitter", handle: "@reidhoffman", url: "https://twitter.com/reidhoffman", icon: "🐦" },
               { platform: "LinkedIn", handle: "reidhoffman", url: "https://linkedin.com/in/reidhoffman", icon: "💼" },
@@ -214,47 +209,7 @@ Return your response as a JSON object with this exact structure:
         };
       }
 
-      // Fetch real cover images for each resource
-      const fetchCoverImage = async (resource, type) => {
-        try {
-          const coverResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/ai/cover-image`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              title: resource.title,
-              type: type,
-              author: resource.author
-            })
-          });
-          
-          if (coverResponse.ok) {
-            const coverData = await coverResponse.json();
-            return coverData.imageUrl;
-          }
-        } catch (error) {
-          console.log(`Failed to fetch cover for ${resource.title}:`, error.message);
-        }
-        return null;
-      };
-
-      // Add thumbnails to all resources
-      if (resources.books) {
-        for (const book of resources.books) {
-          book.thumbnail = await fetchCoverImage(book, 'book');
-        }
-      }
-      
-      if (resources.podcasts) {
-        for (const podcast of resources.podcasts) {
-          podcast.thumbnail = await fetchCoverImage(podcast, 'podcast');
-        }
-      }
-      
-      if (resources.social) {
-        for (const social of resources.social) {
-          social.thumbnail = await fetchCoverImage(social, 'social');
-        }
-      }
+      // Image fetching has been removed - resources are now text-only
 
       return NextResponse.json({ 
         query: query,

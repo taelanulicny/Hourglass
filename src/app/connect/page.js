@@ -218,14 +218,14 @@ function ResourcesTab({ focusAreas = [], onPodcastSelect, onPersonSelect }) {
         <h3 className="text-lg font-semibold mb-3">Books</h3>
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
           {(searchResults?.books || [
-            { title: "$100M Offers", desc: "How to make offers so good people feel stupid saying no", url: "https://amazon.com/dp/1737475715", thumbnail: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=200&h=200&fit=crop", author: "Alex Hormozi" },
-            { title: "$100M Leads", desc: "How to get strangers to want to buy your stuff", url: "https://amazon.com/dp/1737475723", thumbnail: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=200&h=200&fit=crop", author: "Alex Hormozi" },
-            { title: "Atomic Habits", desc: "Build good habits and break bad ones", url: "https://amazon.com/dp/0735211299", thumbnail: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop", author: "James Clear" },
-            { title: "Deep Work", desc: "Rules for focused success in a distracted world", url: "https://amazon.com/dp/1455586692", thumbnail: "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=200&h=200&fit=crop", author: "Cal Newport" },
-            { title: "The Lean Startup", desc: "How today's entrepreneurs use continuous innovation", url: "https://amazon.com/dp/0307887898", thumbnail: "https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=200&h=200&fit=crop", author: "Eric Ries" }
+            { title: "$100M Offers", desc: "How to make offers so good people feel stupid saying no", url: "https://amazon.com/dp/1737475715", author: "Alex Hormozi" },
+            { title: "$100M Leads", desc: "How to get strangers to want to buy your stuff", url: "https://amazon.com/dp/1737475723", author: "Alex Hormozi" },
+            { title: "Atomic Habits", desc: "Build good habits and break bad ones", url: "https://amazon.com/dp/0735211299", author: "James Clear" },
+            { title: "Deep Work", desc: "Rules for focused success in a distracted world", url: "https://amazon.com/dp/1455586692", author: "Cal Newport" },
+            { title: "The Lean Startup", desc: "How today's entrepreneurs use continuous innovation", url: "https://amazon.com/dp/0307887898", author: "Eric Ries" }
           ]).map((book, index) => (
             <div key={index} className="flex-shrink-0 w-64">
-              <ResourceCard title={book.title} desc={book.desc} url={book.url} thumbnail={book.thumbnail} type="book" author={book.author} spotifyUrl={book.spotifyUrl} onPodcastClick={onPodcastSelect} />
+              <ResourceCard title={book.title} desc={book.desc} url={book.url} type="book" author={book.author} spotifyUrl={book.spotifyUrl} onPodcastClick={onPodcastSelect} />
             </div>
           ))}
         </div>
@@ -239,7 +239,6 @@ function ResourcesTab({ focusAreas = [], onPodcastSelect, onPersonSelect }) {
             { 
               name: "Alex Hormozi", 
               desc: "Serial entrepreneur, gym owner, and business educator", 
-              thumbnail: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face",
               socialLinks: [
                 { platform: "Twitter", handle: "@AlexHormozi", url: "https://twitter.com/AlexHormozi", icon: "🐦" },
                 { platform: "LinkedIn", handle: "alex-hormozi", url: "https://linkedin.com/in/alex-hormozi", icon: "💼" },
@@ -250,7 +249,6 @@ function ResourcesTab({ focusAreas = [], onPodcastSelect, onPersonSelect }) {
             { 
               name: "Gary Vaynerchuk", 
               desc: "Entrepreneur, CEO of VaynerMedia, and social media expert", 
-              thumbnail: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face",
               socialLinks: [
                 { platform: "Twitter", handle: "@garyvee", url: "https://twitter.com/garyvee", icon: "🐦" },
                 { platform: "LinkedIn", handle: "garyvaynerchuk", url: "https://linkedin.com/in/garyvaynerchuk", icon: "💼" },
@@ -261,7 +259,6 @@ function ResourcesTab({ focusAreas = [], onPodcastSelect, onPersonSelect }) {
             { 
               name: "Naval Ravikant", 
               desc: "Entrepreneur, investor, and philosopher", 
-              thumbnail: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=400&h=400&fit=crop&crop=face",
               socialLinks: [
                 { platform: "Twitter", handle: "@naval", url: "https://twitter.com/naval", icon: "🐦" },
                 { platform: "LinkedIn", handle: "naval-ravikant", url: "https://linkedin.com/in/naval-ravikant", icon: "💼" },
@@ -271,7 +268,6 @@ function ResourcesTab({ focusAreas = [], onPodcastSelect, onPersonSelect }) {
             { 
               name: "Paul Graham", 
               desc: "Co-founder of Y Combinator, essayist", 
-              thumbnail: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face",
               socialLinks: [
                 { platform: "Twitter", handle: "@paulg", url: "https://twitter.com/paulg", icon: "🐦" },
                 { platform: "Website", handle: "paulgraham.com", url: "https://paulgraham.com", icon: "🌐" },
@@ -281,7 +277,6 @@ function ResourcesTab({ focusAreas = [], onPodcastSelect, onPersonSelect }) {
             { 
               name: "Reid Hoffman", 
               desc: "Co-founder of LinkedIn, entrepreneur and investor", 
-              thumbnail: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face",
               socialLinks: [
                 { platform: "Twitter", handle: "@reidhoffman", url: "https://twitter.com/reidhoffman", icon: "🐦" },
                 { platform: "LinkedIn", handle: "reidhoffman", url: "https://linkedin.com/in/reidhoffman", icon: "💼" },
@@ -301,14 +296,14 @@ function ResourcesTab({ focusAreas = [], onPodcastSelect, onPersonSelect }) {
         <h3 className="text-lg font-semibold mb-3">Podcasts</h3>
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
           {(searchResults?.podcasts || [
-            { title: "Founders", desc: "Biographies of the world's greatest entrepreneurs by David Senra", url: "https://podcasts.apple.com/podcast/id1151430296", spotifyUrl: "https://open.spotify.com/show/6E6sTsI8O5j1dpEYFqylx8", thumbnail: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop" },
-            { title: "The Tim Ferriss Show", desc: "Interviews with world-class performers", url: "https://podcasts.apple.com/podcast/id863897795", spotifyUrl: "https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk", thumbnail: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=200&h=200&fit=crop" },
-            { title: "How I Built This", desc: "Stories behind successful companies", url: "https://podcasts.apple.com/podcast/id1154105909", spotifyUrl: "https://open.spotify.com/show/6E6sTsI8O5j1dpEYFqylx8", thumbnail: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop" },
-            { title: "The GaryVee Audio Experience", desc: "Business insights and motivational content", url: "https://podcasts.apple.com/podcast/id928159684", spotifyUrl: "https://open.spotify.com/show/1fMUGyV3eLqF4Lk7HdYp6h", thumbnail: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=200&h=200&fit=crop" },
-            { title: "Masters of Scale", desc: "How great companies grow from zero to a gazillion", url: "https://podcasts.apple.com/podcast/id1227971746", spotifyUrl: "https://open.spotify.com/show/1FcXiMTJ9QrQx3fQ4s8w8i", thumbnail: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop" }
+            { title: "Founders", desc: "Biographies of the world's greatest entrepreneurs by David Senra", url: "https://podcasts.apple.com/podcast/id1151430296", spotifyUrl: "https://open.spotify.com/show/6E6sTsI8O5j1dpEYFqylx8" },
+            { title: "The Tim Ferriss Show", desc: "Interviews with world-class performers", url: "https://podcasts.apple.com/podcast/id863897795", spotifyUrl: "https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk" },
+            { title: "How I Built This", desc: "Stories behind successful companies", url: "https://podcasts.apple.com/podcast/id1154105909", spotifyUrl: "https://open.spotify.com/show/6E6sTsI8O5j1dpEYFqylx8" },
+            { title: "The GaryVee Audio Experience", desc: "Business insights and motivational content", url: "https://podcasts.apple.com/podcast/id928159684", spotifyUrl: "https://open.spotify.com/show/1fMUGyV3eLqF4Lk7HdYp6h" },
+            { title: "Masters of Scale", desc: "How great companies grow from zero to a gazillion", url: "https://podcasts.apple.com/podcast/id1227971746", spotifyUrl: "https://open.spotify.com/show/1FcXiMTJ9QrQx3fQ4s8w8i" }
           ]).map((podcast, index) => (
             <div key={index} className="flex-shrink-0 w-64">
-              <ResourceCard title={podcast.title} desc={podcast.desc} url={podcast.url} thumbnail={podcast.thumbnail} type="podcast" spotifyUrl={podcast.spotifyUrl} onPodcastClick={onPodcastSelect} />
+              <ResourceCard title={podcast.title} desc={podcast.desc} url={podcast.url} type="podcast" spotifyUrl={podcast.spotifyUrl} onPodcastClick={onPodcastSelect} />
             </div>
           ))}
         </div>
@@ -421,53 +416,30 @@ function FeedCard({ title, children, cta }) {
 }
 
   function PersonCard({ person, onClick }) {
-    const [imageLoaded, setImageLoaded] = useState(false);
-    const [imageError, setImageError] = useState(false);
-
     return (
       <div 
-        className="block rounded-xl border hover:shadow-sm bg-white h-32 flex flex-row cursor-pointer"
+        className="block rounded-xl border hover:shadow-sm bg-white p-4 cursor-pointer"
         onClick={() => onClick(person)}
       >
-        {/* Profile picture on the left */}
-        <div className="w-24 h-full bg-gray-100 rounded-l-xl flex items-center justify-center overflow-hidden relative flex-shrink-0">
-          {person.thumbnail && !imageError ? (
-            <img 
-              src={person.thumbnail} 
-              alt={person.name}
-              className="w-full h-full object-cover"
-              onLoad={() => {
-                console.log(`Image loaded successfully for ${person.name}: ${person.thumbnail}`);
-                setImageLoaded(true);
-              }}
-              onError={(e) => {
-                console.log(`Image failed to load for ${person.name}: ${person.thumbnail}`, e);
-                setImageError(true);
-                setImageLoaded(false);
-              }}
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-400 text-2xl bg-gray-100">
-              👤
-            </div>
-          )}
-        </div>
-        
-        {/* Content on the right */}
-        <div className="p-4 flex-1 flex flex-col justify-center">
-          <div className="font-semibold leading-snug text-base line-clamp-1 mb-1">{person.name}</div>
-          <div className="text-sm text-gray-500 line-clamp-2">{person.desc}</div>
+        <div className="flex items-start gap-3">
+          {/* Icon */}
+          <div className="text-2xl flex-shrink-0 mt-0.5">
+            👤
+          </div>
+          
+          {/* Content */}
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold leading-snug text-base line-clamp-1 mb-1">{person.name}</div>
+            <div className="text-sm text-gray-500 line-clamp-2">{person.desc}</div>
+          </div>
         </div>
       </div>
     );
   }
 
-  function ResourceCard({ title, desc, url, thumbnail, type = 'book', author, spotifyUrl, onPodcastClick }) {
-    const [imageLoaded, setImageLoaded] = useState(false);
-    const [imageError, setImageError] = useState(false);
-
-    // Determine the appropriate placeholder icon based on type
-    const getPlaceholderIcon = (type) => {
+  function ResourceCard({ title, desc, url, type = 'book', author, spotifyUrl, onPodcastClick }) {
+    // Determine the appropriate icon based on type
+    const getIcon = (type) => {
       switch (type) {
         case 'book':
           return '📖';
@@ -482,53 +454,29 @@ function FeedCard({ title, children, cta }) {
 
     const handleClick = () => {
       if (type === 'podcast' && onPodcastClick) {
-        onPodcastClick({ title, desc, url, spotifyUrl, thumbnail });
+        onPodcastClick({ title, desc, url, spotifyUrl });
       } else if (type !== 'podcast' && url) {
         window.open(url, '_blank', 'noopener,noreferrer');
       }
     };
 
-    // Debug logging
-    useEffect(() => {
-      if (thumbnail) {
-        console.log(`ResourceCard ${title}: thumbnail = ${thumbnail}`);
-      }
-    }, [thumbnail, title]);
-
     return (
-      <div className="block rounded-xl border hover:shadow-sm bg-white h-32 flex flex-row cursor-pointer" onClick={handleClick}>
-        {/* Thumbnail on the left */}
-        <div className="w-24 h-full bg-gray-100 rounded-l-xl flex items-center justify-center overflow-hidden relative flex-shrink-0">
-          {thumbnail && !imageError ? (
-            <img 
-              src={thumbnail} 
-              alt={title}
-              className="w-full h-full object-cover"
-              onLoad={() => {
-                console.log(`Image loaded successfully for ${title}: ${thumbnail}`);
-                setImageLoaded(true);
-              }}
-              onError={(e) => {
-                console.log(`Image failed to load for ${title}: ${thumbnail}`, e);
-                setImageError(true);
-                setImageLoaded(false);
-              }}
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-400 text-2xl bg-gray-100">
-              {getPlaceholderIcon(type)}
-            </div>
-          )}
-        </div>
-        
-        {/* Content on the right */}
-        <div className="p-4 flex-1 flex flex-col justify-center">
-          <div className="font-semibold leading-snug text-base line-clamp-2 mb-1">{title}</div>
-          {type === 'book' && author ? (
-            <div className="text-sm text-gray-600 line-clamp-2">by {author}</div>
-          ) : (
-            <div className="text-sm text-gray-500 line-clamp-3">{desc}</div>
-          )}
+      <div className="block rounded-xl border hover:shadow-sm bg-white p-4 cursor-pointer" onClick={handleClick}>
+        <div className="flex items-start gap-3">
+          {/* Icon */}
+          <div className="text-2xl flex-shrink-0 mt-0.5">
+            {getIcon(type)}
+          </div>
+          
+          {/* Content */}
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold leading-snug text-base line-clamp-2 mb-1">{title}</div>
+            {type === 'book' && author ? (
+              <div className="text-sm text-gray-600 line-clamp-2">by {author}</div>
+            ) : (
+              <div className="text-sm text-gray-500 line-clamp-3">{desc}</div>
+            )}
+          </div>
         </div>
       </div>
     );
