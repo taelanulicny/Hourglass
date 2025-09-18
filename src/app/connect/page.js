@@ -160,24 +160,24 @@ function ResourcesTab({ focusAreas = [] }) {
         </div>
       </div>
 
-      {/* Tools & Apps Section */}
+      {/* Podcasts Section */}
       <div className="bg-white rounded-xl border border-gray-200 p-4">
-        <h3 className="text-lg font-semibold mb-3">Tools & Apps</h3>
+        <h3 className="text-lg font-semibold mb-3">Podcasts</h3>
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
           <div className="flex-shrink-0 w-48">
-            <ResourceCard title="Pomodoro Timer" desc="25-minute focused work sessions" url="https://example.com/pomodoro" />
+            <ResourceCard title="The Tim Ferriss Show" desc="Interviews with world-class performers" url="https://example.com/tim-ferriss" />
           </div>
           <div className="flex-shrink-0 w-48">
-            <ResourceCard title="Forest App" desc="Stay focused and plant real trees" url="https://example.com/forest" />
+            <ResourceCard title="Huberman Lab" desc="Neuroscience-based tools for everyday life" url="https://example.com/huberman-lab" />
           </div>
           <div className="flex-shrink-0 w-48">
-            <ResourceCard title="Notion Templates" desc="Free productivity templates" url="https://example.com/notion-templates" />
+            <ResourceCard title="Deep Questions" desc="Cal Newport on digital minimalism" url="https://example.com/deep-questions" />
           </div>
           <div className="flex-shrink-0 w-48">
-            <ResourceCard title="Focus Keeper" desc="Time management and focus app" url="https://example.com/focus-keeper" />
+            <ResourceCard title="The Productivity Show" desc="Tips and strategies for getting things done" url="https://example.com/productivity-show" />
           </div>
           <div className="flex-shrink-0 w-48">
-            <ResourceCard title="RescueTime" desc="Track time and boost productivity" url="https://example.com/rescuetime" />
+            <ResourceCard title="Atomic Habits" desc="James Clear on building better habits" url="https://example.com/atomic-habits-podcast" />
           </div>
         </div>
       </div>
