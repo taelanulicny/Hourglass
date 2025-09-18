@@ -92,6 +92,31 @@ function ResourcesTab({ focusAreas = [] }) {
     : [];
     
   const [selectedId, setSelectedId] = React.useState(areas[0]?.id || '');
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [searchResults, setSearchResults] = React.useState(null);
+
+  // Handle AI search for resources
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
+    
+    // Simulate AI search - in a real app, this would call an AI API
+    setSearchResults({
+      query: searchQuery,
+      books: [
+        { title: `${searchQuery} - Essential Guide`, desc: `Comprehensive resource for ${searchQuery}`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-guide` },
+        { title: `Mastering ${searchQuery}`, desc: `Advanced techniques and strategies`, url: `https://example.com/mastering-${searchQuery.replace(/\s+/g, '-').toLowerCase()}` },
+        { title: `${searchQuery} for Beginners`, desc: `Perfect starting point for newcomers`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-beginners` }
+      ],
+      podcasts: [
+        { title: `${searchQuery} Podcast`, desc: `Weekly insights and discussions`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-podcast` },
+        { title: `The ${searchQuery} Show`, desc: `Expert interviews and tips`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-show` }
+      ],
+      social: [
+        { title: `${searchQuery} Twitter`, desc: `Best accounts and communities`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-twitter` },
+        { title: `${searchQuery} YouTube`, desc: `Top channels and tutorials`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-youtube` }
+      ]
+    });
+  };
 
   // If no focus areas exist, show message to add them
   if (focusAreas.length === 0) {
@@ -108,14 +133,39 @@ function ResourcesTab({ focusAreas = [] }) {
   return (
     <div className="space-y-4">
       <div className="rounded-xl border bg-white px-3 py-3">
-        <div className="text-xs text-gray-500 mb-1">Choose a focus area</div>
-        <select
-          value={selectedId}
-          onChange={(e)=>setSelectedId(e.target.value)}
-          className="w-full rounded-lg border px-3 py-2"
-        >
-          {areas.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-        </select>
+        <div className="text-xs text-gray-500 mb-1">AI Resource Helper</div>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="Ask for resources... (e.g., 'productivity books', 'coding tutorials', 'fitness podcasts')"
+            className="flex-1 rounded-lg border px-3 py-2 text-sm"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+          />
+          <button
+            onClick={handleSearch}
+            className="px-4 py-2 bg-[#8CA4AF] text-white rounded-lg text-sm font-medium hover:bg-[#7A939E] transition-colors"
+          >
+            Find
+          </button>
+        </div>
+        {searchQuery && (
+          <div className="mt-2 flex items-center justify-between">
+            <div className="text-xs text-gray-600">
+              Showing resources for: <span className="font-medium">"{searchQuery}"</span>
+            </div>
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setSearchResults(null);
+              }}
+              className="text-xs text-[#8CA4AF] hover:text-[#7A939E] font-medium"
+            >
+              Clear
+            </button>
+          </div>
+        )}
       </div>
 
 
@@ -123,21 +173,17 @@ function ResourcesTab({ focusAreas = [] }) {
       <div className="bg-white rounded-xl border border-gray-200 p-4">
         <h3 className="text-lg font-semibold mb-3">Books</h3>
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-          <div className="flex-shrink-0 w-48">
-            <ResourceCard title="Atomic Habits" desc="Build good habits and break bad ones" url="https://example.com/atomic-habits" />
-          </div>
-          <div className="flex-shrink-0 w-48">
-            <ResourceCard title="Deep Work" desc="Rules for focused success in a distracted world" url="https://example.com/deep-work" />
-          </div>
-          <div className="flex-shrink-0 w-48">
-            <ResourceCard title="The Power of Habit" desc="Why we do what we do in life and business" url="https://example.com/power-of-habit" />
-          </div>
-          <div className="flex-shrink-0 w-48">
-            <ResourceCard title="Getting Things Done" desc="The art of stress-free productivity" url="https://example.com/gtd" />
-          </div>
-          <div className="flex-shrink-0 w-48">
-            <ResourceCard title="The 7 Habits" desc="Highly effective people principles" url="https://example.com/7-habits" />
-          </div>
+          {(searchResults?.books || [
+            { title: "Atomic Habits", desc: "Build good habits and break bad ones", url: "https://example.com/atomic-habits" },
+            { title: "Deep Work", desc: "Rules for focused success in a distracted world", url: "https://example.com/deep-work" },
+            { title: "The Power of Habit", desc: "Why we do what we do in life and business", url: "https://example.com/power-of-habit" },
+            { title: "Getting Things Done", desc: "The art of stress-free productivity", url: "https://example.com/gtd" },
+            { title: "The 7 Habits", desc: "Highly effective people principles", url: "https://example.com/7-habits" }
+          ]).map((book, index) => (
+            <div key={index} className="flex-shrink-0 w-48">
+              <ResourceCard title={book.title} desc={book.desc} url={book.url} />
+            </div>
+          ))}
         </div>
       </div>
 
@@ -145,18 +191,16 @@ function ResourcesTab({ focusAreas = [] }) {
       <div className="bg-white rounded-xl border border-gray-200 p-4">
         <h3 className="text-lg font-semibold mb-3">Social Media</h3>
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-          <div className="flex-shrink-0 w-48">
-            <ResourceCard title="Productivity Twitter" desc="Best accounts for productivity tips" url="https://example.com/productivity-twitter" />
-          </div>
-          <div className="flex-shrink-0 w-48">
-            <ResourceCard title="StudyTok" desc="Study motivation and tips on TikTok" url="https://example.com/studytok" />
-          </div>
-          <div className="flex-shrink-0 w-48">
-            <ResourceCard title="LinkedIn Learning" desc="Professional development courses" url="https://example.com/linkedin-learning" />
-          </div>
-          <div className="flex-shrink-0 w-48">
-            <ResourceCard title="YouTube Channels" desc="Top productivity and study channels" url="https://example.com/youtube-prod" />
-          </div>
+          {(searchResults?.social || [
+            { title: "Productivity Twitter", desc: "Best accounts for productivity tips", url: "https://example.com/productivity-twitter" },
+            { title: "StudyTok", desc: "Study motivation and tips on TikTok", url: "https://example.com/studytok" },
+            { title: "LinkedIn Learning", desc: "Professional development courses", url: "https://example.com/linkedin-learning" },
+            { title: "YouTube Channels", desc: "Top productivity and study channels", url: "https://example.com/youtube-prod" }
+          ]).map((social, index) => (
+            <div key={index} className="flex-shrink-0 w-48">
+              <ResourceCard title={social.title} desc={social.desc} url={social.url} />
+            </div>
+          ))}
         </div>
       </div>
 
@@ -164,21 +208,17 @@ function ResourcesTab({ focusAreas = [] }) {
       <div className="bg-white rounded-xl border border-gray-200 p-4">
         <h3 className="text-lg font-semibold mb-3">Podcasts</h3>
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-          <div className="flex-shrink-0 w-48">
-            <ResourceCard title="The Tim Ferriss Show" desc="Interviews with world-class performers" url="https://example.com/tim-ferriss" />
-          </div>
-          <div className="flex-shrink-0 w-48">
-            <ResourceCard title="Huberman Lab" desc="Neuroscience-based tools for everyday life" url="https://example.com/huberman-lab" />
-          </div>
-          <div className="flex-shrink-0 w-48">
-            <ResourceCard title="Deep Questions" desc="Cal Newport on digital minimalism" url="https://example.com/deep-questions" />
-          </div>
-          <div className="flex-shrink-0 w-48">
-            <ResourceCard title="The Productivity Show" desc="Tips and strategies for getting things done" url="https://example.com/productivity-show" />
-          </div>
-          <div className="flex-shrink-0 w-48">
-            <ResourceCard title="Atomic Habits" desc="James Clear on building better habits" url="https://example.com/atomic-habits-podcast" />
-          </div>
+          {(searchResults?.podcasts || [
+            { title: "The Tim Ferriss Show", desc: "Interviews with world-class performers", url: "https://example.com/tim-ferriss" },
+            { title: "Huberman Lab", desc: "Neuroscience-based tools for everyday life", url: "https://example.com/huberman-lab" },
+            { title: "Deep Questions", desc: "Cal Newport on digital minimalism", url: "https://example.com/deep-questions" },
+            { title: "The Productivity Show", desc: "Tips and strategies for getting things done", url: "https://example.com/productivity-show" },
+            { title: "Atomic Habits", desc: "James Clear on building better habits", url: "https://example.com/atomic-habits-podcast" }
+          ]).map((podcast, index) => (
+            <div key={index} className="flex-shrink-0 w-48">
+              <ResourceCard title={podcast.title} desc={podcast.desc} url={podcast.url} />
+            </div>
+          ))}
         </div>
       </div>
     </div>
