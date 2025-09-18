@@ -106,9 +106,9 @@ export async function POST(request) {
         const searchQuery = encodeURIComponent(title);
         console.log(`Searching for social media: ${searchQuery}`);
         
-        // First, try to get profile picture from Instagram using public API
-        const knownInstagramProfiles = {
-          'alex hormozi': 'alexhormozi',
+        // Try to get profile pictures from Instagram using correct usernames
+        const instagramProfiles = {
+          'alex hormozi': 'hormozi',
           'gary vaynerchuk': 'garyvee',
           'gary vee': 'garyvee',
           'naval ravikant': 'naval',
@@ -119,7 +119,7 @@ export async function POST(request) {
         
         const titleLower = title.toLowerCase();
         let instagramUsername = null;
-        for (const [name, username] of Object.entries(knownInstagramProfiles)) {
+        for (const [name, username] of Object.entries(instagramProfiles)) {
           if (titleLower.includes(name)) {
             instagramUsername = username;
             console.log(`Found Instagram username for: ${title} -> ${username}`);
@@ -127,46 +127,37 @@ export async function POST(request) {
           }
         }
         
-        // Try to fetch profile picture from Instagram using a reliable service
+        // Try to get profile picture from Instagram using a working method
         if (instagramUsername) {
           try {
-            // Use a third-party service that provides Instagram profile pictures
-            const instagApiUrl = `https://api.instagapi.com/userprofilephoto/${instagramUsername}`;
-            const instagResponse = await fetch(instagApiUrl);
+            // Use Instagram's public profile picture URL format
+            const instagramProfileUrl = `https://www.instagram.com/${instagramUsername}/`;
+            const response = await fetch(instagramProfileUrl, {
+              headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+              }
+            });
             
-            if (instagResponse.ok) {
-              const data = await instagResponse.json();
-              if (data.profile_pic_url) {
-                imageUrl = data.profile_pic_url;
+            if (response.ok) {
+              const html = await response.text();
+              // Look for profile picture URL in the HTML
+              const profilePicMatch = html.match(/"profile_pic_url_hd":"([^"]+)"/);
+              if (profilePicMatch) {
+                imageUrl = profilePicMatch[1].replace(/\\u0026/g, '&');
                 console.log(`Found Instagram profile picture for ${instagramUsername}: ${imageUrl}`);
+              } else {
+                // Try alternative pattern
+                const altMatch = html.match(/"profile_pic_url":"([^"]+)"/);
+                if (altMatch) {
+                  imageUrl = altMatch[1].replace(/\\u0026/g, '&');
+                  console.log(`Found Instagram profile picture (alt) for ${instagramUsername}: ${imageUrl}`);
+                }
               }
             } else {
-              console.log(`InstagAPI error for ${instagramUsername}: ${instagResponse.status}`);
-              
-              // Fallback: try direct Instagram URL method
-              try {
-                const directUrl = `https://www.instagram.com/${instagramUsername}/`;
-                const directResponse = await fetch(directUrl, {
-                  headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                  }
-                });
-                
-                if (directResponse.ok) {
-                  const html = await directResponse.text();
-                  // Look for profile picture URL in the HTML
-                  const profilePicMatch = html.match(/"profile_pic_url_hd":"([^"]+)"/);
-                  if (profilePicMatch) {
-                    imageUrl = profilePicMatch[1].replace(/\\u0026/g, '&');
-                    console.log(`Found Instagram profile picture via HTML parsing for ${instagramUsername}: ${imageUrl}`);
-                  }
-                }
-              } catch (directError) {
-                console.log(`Direct Instagram fetch error for ${instagramUsername}:`, directError.message);
-              }
+              console.log(`Instagram fetch failed for ${instagramUsername}: ${response.status}`);
             }
-          } catch (instagError) {
-            console.log(`InstagAPI fetch error for ${instagramUsername}:`, instagError.message);
+          } catch (instagramError) {
+            console.log(`Instagram fetch error for ${instagramUsername}:`, instagramError.message);
           }
         }
         

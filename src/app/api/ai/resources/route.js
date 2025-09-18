@@ -166,7 +166,7 @@ Return your response as a JSON object with this exact structure:
               { platform: "Twitter", handle: "@AlexHormozi", url: "https://twitter.com/AlexHormozi", icon: "🐦" },
               { platform: "LinkedIn", handle: "alex-hormozi", url: "https://linkedin.com/in/alex-hormozi", icon: "💼" },
               { platform: "YouTube", handle: "Alex Hormozi", url: "https://youtube.com/@AlexHormozi", icon: "📺" },
-              { platform: "Instagram", handle: "@AlexHormozi", url: "https://instagram.com/alexhormozi", icon: "📸" }
+              { platform: "Instagram", handle: "@hormozi", url: "https://instagram.com/hormozi", icon: "📸" }
             ]
           },
           {
