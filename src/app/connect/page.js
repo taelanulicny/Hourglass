@@ -296,11 +296,11 @@ function ResourcesTab({ focusAreas = [], onPersonSelect }) {
         <h3 className="text-lg font-semibold mb-3">Podcasts</h3>
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
           {(searchResults?.podcasts || [
-            { title: "Founders", desc: "Biographies of the world's greatest entrepreneurs by David Senra", url: "https://podcasts.apple.com/podcast/id1151430296", spotifyUrl: "https://open.spotify.com/show/6E6sTsI8O5j1dpEYFqylx8" },
-            { title: "The Tim Ferriss Show", desc: "Interviews with world-class performers", url: "https://podcasts.apple.com/podcast/id863897795", spotifyUrl: "https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk" },
-            { title: "How I Built This", desc: "Stories behind successful companies", url: "https://podcasts.apple.com/podcast/id1154105909", spotifyUrl: "https://open.spotify.com/show/6E6sTsI8O5j1dpEYFqylx8" },
-            { title: "The GaryVee Audio Experience", desc: "Business insights and motivational content", url: "https://podcasts.apple.com/podcast/id928159684", spotifyUrl: "https://open.spotify.com/show/1fMUGyV3eLqF4Lk7HdYp6h" },
-            { title: "Masters of Scale", desc: "How great companies grow from zero to a gazillion", url: "https://podcasts.apple.com/podcast/id1227971746", spotifyUrl: "https://open.spotify.com/show/1FcXiMTJ9QrQx3fQ4s8w8i" }
+            { title: "Founders", desc: "Biographies of the world's greatest entrepreneurs by David Senra", url: "https://podcasts.apple.com/podcast/id1151430296", spotifyUrl: "https://open.spotify.com/search/Founders%20David%20Senra" },
+            { title: "The Tim Ferriss Show", desc: "Interviews with world-class performers", url: "https://podcasts.apple.com/podcast/id863897795", spotifyUrl: "https://open.spotify.com/search/The%20Tim%20Ferriss%20Show" },
+            { title: "How I Built This", desc: "Stories behind successful companies", url: "https://podcasts.apple.com/podcast/id1154105909", spotifyUrl: "https://open.spotify.com/search/How%20I%20Built%20This" },
+            { title: "The GaryVee Audio Experience", desc: "Business insights and motivational content", url: "https://podcasts.apple.com/podcast/id928159684", spotifyUrl: "https://open.spotify.com/search/The%20GaryVee%20Audio%20Experience" },
+            { title: "Masters of Scale", desc: "How great companies grow from zero to a gazillion", url: "https://podcasts.apple.com/podcast/id1227971746", spotifyUrl: "https://open.spotify.com/search/Masters%20of%20Scale" }
           ]).map((podcast, index) => (
             <div key={index} className="flex-shrink-0 w-64">
               <ResourceCard title={podcast.title} desc={podcast.desc} url={podcast.url} type="podcast" spotifyUrl={podcast.spotifyUrl} />
