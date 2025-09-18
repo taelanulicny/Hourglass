@@ -237,48 +237,53 @@ function ResourcesTab({ focusAreas = [], onPodcastSelect }) {
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
           {(searchResults?.social || [
             { 
+              name: "Alex Hormozi", 
+              desc: "Serial entrepreneur, gym owner, and business educator", 
+              thumbnail: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop",
+              socialLinks: [
+                { platform: "X (Twitter)", handle: "@AlexHormozi", url: "https://twitter.com/AlexHormozi", icon: "🐦" },
+                { platform: "Instagram", handle: "@alexhormozi", url: "https://instagram.com/alexhormozi", icon: "📷" },
+                { platform: "YouTube", handle: "Alex Hormozi", url: "https://youtube.com/@AlexHormozi", icon: "📺" },
+                { platform: "LinkedIn", handle: "alex-hormozi", url: "https://linkedin.com/in/alex-hormozi", icon: "💼" },
+                { platform: "TikTok", handle: "@alexhormozi", url: "https://tiktok.com/@alexhormozi", icon: "🎵" }
+              ]
+            },
+            { 
               name: "Naval Ravikant", 
               desc: "Entrepreneur, investor, and philosopher", 
               thumbnail: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200&h=200&fit=crop",
               socialLinks: [
-                { platform: "Twitter", handle: "@naval", url: "https://twitter.com/naval", icon: "🐦" },
+                { platform: "X (Twitter)", handle: "@naval", url: "https://twitter.com/naval", icon: "🐦" },
                 { platform: "LinkedIn", handle: "naval-ravikant", url: "https://linkedin.com/in/naval-ravikant", icon: "💼" },
                 { platform: "YouTube", handle: "Naval Ravikant", url: "https://youtube.com/@naval", icon: "📺" }
               ]
             },
             { 
-              name: "Paul Graham", 
-              desc: "Co-founder of Y Combinator, essayist", 
-              thumbnail: "https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=200&h=200&fit=crop",
-              socialLinks: [
-                { platform: "Twitter", handle: "@paulg", url: "https://twitter.com/paulg", icon: "🐦" },
-                { platform: "Website", handle: "paulgraham.com", url: "https://paulgraham.com", icon: "🌐" },
-                { platform: "GitHub", handle: "@paulg", url: "https://github.com/paulg", icon: "💻" }
-              ]
-            },
-            { 
               name: "Tim Ferriss", 
               desc: "Author, podcaster, and lifestyle designer", 
-              thumbnail: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200&h=200&fit=crop",
+              thumbnail: "https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=200&h=200&fit=crop",
               socialLinks: [
-                { platform: "Twitter", handle: "@tferriss", url: "https://twitter.com/tferriss", icon: "🐦" },
+                { platform: "X (Twitter)", handle: "@tferriss", url: "https://twitter.com/tferriss", icon: "🐦" },
                 { platform: "Instagram", handle: "@timferriss", url: "https://instagram.com/timferriss", icon: "📷" },
-                { platform: "YouTube", handle: "Tim Ferriss", url: "https://youtube.com/@timferriss", icon: "📺" }
+                { platform: "YouTube", handle: "Tim Ferriss", url: "https://youtube.com/@timferriss", icon: "📺" },
+                { platform: "LinkedIn", handle: "tim-ferriss", url: "https://linkedin.com/in/tim-ferriss", icon: "💼" }
               ]
             },
             { 
-              name: "Sahil Lavingia", 
-              desc: "Founder of Gumroad, investor", 
-              thumbnail: "https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=200&h=200&fit=crop",
+              name: "Gary Vaynerchuk", 
+              desc: "CEO of VaynerMedia, social media expert", 
+              thumbnail: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop",
               socialLinks: [
-                { platform: "Twitter", handle: "@shl", url: "https://twitter.com/shl", icon: "🐦" },
-                { platform: "LinkedIn", handle: "sahil-lavingia", url: "https://linkedin.com/in/sahil-lavingia", icon: "💼" },
-                { platform: "Website", handle: "sahillavingia.com", url: "https://sahillavingia.com", icon: "🌐" }
+                { platform: "X (Twitter)", handle: "@garyvee", url: "https://twitter.com/garyvee", icon: "🐦" },
+                { platform: "Instagram", handle: "@garyvee", url: "https://instagram.com/garyvee", icon: "📷" },
+                { platform: "YouTube", handle: "GaryVee", url: "https://youtube.com/@GaryVee", icon: "📺" },
+                { platform: "LinkedIn", handle: "garyvaynerchuk", url: "https://linkedin.com/in/garyvaynerchuk", icon: "💼" },
+                { platform: "TikTok", handle: "@garyvee", url: "https://tiktok.com/@garyvee", icon: "🎵" }
               ]
             }
           ]).map((person, index) => (
             <div key={index} className="flex-shrink-0 w-64">
-              <PersonCard person={person} />
+              <PersonCard person={person} onClick={setSelectedPerson} />
             </div>
           ))}
         </div>
@@ -408,12 +413,15 @@ function FeedCard({ title, children, cta }) {
   );
 }
 
-  function PersonCard({ person }) {
+  function PersonCard({ person, onClick }) {
     const [imageLoaded, setImageLoaded] = React.useState(false);
     const [imageError, setImageError] = React.useState(false);
 
     return (
-      <div className="block rounded-xl border hover:shadow-sm bg-white h-32 flex flex-row cursor-pointer">
+      <div 
+        className="block rounded-xl border hover:shadow-sm bg-white h-32 flex flex-row cursor-pointer"
+        onClick={() => onClick(person)}
+      >
         {/* Profile picture on the left */}
         <div className="w-24 h-full bg-gray-100 rounded-l-xl flex items-center justify-center overflow-hidden relative flex-shrink-0">
           {person.thumbnail && !imageError ? (
@@ -441,29 +449,7 @@ function FeedCard({ title, children, cta }) {
         {/* Content on the right */}
         <div className="p-4 flex-1 flex flex-col justify-center">
           <div className="font-semibold leading-snug text-base line-clamp-1 mb-1">{person.name}</div>
-          <div className="text-sm text-gray-500 line-clamp-1 mb-2">{person.desc}</div>
-          
-          {/* Social media links */}
-          <div className="flex gap-1 flex-wrap">
-            {person.socialLinks.slice(0, 3).map((link, index) => (
-              <a
-                key={index}
-                href={link.url}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded transition-colors"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <span>{link.icon}</span>
-                <span className="truncate max-w-16">{link.platform}</span>
-              </a>
-            ))}
-            {person.socialLinks.length > 3 && (
-              <span className="text-xs text-gray-400 px-2 py-1">
-                +{person.socialLinks.length - 3} more
-              </span>
-            )}
-          </div>
+          <div className="text-sm text-gray-500 line-clamp-2">{person.desc}</div>
         </div>
       </div>
     );
@@ -557,6 +543,59 @@ function FeedCard({ title, children, cta }) {
       </div>
     );
   }
+
+// --- Person Social Media Modal ------------------------------------------
+function PersonSocialModal({ person, isOpen, onClose }) {
+  if (!isOpen || !person) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl max-w-md w-full p-6">
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-6">
+          <img 
+            src={person.thumbnail} 
+            alt={person.name}
+            className="w-16 h-16 rounded-full object-cover"
+          />
+          <div>
+            <h3 className="font-semibold text-xl">{person.name}</h3>
+            <p className="text-sm text-gray-600">{person.desc}</p>
+          </div>
+        </div>
+
+        {/* Social media links */}
+        <div className="space-y-3 mb-6">
+          <p className="text-sm text-gray-500 font-medium">Follow on:</p>
+          {person.socialLinks.map((link, index) => (
+            <a
+              key={index}
+              href={link.url}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-3 p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
+            >
+              <span className="text-2xl">{link.icon}</span>
+              <div className="flex-1">
+                <div className="font-medium text-gray-900">{link.platform}</div>
+                <div className="text-sm text-gray-500">{link.handle}</div>
+              </div>
+              <span className="text-gray-400">→</span>
+            </a>
+          ))}
+        </div>
+
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl font-medium transition-colors"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  );
+}
 
 // --- Podcast Platform Modal ------------------------------------------
 function PodcastPlatformModal({ podcast, isOpen, onClose }) {
@@ -1001,6 +1040,7 @@ export default function ConnectPage() {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [selectedPodcast, setSelectedPodcast] = useState(null);
+  const [selectedPerson, setSelectedPerson] = useState(null);
   const menuRef = useRef(null);
   const router = useRouter();
 
@@ -1163,6 +1203,13 @@ export default function ConnectPage() {
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
+
+      {/* Person Social Media Modal */}
+      <PersonSocialModal 
+        person={selectedPerson}
+        isOpen={!!selectedPerson}
+        onClose={() => setSelectedPerson(null)}
+      />
 
       {/* Podcast Platform Modal */}
       <PodcastPlatformModal 
