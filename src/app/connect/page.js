@@ -83,7 +83,7 @@ function ChallengesTab() {
   );
 }
 
-function ResourcesTab({ focusAreas = [], onPersonSelect }) {
+function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect }) {
   const DEMO = [{ id:'lsat', name:'LSAT Prep' }, { id:'fitness', name:'Fitness' }];
   
   // Convert focus areas to the format expected by the selector
@@ -225,7 +225,7 @@ function ResourcesTab({ focusAreas = [], onPersonSelect }) {
             { title: "The Lean Startup", desc: "How today's entrepreneurs use continuous innovation", url: "https://amazon.com/dp/0307887898", author: "Eric Ries" }
           ]).map((book, index) => (
             <div key={index} className="flex-shrink-0 w-64">
-              <ResourceCard title={book.title} desc={book.desc} url={book.url} type="book" author={book.author} spotifyUrl={book.spotifyUrl} />
+              <ResourceCard title={book.title} desc={book.desc} url={book.url} type="book" author={book.author} spotifyUrl={book.spotifyUrl} onResourceClick={onResourceSelect} />
             </div>
           ))}
         </div>
@@ -303,7 +303,7 @@ function ResourcesTab({ focusAreas = [], onPersonSelect }) {
             { title: "Masters of Scale", desc: "How great companies grow from zero to a gazillion", url: "https://podcasts.apple.com/podcast/id1227971746", spotifyUrl: "https://open.spotify.com/search/Masters%20of%20Scale" }
           ]).map((podcast, index) => (
             <div key={index} className="flex-shrink-0 w-64">
-              <ResourceCard title={podcast.title} desc={podcast.desc} url={podcast.url} type="podcast" spotifyUrl={podcast.spotifyUrl} />
+              <ResourceCard title={podcast.title} desc={podcast.desc} url={podcast.url} type="podcast" spotifyUrl={podcast.spotifyUrl} onResourceClick={onResourceSelect} />
             </div>
           ))}
         </div>
@@ -437,7 +437,122 @@ function FeedCard({ title, children, cta }) {
     );
   }
 
-  function ResourceCard({ title, desc, url, type = 'book', author, spotifyUrl }) {
+// --- Resource Preview Modal ------------------------------------------
+function ResourcePreviewModal({ resource, isOpen, onClose }) {
+  if (!isOpen || !resource) return null;
+
+  const handleVisitResource = () => {
+    if (resource.type === 'podcast' && resource.spotifyUrl) {
+      window.open(resource.spotifyUrl, '_blank', 'noopener,noreferrer');
+    } else if (resource.url) {
+      window.open(resource.url, '_blank', 'noopener,noreferrer');
+    }
+    onClose();
+  };
+
+  const getResourceIcon = (type) => {
+    switch (type) {
+      case 'book':
+        return '📖';
+      case 'podcast':
+        return '🎧';
+      case 'social':
+        return '👤';
+      default:
+        return '📚';
+    }
+  };
+
+  const getResourceTypeLabel = (type) => {
+    switch (type) {
+      case 'book':
+        return 'Book';
+      case 'podcast':
+        return 'Podcast';
+      case 'social':
+        return 'Person';
+      default:
+        return 'Resource';
+    }
+  };
+
+  const getActionButtonText = (type) => {
+    switch (type) {
+      case 'book':
+        return 'View on Amazon';
+      case 'podcast':
+        return 'Listen on Spotify';
+      case 'social':
+        return 'View Social Profiles';
+      default:
+        return 'Visit Resource';
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl max-w-md w-full p-6">
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-4">
+          <div className="text-3xl">
+            {getResourceIcon(resource.type)}
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">{resource.title || resource.name}</h2>
+            <p className="text-sm text-gray-500">{getResourceTypeLabel(resource.type)}</p>
+          </div>
+        </div>
+
+        {/* Resource Info */}
+        <div className="mb-6">
+          {resource.type === 'book' && resource.author && (
+            <div className="mb-3">
+              <p className="text-sm font-medium text-gray-700 mb-1">Author</p>
+              <p className="text-gray-600">{resource.author}</p>
+            </div>
+          )}
+          
+          <div className="mb-3">
+            <p className="text-sm font-medium text-gray-700 mb-1">Description</p>
+            <p className="text-gray-600 leading-relaxed">{resource.desc}</p>
+          </div>
+
+          {resource.type === 'social' && resource.socialLinks && (
+            <div className="mb-3">
+              <p className="text-sm font-medium text-gray-700 mb-2">Available on</p>
+              <div className="flex flex-wrap gap-2">
+                {resource.socialLinks.slice(0, 4).map((link, index) => (
+                  <span key={index} className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-xs">
+                    <span>{link.icon}</span>
+                    <span>{link.platform}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-3">
+          <button
+            onClick={handleVisitResource}
+            className="flex-1 bg-[#8CA4AF] hover:bg-[#7A939E] text-white py-3 rounded-xl font-medium transition-colors"
+          >
+            {getActionButtonText(resource.type)}
+          </button>
+          <button
+            onClick={onClose}
+            className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+  function ResourceCard({ title, desc, url, type = 'book', author, spotifyUrl, onResourceClick }) {
     // Determine the appropriate icon based on type
     const getIcon = (type) => {
       switch (type) {
@@ -453,12 +568,15 @@ function FeedCard({ title, children, cta }) {
     };
 
     const handleClick = () => {
-      if (type === 'podcast' && spotifyUrl) {
-        // For podcasts, always go directly to Spotify
-        window.open(spotifyUrl, '_blank', 'noopener,noreferrer');
-      } else if (url) {
-        // For books and other resources, use the main URL
-        window.open(url, '_blank', 'noopener,noreferrer');
+      if (onResourceClick) {
+        onResourceClick({
+          title,
+          desc,
+          url,
+          type,
+          author,
+          spotifyUrl
+        });
       }
     };
 
@@ -883,6 +1001,7 @@ export default function ConnectPage() {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState(null);
+  const [selectedResource, setSelectedResource] = useState(null);
   const menuRef = useRef(null);
   const router = useRouter();
 
@@ -1011,7 +1130,7 @@ export default function ConnectPage() {
       <main className="px-4 mt-4">
         {tab === 'Close Friends' && <FeedTab />}
         {tab === 'Challenges' && <ChallengesTab />}
-        {tab === 'Resources' && <ResourcesTab focusAreas={focusAreas} onPersonSelect={setSelectedPerson} />}
+        {tab === 'Resources' && <ResourcesTab focusAreas={focusAreas} onPersonSelect={setSelectedPerson} onResourceSelect={setSelectedResource} />}
         {tab === 'Templates' && <TemplatesTab />}
       </main>
 
@@ -1051,6 +1170,13 @@ export default function ConnectPage() {
         person={selectedPerson}
         isOpen={!!selectedPerson}
         onClose={() => setSelectedPerson(null)}
+      />
+
+      {/* Resource Preview Modal */}
+      <ResourcePreviewModal 
+        resource={selectedResource}
+        isOpen={!!selectedResource}
+        onClose={() => setSelectedResource(null)}
       />
 
     </div>
