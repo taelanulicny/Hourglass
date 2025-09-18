@@ -476,6 +476,8 @@ function FeedCard({ title, children, cta }) {
     const handleClick = () => {
       if (type === 'podcast' && onPodcastClick) {
         onPodcastClick({ title, desc, url, spotifyUrl, thumbnail });
+      } else if (type !== 'podcast' && url) {
+        window.open(url, '_blank', 'noopener,noreferrer');
       }
     };
 
@@ -516,29 +518,10 @@ function FeedCard({ title, children, cta }) {
         <div className="p-4 flex-1 flex flex-col justify-center">
           <div className="font-semibold leading-snug text-base line-clamp-2 mb-1">{title}</div>
           {type === 'book' && author ? (
-            <div className="text-sm text-gray-600 line-clamp-1">by {author}</div>
+            <div className="text-sm text-gray-600 line-clamp-2">by {author}</div>
           ) : (
-            <div className="text-sm text-gray-500 line-clamp-2">{desc}</div>
+            <div className="text-sm text-gray-500 line-clamp-3">{desc}</div>
           )}
-          
-          {/* Button for all resource types */}
-          <div className="mt-2">
-            {type === 'podcast' ? (
-              <div className="bg-purple-500 hover:bg-purple-600 text-white text-xs px-3 py-1 rounded text-center transition-colors">
-                🎧 Listen
-              </div>
-            ) : (
-              <a 
-                href={url} 
-                target="_blank" 
-                rel="noreferrer"
-                className="block bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-1 rounded text-center transition-colors"
-                onClick={(e) => e.stopPropagation()}
-              >
-                Open
-              </a>
-            )}
-          </div>
         </div>
       </div>
     );
