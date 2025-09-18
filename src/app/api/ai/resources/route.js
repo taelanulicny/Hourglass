@@ -108,9 +108,9 @@ Return your response as a JSON object with this exact structure:
       "name": "Person Name", 
       "desc": "Their role/expertise", 
       "socialLinks": [
-        {"platform": "X", "handle": "@username", "url": "https://x.com/username", "icon": "🐦"},
-        {"platform": "LinkedIn", "handle": "person-name", "url": "https://linkedin.com/in/person-name", "icon": "💼"},
-        {"platform": "YouTube", "handle": "Channel Name", "url": "https://youtube.com/@channel", "icon": "📺"}
+        {"platform": "X", "handle": "@username", "url": "https://x.com/username", "icon": "X"},
+        {"platform": "LinkedIn", "handle": "person-name", "url": "https://linkedin.com/in/person-name", "icon": "LinkedIn"},
+        {"platform": "YouTube", "handle": "Channel Name", "url": "https://youtube.com/@channel", "icon": "YouTube"}
       ]
     }
   ]
@@ -163,57 +163,57 @@ Return your response as a JSON object with this exact structure:
             name: "David Goggins",
             desc: "Former Navy SEAL, ultra-endurance athlete, and motivational speaker",
             socialLinks: [
-              { platform: "X", handle: "@davidgoggins", url: "https://x.com/davidgoggins", icon: "🐦" },
-              { platform: "Instagram", handle: "@davidgoggins", url: "https://instagram.com/davidgoggins", icon: "📸" },
-              { platform: "YouTube", handle: "David Goggins", url: "https://youtube.com/@DavidGoggins", icon: "📺" },
-              { platform: "Website", handle: "davidgoggins.com", url: "https://davidgoggins.com", icon: "🌐" }
+              { platform: "X", handle: "@davidgoggins", url: "https://x.com/davidgoggins", icon: "X" },
+              { platform: "Instagram", handle: "@davidgoggins", url: "https://instagram.com/davidgoggins", icon: "Instagram" },
+              { platform: "YouTube", handle: "David Goggins", url: "https://youtube.com/@DavidGoggins", icon: "YouTube" },
+              { platform: "Website", handle: "davidgoggins.com", url: "https://davidgoggins.com", icon: "Website" }
             ]
           },
           {
             name: "Alex Hormozi",
             desc: "Serial entrepreneur, gym owner, and business educator",
             socialLinks: [
-              { platform: "X", handle: "@AlexHormozi", url: "https://x.com/AlexHormozi", icon: "🐦" },
-              { platform: "LinkedIn", handle: "alex-hormozi", url: "https://linkedin.com/in/alex-hormozi", icon: "💼" },
-              { platform: "YouTube", handle: "Alex Hormozi", url: "https://youtube.com/@AlexHormozi", icon: "📺" },
-              { platform: "Instagram", handle: "@hormozi", url: "https://instagram.com/hormozi", icon: "📸" }
+              { platform: "X", handle: "@AlexHormozi", url: "https://x.com/AlexHormozi", icon: "X" },
+              { platform: "LinkedIn", handle: "alex-hormozi", url: "https://linkedin.com/in/alex-hormozi", icon: "LinkedIn" },
+              { platform: "YouTube", handle: "Alex Hormozi", url: "https://youtube.com/@AlexHormozi", icon: "YouTube" },
+              { platform: "Instagram", handle: "@hormozi", url: "https://instagram.com/hormozi", icon: "Instagram" }
             ]
           },
           {
             name: "Gary Vaynerchuk",
             desc: "Entrepreneur, CEO of VaynerMedia, and social media expert",
             socialLinks: [
-              { platform: "X", handle: "@garyvee", url: "https://x.com/garyvee", icon: "🐦" },
-              { platform: "LinkedIn", handle: "garyvaynerchuk", url: "https://linkedin.com/in/garyvaynerchuk", icon: "💼" },
-              { platform: "YouTube", handle: "GaryVee", url: "https://youtube.com/@GaryVee", icon: "📺" },
-              { platform: "Instagram", handle: "@garyvee", url: "https://instagram.com/garyvee", icon: "📸" }
+              { platform: "X", handle: "@garyvee", url: "https://x.com/garyvee", icon: "X" },
+              { platform: "LinkedIn", handle: "garyvaynerchuk", url: "https://linkedin.com/in/garyvaynerchuk", icon: "LinkedIn" },
+              { platform: "YouTube", handle: "GaryVee", url: "https://youtube.com/@GaryVee", icon: "YouTube" },
+              { platform: "Instagram", handle: "@garyvee", url: "https://instagram.com/garyvee", icon: "Instagram" }
             ]
           },
           {
             name: "Naval Ravikant",
             desc: "Entrepreneur, investor, and philosopher",
             socialLinks: [
-              { platform: "X", handle: "@naval", url: "https://x.com/naval", icon: "🐦" },
-              { platform: "LinkedIn", handle: "naval-ravikant", url: "https://linkedin.com/in/naval-ravikant", icon: "💼" },
-              { platform: "YouTube", handle: "Naval Ravikant", url: "https://youtube.com/@naval", icon: "📺" }
+              { platform: "X", handle: "@naval", url: "https://x.com/naval", icon: "X" },
+              { platform: "LinkedIn", handle: "naval-ravikant", url: "https://linkedin.com/in/naval-ravikant", icon: "LinkedIn" },
+              { platform: "YouTube", handle: "Naval Ravikant", url: "https://youtube.com/@naval", icon: "YouTube" }
             ]
           },
           {
             name: "Paul Graham",
             desc: "Co-founder of Y Combinator, essayist",
             socialLinks: [
-              { platform: "X", handle: "@paulg", url: "https://x.com/paulg", icon: "🐦" },
-              { platform: "Website", handle: "paulgraham.com", url: "https://paulgraham.com", icon: "🌐" },
-              { platform: "GitHub", handle: "@paulg", url: "https://github.com/paulg", icon: "💻" }
+              { platform: "X", handle: "@paulg", url: "https://x.com/paulg", icon: "X" },
+              { platform: "Website", handle: "paulgraham.com", url: "https://paulgraham.com", icon: "Website" },
+              { platform: "GitHub", handle: "@paulg", url: "https://github.com/paulg", icon: "GitHub" }
             ]
           },
           {
             name: "Reid Hoffman",
             desc: "Co-founder of LinkedIn, entrepreneur and investor",
             socialLinks: [
-              { platform: "X", handle: "@reidhoffman", url: "https://x.com/reidhoffman", icon: "🐦" },
-              { platform: "LinkedIn", handle: "reidhoffman", url: "https://linkedin.com/in/reidhoffman", icon: "💼" },
-              { platform: "Website", handle: "reidhoffman.org", url: "https://reidhoffman.org", icon: "🌐" }
+              { platform: "X", handle: "@reidhoffman", url: "https://x.com/reidhoffman", icon: "X" },
+              { platform: "LinkedIn", handle: "reidhoffman", url: "https://linkedin.com/in/reidhoffman", icon: "LinkedIn" },
+              { platform: "Website", handle: "reidhoffman.org", url: "https://reidhoffman.org", icon: "Website" }
             ]
           }
           ]
@@ -251,18 +251,18 @@ Return your response as a JSON object with this exact structure:
             name: "Naval Ravikant", 
             desc: "Entrepreneur, investor, and philosopher", 
             socialLinks: [
-              { platform: "X", handle: "@naval", url: "https://x.com/naval", icon: "🐦" },
-              { platform: "LinkedIn", handle: "naval-ravikant", url: "https://linkedin.com/in/naval-ravikant", icon: "💼" },
-              { platform: "YouTube", handle: "Naval Ravikant", url: "https://youtube.com/@naval", icon: "📺" }
+              { platform: "X", handle: "@naval", url: "https://x.com/naval", icon: "X" },
+              { platform: "LinkedIn", handle: "naval-ravikant", url: "https://linkedin.com/in/naval-ravikant", icon: "LinkedIn" },
+              { platform: "YouTube", handle: "Naval Ravikant", url: "https://youtube.com/@naval", icon: "YouTube" }
             ]
           },
           { 
             name: "Paul Graham", 
             desc: "Co-founder of Y Combinator, essayist", 
             socialLinks: [
-              { platform: "X", handle: "@paulg", url: "https://x.com/paulg", icon: "🐦" },
-              { platform: "Website", handle: "paulgraham.com", url: "https://paulgraham.com", icon: "🌐" },
-              { platform: "GitHub", handle: "@paulg", url: "https://github.com/paulg", icon: "💻" }
+              { platform: "X", handle: "@paulg", url: "https://x.com/paulg", icon: "X" },
+              { platform: "Website", handle: "paulgraham.com", url: "https://paulgraham.com", icon: "Website" },
+              { platform: "GitHub", handle: "@paulg", url: "https://github.com/paulg", icon: "GitHub" }
             ]
           }
         ]
@@ -294,18 +294,18 @@ Return your response as a JSON object with this exact structure:
             name: "Naval Ravikant", 
             desc: "Entrepreneur, investor, and philosopher", 
             socialLinks: [
-              { platform: "X", handle: "@naval", url: "https://x.com/naval", icon: "🐦" },
-              { platform: "LinkedIn", handle: "naval-ravikant", url: "https://linkedin.com/in/naval-ravikant", icon: "💼" },
-              { platform: "YouTube", handle: "Naval Ravikant", url: "https://youtube.com/@naval", icon: "📺" }
+              { platform: "X", handle: "@naval", url: "https://x.com/naval", icon: "X" },
+              { platform: "LinkedIn", handle: "naval-ravikant", url: "https://linkedin.com/in/naval-ravikant", icon: "LinkedIn" },
+              { platform: "YouTube", handle: "Naval Ravikant", url: "https://youtube.com/@naval", icon: "YouTube" }
             ]
           },
           { 
             name: "Paul Graham", 
             desc: "Co-founder of Y Combinator, essayist", 
             socialLinks: [
-              { platform: "X", handle: "@paulg", url: "https://x.com/paulg", icon: "🐦" },
-              { platform: "Website", handle: "paulgraham.com", url: "https://paulgraham.com", icon: "🌐" },
-              { platform: "GitHub", handle: "@paulg", url: "https://github.com/paulg", icon: "💻" }
+              { platform: "X", handle: "@paulg", url: "https://x.com/paulg", icon: "X" },
+              { platform: "Website", handle: "paulgraham.com", url: "https://paulgraham.com", icon: "Website" },
+              { platform: "GitHub", handle: "@paulg", url: "https://github.com/paulg", icon: "GitHub" }
             ]
           }
         ]
