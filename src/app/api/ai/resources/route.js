@@ -64,15 +64,18 @@ export async function POST(request) {
     role: 'system',
     content: `You are a helpful AI assistant that finds high-quality resources for learning topics. When given a topic like "${query}", you should recommend:
 
-1. **Books** - 3-5 specific, well-known books with real titles and authors
-2. **People** - 3-4 influential people in the field with their social media links
-3. **Podcasts** - 3-4 specific podcast shows or episodes
+1. **Books** - EXACTLY 5 specific, well-known books with real titles and authors
+2. **People** - EXACTLY 5 influential people in the field with their social media links
+3. **Podcasts** - EXACTLY 5 specific podcast shows or episodes
+
+IMPORTANT: You MUST provide exactly 5 items for each category. No more, no less.
 
 SPECIAL INSTRUCTIONS FOR ENTREPRENEURS:
 - If the query mentions "entrepreneurship", "entrepreneurs", or specific entrepreneur names like "Alex Hormozi", prioritize well-known entrepreneurs
 - For Alex Hormozi specifically, include his real social media profiles and books
 - Always include the most prominent, recognizable people in the field
 - Focus on people who are actively sharing content and have significant social media presence
+- Ensure you provide 5 different people, 5 different books, and 5 different podcasts
 
 For each resource, provide:
 - A realistic, specific title
@@ -119,7 +122,7 @@ Return your response as a JSON object with this exact structure:
             content: `Find resources for learning about: ${query}`
           }
         ],
-        max_tokens: 1000,
+        max_tokens: 1500,
         temperature: 0.7,
       });
 
@@ -162,6 +165,16 @@ Return your response as a JSON object with this exact structure:
               ]
             },
             { 
+              name: "Gary Vaynerchuk", 
+              desc: "Entrepreneur, CEO of VaynerMedia, and social media expert", 
+              socialLinks: [
+                { platform: "Twitter", handle: "@garyvee", url: "https://twitter.com/garyvee", icon: "🐦" },
+                { platform: "LinkedIn", handle: "garyvaynerchuk", url: "https://linkedin.com/in/garyvaynerchuk", icon: "💼" },
+                { platform: "YouTube", handle: "GaryVee", url: "https://youtube.com/@GaryVee", icon: "📺" },
+                { platform: "Instagram", handle: "@garyvee", url: "https://instagram.com/garyvee", icon: "📸" }
+              ]
+            },
+            { 
               name: "Naval Ravikant", 
               desc: "Entrepreneur, investor, and philosopher", 
               socialLinks: [
@@ -177,6 +190,15 @@ Return your response as a JSON object with this exact structure:
                 { platform: "Twitter", handle: "@paulg", url: "https://twitter.com/paulg", icon: "🐦" },
                 { platform: "Website", handle: "paulgraham.com", url: "https://paulgraham.com", icon: "🌐" },
                 { platform: "GitHub", handle: "@paulg", url: "https://github.com/paulg", icon: "💻" }
+              ]
+            },
+            { 
+              name: "Reid Hoffman", 
+              desc: "Co-founder of LinkedIn, entrepreneur and investor", 
+              socialLinks: [
+                { platform: "Twitter", handle: "@reidhoffman", url: "https://twitter.com/reidhoffman", icon: "🐦" },
+                { platform: "LinkedIn", handle: "reidhoffman", url: "https://linkedin.com/in/reidhoffman", icon: "💼" },
+                { platform: "Website", handle: "reidhoffman.org", url: "https://reidhoffman.org", icon: "🌐" }
               ]
             }
           ]
@@ -239,11 +261,15 @@ Return your response as a JSON object with this exact structure:
           { title: `$100M Offers`, desc: `How to make offers so good people feel stupid saying no`, url: `https://amazon.com/dp/1737475715`, author: "Alex Hormozi" },
           { title: `$100M Leads`, desc: `How to get strangers to want to buy your stuff`, url: `https://amazon.com/dp/1737475723`, author: "Alex Hormozi" },
           { title: `Atomic Habits`, desc: `Build good habits and break bad ones`, url: `https://amazon.com/dp/0735211299`, author: "James Clear" },
-          { title: `Deep Work`, desc: `Rules for focused success in a distracted world`, url: `https://amazon.com/dp/1455586692`, author: "Cal Newport" }
+          { title: `Deep Work`, desc: `Rules for focused success in a distracted world`, url: `https://amazon.com/dp/1455586692`, author: "Cal Newport" },
+          { title: `The Lean Startup`, desc: `How today's entrepreneurs use continuous innovation`, url: `https://amazon.com/dp/0307887898`, author: "Eric Ries" }
         ],
         podcasts: [
           { title: `The Tim Ferriss Show`, desc: `Interviews with world-class performers`, url: `https://podcasts.apple.com/podcast/id863897795`, spotifyUrl: `https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk` },
-          { title: `How I Built This`, desc: `Stories behind successful companies`, url: `https://podcasts.apple.com/podcast/id1154105909`, spotifyUrl: `https://open.spotify.com/show/6E6sTsI8O5j1dpEYFqylx8` }
+          { title: `How I Built This`, desc: `Stories behind successful companies`, url: `https://podcasts.apple.com/podcast/id1154105909`, spotifyUrl: `https://open.spotify.com/show/6E6sTsI8O5j1dpEYFqylx8` },
+          { title: `The GaryVee Audio Experience`, desc: `Business insights and motivational content`, url: `https://podcasts.apple.com/podcast/id928159684`, spotifyUrl: `https://open.spotify.com/show/1fMUGyV3eLqF4Lk7HdYp6h` },
+          { title: `Masters of Scale`, desc: `How great companies grow from zero to a gazillion`, url: `https://podcasts.apple.com/podcast/id1227971746`, spotifyUrl: `https://open.spotify.com/show/1FcXiMTJ9QrQx3fQ4s8w8i` },
+          { title: `The Smart Passive Income Podcast`, desc: `Online business strategies and passive income`, url: `https://podcasts.apple.com/podcast/id383275001`, spotifyUrl: `https://open.spotify.com/show/2fQn6l6p6Fcj8vJO3vbyZ7` }
         ],
         social: [
           { 
