@@ -200,11 +200,11 @@ function ResourcesTab({ focusAreas = [] }) {
         <h3 className="text-lg font-semibold mb-3">Books</h3>
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
           {(searchResults?.books || [
-            { title: "Atomic Habits", desc: "Build good habits and break bad ones", url: "https://example.com/atomic-habits", thumbnail: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=200&h=200&fit=crop", author: "James Clear" },
-            { title: "Deep Work", desc: "Rules for focused success in a distracted world", url: "https://example.com/deep-work", thumbnail: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=200&h=200&fit=crop", author: "Cal Newport" },
-            { title: "The Power of Habit", desc: "Why we do what we do in life and business", url: "https://example.com/power-of-habit", thumbnail: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop", author: "Charles Duhigg" },
-            { title: "Getting Things Done", desc: "The art of stress-free productivity", url: "https://example.com/gtd", thumbnail: "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=200&h=200&fit=crop", author: "David Allen" },
-            { title: "The 7 Habits", desc: "Highly effective people principles", url: "https://example.com/7-habits", thumbnail: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=200&h=200&fit=crop", author: "Stephen Covey" }
+            { title: "Atomic Habits", desc: "Build good habits and break bad ones", url: "https://amazon.com/dp/0735211299", thumbnail: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=200&h=200&fit=crop", author: "James Clear" },
+            { title: "Deep Work", desc: "Rules for focused success in a distracted world", url: "https://amazon.com/dp/1455586692", thumbnail: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=200&h=200&fit=crop", author: "Cal Newport" },
+            { title: "The Power of Habit", desc: "Why we do what we do in life and business", url: "https://amazon.com/dp/1400069289", thumbnail: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop", author: "Charles Duhigg" },
+            { title: "Getting Things Done", desc: "The art of stress-free productivity", url: "https://amazon.com/dp/0143126560", thumbnail: "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=200&h=200&fit=crop", author: "David Allen" },
+            { title: "The 7 Habits", desc: "Highly effective people principles", url: "https://amazon.com/dp/1982137274", thumbnail: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=200&h=200&fit=crop", author: "Stephen Covey" }
           ]).map((book, index) => (
             <div key={index} className="flex-shrink-0 w-64">
               <ResourceCard title={book.title} desc={book.desc} url={book.url} thumbnail={book.thumbnail} type="book" author={book.author} />
@@ -218,10 +218,10 @@ function ResourcesTab({ focusAreas = [] }) {
         <h3 className="text-lg font-semibold mb-3">Social Media</h3>
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
           {(searchResults?.social || [
-            { title: "Productivity Twitter", desc: "Best accounts for productivity tips", url: "https://example.com/productivity-twitter", thumbnail: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200&h=200&fit=crop" },
-            { title: "StudyTok", desc: "Study motivation and tips on TikTok", url: "https://example.com/studytok", thumbnail: "https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=200&h=200&fit=crop" },
-            { title: "LinkedIn Learning", desc: "Professional development courses", url: "https://example.com/linkedin-learning", thumbnail: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200&h=200&fit=crop" },
-            { title: "YouTube Channels", desc: "Top productivity and study channels", url: "https://example.com/youtube-prod", thumbnail: "https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=200&h=200&fit=crop" }
+            { title: "@naval", desc: "Naval Ravikant on entrepreneurship and philosophy", url: "https://twitter.com/naval", thumbnail: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200&h=200&fit=crop" },
+            { title: "@paulg", desc: "Paul Graham on startups and programming", url: "https://twitter.com/paulg", thumbnail: "https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=200&h=200&fit=crop" },
+            { title: "@tferriss", desc: "Tim Ferriss on productivity and lifestyle design", url: "https://twitter.com/tferriss", thumbnail: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200&h=200&fit=crop" },
+            { title: "LinkedIn Learning", desc: "Professional development courses", url: "https://linkedin.com/learning", thumbnail: "https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=200&h=200&fit=crop" }
           ]).map((social, index) => (
             <div key={index} className="flex-shrink-0 w-64">
               <ResourceCard title={social.title} desc={social.desc} url={social.url} thumbnail={social.thumbnail} type="social" />
@@ -235,11 +235,11 @@ function ResourcesTab({ focusAreas = [] }) {
         <h3 className="text-lg font-semibold mb-3">Podcasts</h3>
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
           {(searchResults?.podcasts || [
-            { title: "The Tim Ferriss Show", desc: "Interviews with world-class performers", url: "https://example.com/tim-ferriss", thumbnail: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop" },
-            { title: "Huberman Lab", desc: "Neuroscience-based tools for everyday life", url: "https://example.com/huberman-lab", thumbnail: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=200&h=200&fit=crop" },
-            { title: "Deep Questions", desc: "Cal Newport on digital minimalism", url: "https://example.com/deep-questions", thumbnail: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop" },
-            { title: "The Productivity Show", desc: "Tips and strategies for getting things done", url: "https://example.com/productivity-show", thumbnail: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=200&h=200&fit=crop" },
-            { title: "Atomic Habits", desc: "James Clear on building better habits", url: "https://example.com/atomic-habits-podcast", thumbnail: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop" }
+            { title: "The Tim Ferriss Show", desc: "Interviews with world-class performers", url: "https://podcasts.apple.com/podcast/id863897795", thumbnail: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop" },
+            { title: "How I Built This", desc: "Stories behind successful companies", url: "https://podcasts.apple.com/podcast/id1154105909", thumbnail: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=200&h=200&fit=crop" },
+            { title: "Huberman Lab", desc: "Neuroscience-based tools for everyday life", url: "https://podcasts.apple.com/podcast/id1545953110", thumbnail: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop" },
+            { title: "Deep Questions", desc: "Cal Newport on digital minimalism", url: "https://podcasts.apple.com/podcast/id1515788106", thumbnail: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=200&h=200&fit=crop" },
+            { title: "Smart Passive Income", desc: "Pat Flynn on online business", url: "https://podcasts.apple.com/podcast/id383651043", thumbnail: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop" }
           ]).map((podcast, index) => (
             <div key={index} className="flex-shrink-0 w-64">
               <ResourceCard title={podcast.title} desc={podcast.desc} url={podcast.url} thumbnail={podcast.thumbnail} type="podcast" />

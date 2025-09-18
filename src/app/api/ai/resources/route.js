@@ -60,9 +60,9 @@ export async function POST(request) {
     });
 
     // Create a system message for resource recommendations
-    const systemMessage = {
-      role: 'system',
-      content: `You are a helpful AI assistant that finds high-quality resources for learning topics. When given a topic like "${query}", you should recommend:
+  const systemMessage = {
+    role: 'system',
+    content: `You are a helpful AI assistant that finds high-quality resources for learning topics. When given a topic like "${query}", you should recommend:
 
 1. **Books** - 3-5 specific, well-known books with real titles and authors
 2. **Social Media** - 3-4 specific Twitter accounts, YouTube channels, or LinkedIn profiles  
@@ -71,24 +71,29 @@ export async function POST(request) {
 For each resource, provide:
 - A realistic, specific title
 - A brief, helpful description
-- A placeholder URL (use example.com format)
+- A REAL, working URL that users can actually visit
 - An author field for books (this helps with cover image lookup)
+
+IMPORTANT: Use real URLs that work:
+- For books: Use Amazon, Goodreads, or publisher URLs
+- For podcasts: Use Apple Podcasts, Spotify, or the podcast's official website
+- For social media: Use the actual Twitter, YouTube, LinkedIn, or Instagram profile URLs
 
 Make the recommendations relevant, specific, and actually useful for someone learning about "${query}". Use real book titles, podcast names, and social media accounts when possible.
 
 Return your response as a JSON object with this exact structure:
 {
   "books": [
-    {"title": "Book Title", "desc": "Description", "url": "https://example.com/book-url", "author": "Author Name"}
+    {"title": "Book Title", "desc": "Description", "url": "https://amazon.com/dp/BOOK_ID", "author": "Author Name"}
   ],
   "podcasts": [
-    {"title": "Podcast Name", "desc": "Description", "url": "https://example.com/podcast-url"}
+    {"title": "Podcast Name", "desc": "Description", "url": "https://podcasts.apple.com/podcast/PODCAST_ID"}
   ],
   "social": [
-    {"title": "Account/Channel Name", "desc": "Description", "url": "https://example.com/social-url"}
+    {"title": "Account/Channel Name", "desc": "Description", "url": "https://twitter.com/username"}
   ]
 }`
-    };
+  };
 
     try {
       const completion = await openai.chat.completions.create({
@@ -120,20 +125,20 @@ Return your response as a JSON object with this exact structure:
         console.error('Failed to parse AI response as JSON:', parseError);
         console.log('Raw AI response:', response);
         
-        // Fallback to generated resources
+        // Fallback to real resources with working URLs
         resources = {
           books: [
-            { title: `${query} - Essential Guide`, desc: `Comprehensive resource for ${query}`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-guide`, author: "Unknown Author" },
-            { title: `Mastering ${query}`, desc: `Advanced techniques and strategies`, url: `https://example.com/mastering-${query.replace(/\s+/g, '-').toLowerCase()}`, author: "Expert Author" },
-            { title: `${query} for Beginners`, desc: `Perfect starting point for newcomers`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-beginners`, author: "Beginner Guide" }
+            { title: `Atomic Habits`, desc: `Build good habits and break bad ones`, url: `https://amazon.com/dp/0735211299`, author: "James Clear" },
+            { title: `Deep Work`, desc: `Rules for focused success in a distracted world`, url: `https://amazon.com/dp/1455586692`, author: "Cal Newport" },
+            { title: `The Lean Startup`, desc: `How today's entrepreneurs use continuous innovation`, url: `https://amazon.com/dp/0307887898`, author: "Eric Ries" }
           ],
           podcasts: [
-            { title: `${query} Podcast`, desc: `Weekly insights and discussions`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-podcast` },
-            { title: `The ${query} Show`, desc: `Expert interviews and tips`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-show` }
+            { title: `The Tim Ferriss Show`, desc: `Interviews with world-class performers`, url: `https://podcasts.apple.com/podcast/id863897795` },
+            { title: `How I Built This`, desc: `Stories behind successful companies`, url: `https://podcasts.apple.com/podcast/id1154105909` }
           ],
           social: [
-            { title: `${query} Twitter`, desc: `Best accounts and communities`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-twitter` },
-            { title: `${query} YouTube`, desc: `Top channels and tutorials`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-youtube` }
+            { title: `@naval`, desc: `Naval Ravikant on entrepreneurship and philosophy`, url: `https://twitter.com/naval` },
+            { title: `@paulg`, desc: `Paul Graham on startups and programming`, url: `https://twitter.com/paulg` }
           ]
         };
       }
@@ -191,17 +196,17 @@ Return your response as a JSON object with this exact structure:
       // Fallback response for API errors
       const fallbackResources = {
         books: [
-          { title: `${query} - Essential Guide`, desc: `Comprehensive resource for ${query}`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-guide`, author: "Unknown Author" },
-          { title: `Mastering ${query}`, desc: `Advanced techniques and strategies`, url: `https://example.com/mastering-${query.replace(/\s+/g, '-').toLowerCase()}`, author: "Expert Author" },
-          { title: `${query} for Beginners`, desc: `Perfect starting point for newcomers`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-beginners`, author: "Beginner Guide" }
+          { title: `Atomic Habits`, desc: `Build good habits and break bad ones`, url: `https://amazon.com/dp/0735211299`, author: "James Clear" },
+          { title: `Deep Work`, desc: `Rules for focused success in a distracted world`, url: `https://amazon.com/dp/1455586692`, author: "Cal Newport" },
+          { title: `The Lean Startup`, desc: `How today's entrepreneurs use continuous innovation`, url: `https://amazon.com/dp/0307887898`, author: "Eric Ries" }
         ],
         podcasts: [
-          { title: `${query} Podcast`, desc: `Weekly insights and discussions`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-podcast` },
-          { title: `The ${query} Show`, desc: `Expert interviews and tips`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-show` }
+          { title: `The Tim Ferriss Show`, desc: `Interviews with world-class performers`, url: `https://podcasts.apple.com/podcast/id863897795` },
+          { title: `How I Built This`, desc: `Stories behind successful companies`, url: `https://podcasts.apple.com/podcast/id1154105909` }
         ],
         social: [
-          { title: `${query} Twitter`, desc: `Best accounts and communities`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-twitter` },
-          { title: `${query} YouTube`, desc: `Top channels and tutorials`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-youtube` }
+          { title: `@naval`, desc: `Naval Ravikant on entrepreneurship and philosophy`, url: `https://twitter.com/naval` },
+          { title: `@paulg`, desc: `Paul Graham on startups and programming`, url: `https://twitter.com/paulg` }
         ]
       };
 
@@ -218,17 +223,17 @@ Return your response as a JSON object with this exact structure:
     // Provide a helpful fallback even for general errors
     const fallbackResources = {
       books: [
-        { title: `${query || 'Your Topic'} - Essential Guide`, desc: `Comprehensive resource for ${query || 'your topic'}`, url: `https://example.com/guide`, author: "Unknown Author" },
-        { title: `Mastering ${query || 'Your Topic'}`, desc: `Advanced techniques and strategies`, url: `https://example.com/mastering`, author: "Expert Author" },
-        { title: `${query || 'Your Topic'} for Beginners`, desc: `Perfect starting point for newcomers`, url: `https://example.com/beginners`, author: "Beginner Guide" }
+        { title: `Atomic Habits`, desc: `Build good habits and break bad ones`, url: `https://amazon.com/dp/0735211299`, author: "James Clear" },
+        { title: `Deep Work`, desc: `Rules for focused success in a distracted world`, url: `https://amazon.com/dp/1455586692`, author: "Cal Newport" },
+        { title: `The Lean Startup`, desc: `How today's entrepreneurs use continuous innovation`, url: `https://amazon.com/dp/0307887898`, author: "Eric Ries" }
       ],
       podcasts: [
-        { title: `${query || 'Your Topic'} Podcast`, desc: `Weekly insights and discussions`, url: `https://example.com/podcast` },
-        { title: `The ${query || 'Your Topic'} Show`, desc: `Expert interviews and tips`, url: `https://example.com/show` }
+        { title: `The Tim Ferriss Show`, desc: `Interviews with world-class performers`, url: `https://podcasts.apple.com/podcast/id863897795` },
+        { title: `How I Built This`, desc: `Stories behind successful companies`, url: `https://podcasts.apple.com/podcast/id1154105909` }
       ],
       social: [
-        { title: `${query || 'Your Topic'} Twitter`, desc: `Best accounts and communities`, url: `https://example.com/twitter` },
-        { title: `${query || 'Your Topic'} YouTube`, desc: `Top channels and tutorials`, url: `https://example.com/youtube` }
+        { title: `@naval`, desc: `Naval Ravikant on entrepreneurship and philosophy`, url: `https://twitter.com/naval` },
+        { title: `@paulg`, desc: `Paul Graham on startups and programming`, url: `https://twitter.com/paulg` }
       ]
     };
 
