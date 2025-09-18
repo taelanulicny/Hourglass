@@ -119,30 +119,66 @@ function ResourcesTab({ focusAreas = [] }) {
       </div>
 
 
+      {/* Books Section */}
       <div className="bg-white rounded-xl border border-gray-200 p-4">
         <h3 className="text-lg font-semibold mb-3">Books</h3>
-        <div className="space-y-2">
-          <ResourceCard title="Atomic Habits" desc="Build good habits and break bad ones" url="https://example.com/atomic-habits" />
-          <ResourceCard title="Deep Work" desc="Rules for focused success in a distracted world" url="https://example.com/deep-work" />
-          <ResourceCard title="The Power of Habit" desc="Why we do what we do in life and business" url="https://example.com/power-of-habit" />
+        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="flex-shrink-0 w-48">
+            <ResourceCard title="Atomic Habits" desc="Build good habits and break bad ones" url="https://example.com/atomic-habits" />
+          </div>
+          <div className="flex-shrink-0 w-48">
+            <ResourceCard title="Deep Work" desc="Rules for focused success in a distracted world" url="https://example.com/deep-work" />
+          </div>
+          <div className="flex-shrink-0 w-48">
+            <ResourceCard title="The Power of Habit" desc="Why we do what we do in life and business" url="https://example.com/power-of-habit" />
+          </div>
+          <div className="flex-shrink-0 w-48">
+            <ResourceCard title="Getting Things Done" desc="The art of stress-free productivity" url="https://example.com/gtd" />
+          </div>
+          <div className="flex-shrink-0 w-48">
+            <ResourceCard title="The 7 Habits" desc="Highly effective people principles" url="https://example.com/7-habits" />
+          </div>
         </div>
       </div>
 
+      {/* Social Media Section */}
       <div className="bg-white rounded-xl border border-gray-200 p-4">
         <h3 className="text-lg font-semibold mb-3">Social Media</h3>
-        <div className="space-y-2">
-          <ResourceCard title="Productivity Twitter" desc="Best accounts for productivity tips" url="https://example.com/productivity-twitter" />
-          <ResourceCard title="StudyTok" desc="Study motivation and tips on TikTok" url="https://example.com/studytok" />
-          <ResourceCard title="LinkedIn Learning" desc="Professional development courses" url="https://example.com/linkedin-learning" />
+        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="flex-shrink-0 w-48">
+            <ResourceCard title="Productivity Twitter" desc="Best accounts for productivity tips" url="https://example.com/productivity-twitter" />
+          </div>
+          <div className="flex-shrink-0 w-48">
+            <ResourceCard title="StudyTok" desc="Study motivation and tips on TikTok" url="https://example.com/studytok" />
+          </div>
+          <div className="flex-shrink-0 w-48">
+            <ResourceCard title="LinkedIn Learning" desc="Professional development courses" url="https://example.com/linkedin-learning" />
+          </div>
+          <div className="flex-shrink-0 w-48">
+            <ResourceCard title="YouTube Channels" desc="Top productivity and study channels" url="https://example.com/youtube-prod" />
+          </div>
         </div>
       </div>
 
+      {/* Tools & Apps Section */}
       <div className="bg-white rounded-xl border border-gray-200 p-4">
-        <h3 className="text-lg font-semibold mb-3">Links</h3>
-        <div className="space-y-2">
-          <ResourceCard title="Pomodoro Timer" desc="25-minute focused work sessions" url="https://example.com/pomodoro" />
-          <ResourceCard title="Forest App" desc="Stay focused and plant real trees" url="https://example.com/forest" />
-          <ResourceCard title="Notion Templates" desc="Free productivity templates" url="https://example.com/notion-templates" />
+        <h3 className="text-lg font-semibold mb-3">Tools & Apps</h3>
+        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="flex-shrink-0 w-48">
+            <ResourceCard title="Pomodoro Timer" desc="25-minute focused work sessions" url="https://example.com/pomodoro" />
+          </div>
+          <div className="flex-shrink-0 w-48">
+            <ResourceCard title="Forest App" desc="Stay focused and plant real trees" url="https://example.com/forest" />
+          </div>
+          <div className="flex-shrink-0 w-48">
+            <ResourceCard title="Notion Templates" desc="Free productivity templates" url="https://example.com/notion-templates" />
+          </div>
+          <div className="flex-shrink-0 w-48">
+            <ResourceCard title="Focus Keeper" desc="Time management and focus app" url="https://example.com/focus-keeper" />
+          </div>
+          <div className="flex-shrink-0 w-48">
+            <ResourceCard title="RescueTime" desc="Track time and boost productivity" url="https://example.com/rescuetime" />
+          </div>
         </div>
       </div>
     </div>
