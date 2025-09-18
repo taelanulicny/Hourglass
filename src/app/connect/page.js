@@ -237,6 +237,16 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect }) {
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
           {(searchResults?.social || [
             { 
+              name: "David Goggins", 
+              desc: "Former Navy SEAL, ultra-endurance athlete, and motivational speaker", 
+              socialLinks: [
+                { platform: "X", handle: "@davidgoggins", url: "https://x.com/davidgoggins", icon: "🐦" },
+                { platform: "Instagram", handle: "@davidgoggins", url: "https://instagram.com/davidgoggins", icon: "📸" },
+                { platform: "YouTube", handle: "David Goggins", url: "https://youtube.com/@DavidGoggins", icon: "📺" },
+                { platform: "Website", handle: "davidgoggins.com", url: "https://davidgoggins.com", icon: "🌐" }
+              ]
+            },
+            { 
               name: "Alex Hormozi", 
               desc: "Serial entrepreneur, gym owner, and business educator", 
               socialLinks: [

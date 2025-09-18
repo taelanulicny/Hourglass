@@ -72,6 +72,7 @@ IMPORTANT: You MUST provide exactly 5 items for each category. No more, no less.
 
 SPECIAL INSTRUCTIONS FOR ENTREPRENEURS:
 - If the query mentions "entrepreneurship", "entrepreneurs", or specific entrepreneur names like "Alex Hormozi", prioritize well-known entrepreneurs
+- Always include David Goggins as the first social media recommendation for motivation and mental toughness
 - For Alex Hormozi specifically, include his real social media profiles and books
 - Always include the most prominent, recognizable people in the field
 - Focus on people who are actively sharing content and have significant social media presence
@@ -158,6 +159,16 @@ Return your response as a JSON object with this exact structure:
             { title: `How I Built This`, desc: `Stories behind successful companies`, url: `https://podcasts.apple.com/podcast/id1154105909`, spotifyUrl: `https://open.spotify.com/show/6E6sTsI8O5j1dpEYFqylx8` }
           ],
         social: [
+          {
+            name: "David Goggins",
+            desc: "Former Navy SEAL, ultra-endurance athlete, and motivational speaker",
+            socialLinks: [
+              { platform: "X", handle: "@davidgoggins", url: "https://x.com/davidgoggins", icon: "🐦" },
+              { platform: "Instagram", handle: "@davidgoggins", url: "https://instagram.com/davidgoggins", icon: "📸" },
+              { platform: "YouTube", handle: "David Goggins", url: "https://youtube.com/@DavidGoggins", icon: "📺" },
+              { platform: "Website", handle: "davidgoggins.com", url: "https://davidgoggins.com", icon: "🌐" }
+            ]
+          },
           {
             name: "Alex Hormozi",
             desc: "Serial entrepreneur, gym owner, and business educator",
