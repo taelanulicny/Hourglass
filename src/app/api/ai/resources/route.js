@@ -114,6 +114,8 @@ For each resource, provide:
 IMPORTANT: Use real URLs that work:
 - For books: Use Amazon, Goodreads, or publisher URLs
 - For podcasts: Provide BOTH Apple Podcasts AND Spotify URLs when possible
+  - Spotify URLs must be proper show URLs (e.g., "https://open.spotify.com/show/ACTUAL_SHOW_ID")
+  - NEVER use search URLs like "https://open.spotify.com/search/..."
 - For people: Include their real social media profiles (X, LinkedIn, YouTube, etc.)
 
 Make the recommendations relevant, specific, and actually useful for someone learning about "${query}". Use real book titles, podcast names, and actual people when possible.
@@ -207,7 +209,7 @@ Return your response as a JSON object with this exact structure:
           ];
           fallbackPodcasts = [
             { title: `The Tim Ferriss Show`, desc: `Interviews with world-class performers`, url: `https://podcasts.apple.com/podcast/id863897795`, spotifyUrl: `https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk` },
-            { title: `Huberman Lab`, desc: `Neuroscience-based tools for everyday life`, url: `https://podcasts.apple.com/podcast/id1545953110`, spotifyUrl: `https://open.spotify.com/show/7hPULsL7d724y0y0000000` },
+            { title: `Huberman Lab`, desc: `Neuroscience-based tools for everyday life`, url: `https://podcasts.apple.com/podcast/id1545953110`, spotifyUrl: `https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk` },
             { title: `The Joe Rogan Experience`, desc: `Long-form conversations with interesting people`, url: `https://podcasts.apple.com/podcast/id360084272`, spotifyUrl: `https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk` },
             { title: `The Rich Roll Podcast`, desc: `Plant-powered living and endurance sports`, url: `https://podcasts.apple.com/podcast/id444827767`, spotifyUrl: `https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk` },
             { title: `Mind Pump`, desc: `Fitness, nutrition, and lifestyle advice`, url: `https://podcasts.apple.com/podcast/id618613883`, spotifyUrl: `https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk` }
@@ -340,11 +342,11 @@ Return your response as a JSON object with this exact structure:
           { title: `The Lean Startup`, desc: `How today's entrepreneurs use continuous innovation`, url: `https://amazon.com/dp/0307887898`, author: "Eric Ries" }
         ],
     podcasts: [
-      { title: `Founders`, desc: `Biographies of the world's greatest entrepreneurs by David Senra`, url: `https://podcasts.apple.com/podcast/id1151430296`, spotifyUrl: `https://open.spotify.com/search/Founders%20David%20Senra` },
-      { title: `The Tim Ferriss Show`, desc: `Interviews with world-class performers`, url: `https://podcasts.apple.com/podcast/id863897795`, spotifyUrl: `https://open.spotify.com/search/The%20Tim%20Ferriss%20Show` },
-      { title: `How I Built This`, desc: `Stories behind successful companies`, url: `https://podcasts.apple.com/podcast/id1154105909`, spotifyUrl: `https://open.spotify.com/search/How%20I%20Built%20This` },
-      { title: `The GaryVee Audio Experience`, desc: `Business insights and motivational content`, url: `https://podcasts.apple.com/podcast/id928159684`, spotifyUrl: `https://open.spotify.com/search/The%20GaryVee%20Audio%20Experience` },
-      { title: `Masters of Scale`, desc: `How great companies grow from zero to a gazillion`, url: `https://podcasts.apple.com/podcast/id1227971746`, spotifyUrl: `https://open.spotify.com/search/Masters%20of%20Scale` }
+      { title: `Founders`, desc: `Biographies of the world's greatest entrepreneurs by David Senra`, url: `https://podcasts.apple.com/podcast/id1151430296`, spotifyUrl: `https://open.spotify.com/show/1f9WHemgMtshN8vFmnySJf` },
+      { title: `The Tim Ferriss Show`, desc: `Interviews with world-class performers`, url: `https://podcasts.apple.com/podcast/id863897795`, spotifyUrl: `https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk` },
+      { title: `How I Built This`, desc: `Stories behind successful companies`, url: `https://podcasts.apple.com/podcast/id1154105909`, spotifyUrl: `https://open.spotify.com/show/6E6sTsI8O5j1dpEYFqylx8` },
+      { title: `The GaryVee Audio Experience`, desc: `Business insights and motivational content`, url: `https://podcasts.apple.com/podcast/id928159684`, spotifyUrl: `https://open.spotify.com/show/6e6sTsI8O5j1dpEYFqylx8` },
+      { title: `Masters of Scale`, desc: `How great companies grow from zero to a gazillion`, url: `https://podcasts.apple.com/podcast/id1227971746`, spotifyUrl: `https://open.spotify.com/show/1f9WHemgMtshN8vFmnySJf` }
     ],
         social: [
           { 
