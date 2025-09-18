@@ -138,7 +138,7 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect }) {
             desc: `Leading expert in ${searchQuery}`, 
             thumbnail: `https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200&h=200&fit=crop`,
             socialLinks: [
-              { platform: "Twitter", handle: `@${searchQuery.toLowerCase().replace(/\s+/g, '')}1`, url: `https://twitter.com/${searchQuery.toLowerCase().replace(/\s+/g, '')}1`, icon: "🐦" },
+              { platform: "X", handle: `@${searchQuery.toLowerCase().replace(/\s+/g, '')}1`, url: `https://x.com/${searchQuery.toLowerCase().replace(/\s+/g, '')}1`, icon: "🐦" },
               { platform: "LinkedIn", handle: `${searchQuery.toLowerCase().replace(/\s+/g, '-')}-expert`, url: `https://linkedin.com/in/${searchQuery.toLowerCase().replace(/\s+/g, '-')}-expert`, icon: "💼" },
               { platform: "YouTube", handle: `${searchQuery} Expert`, url: `https://youtube.com/@${searchQuery.toLowerCase().replace(/\s+/g, '')}expert`, icon: "📺" }
             ]
@@ -148,7 +148,7 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect }) {
             desc: `Thought leader in ${searchQuery}`, 
             thumbnail: `https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=200&h=200&fit=crop`,
             socialLinks: [
-              { platform: "Twitter", handle: `@${searchQuery.toLowerCase().replace(/\s+/g, '')}2`, url: `https://twitter.com/${searchQuery.toLowerCase().replace(/\s+/g, '')}2`, icon: "🐦" },
+              { platform: "X", handle: `@${searchQuery.toLowerCase().replace(/\s+/g, '')}2`, url: `https://x.com/${searchQuery.toLowerCase().replace(/\s+/g, '')}2`, icon: "🐦" },
               { platform: "Instagram", handle: `@${searchQuery.toLowerCase().replace(/\s+/g, '')}expert`, url: `https://instagram.com/${searchQuery.toLowerCase().replace(/\s+/g, '')}expert`, icon: "📷" },
               { platform: "Website", handle: `${searchQuery.toLowerCase().replace(/\s+/g, '')}expert.com`, url: `https://${searchQuery.toLowerCase().replace(/\s+/g, '')}expert.com`, icon: "🌐" }
             ]
@@ -240,7 +240,7 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect }) {
               name: "Alex Hormozi", 
               desc: "Serial entrepreneur, gym owner, and business educator", 
               socialLinks: [
-                { platform: "Twitter", handle: "@AlexHormozi", url: "https://twitter.com/AlexHormozi", icon: "🐦" },
+                { platform: "X", handle: "@AlexHormozi", url: "https://x.com/AlexHormozi", icon: "🐦" },
                 { platform: "LinkedIn", handle: "alex-hormozi", url: "https://linkedin.com/in/alex-hormozi", icon: "💼" },
                 { platform: "YouTube", handle: "Alex Hormozi", url: "https://youtube.com/@AlexHormozi", icon: "📺" },
                 { platform: "Instagram", handle: "@hormozi", url: "https://instagram.com/hormozi", icon: "📸" }
@@ -250,7 +250,7 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect }) {
               name: "Gary Vaynerchuk", 
               desc: "Entrepreneur, CEO of VaynerMedia, and social media expert", 
               socialLinks: [
-                { platform: "Twitter", handle: "@garyvee", url: "https://twitter.com/garyvee", icon: "🐦" },
+                { platform: "X", handle: "@garyvee", url: "https://x.com/garyvee", icon: "🐦" },
                 { platform: "LinkedIn", handle: "garyvaynerchuk", url: "https://linkedin.com/in/garyvaynerchuk", icon: "💼" },
                 { platform: "YouTube", handle: "GaryVee", url: "https://youtube.com/@GaryVee", icon: "📺" },
                 { platform: "Instagram", handle: "@garyvee", url: "https://instagram.com/garyvee", icon: "📸" }
@@ -260,7 +260,7 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect }) {
               name: "Naval Ravikant", 
               desc: "Entrepreneur, investor, and philosopher", 
               socialLinks: [
-                { platform: "Twitter", handle: "@naval", url: "https://twitter.com/naval", icon: "🐦" },
+                { platform: "X", handle: "@naval", url: "https://x.com/naval", icon: "🐦" },
                 { platform: "LinkedIn", handle: "naval-ravikant", url: "https://linkedin.com/in/naval-ravikant", icon: "💼" },
                 { platform: "YouTube", handle: "Naval Ravikant", url: "https://youtube.com/@naval", icon: "📺" }
               ]
@@ -269,7 +269,7 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect }) {
               name: "Paul Graham", 
               desc: "Co-founder of Y Combinator, essayist", 
               socialLinks: [
-                { platform: "Twitter", handle: "@paulg", url: "https://twitter.com/paulg", icon: "🐦" },
+                { platform: "X", handle: "@paulg", url: "https://x.com/paulg", icon: "🐦" },
                 { platform: "Website", handle: "paulgraham.com", url: "https://paulgraham.com", icon: "🌐" },
                 { platform: "GitHub", handle: "@paulg", url: "https://github.com/paulg", icon: "💻" }
               ]
@@ -278,7 +278,7 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect }) {
               name: "Reid Hoffman", 
               desc: "Co-founder of LinkedIn, entrepreneur and investor", 
               socialLinks: [
-                { platform: "Twitter", handle: "@reidhoffman", url: "https://twitter.com/reidhoffman", icon: "🐦" },
+                { platform: "X", handle: "@reidhoffman", url: "https://x.com/reidhoffman", icon: "🐦" },
                 { platform: "LinkedIn", handle: "reidhoffman", url: "https://linkedin.com/in/reidhoffman", icon: "💼" },
                 { platform: "Website", handle: "reidhoffman.org", url: "https://reidhoffman.org", icon: "🌐" }
               ]

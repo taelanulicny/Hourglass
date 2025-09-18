@@ -24,7 +24,7 @@ export async function POST(request) {
             { title: `The ${query} Show`, desc: `Expert interviews and tips`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-show` }
           ],
           social: [
-            { title: `${query} Twitter`, desc: `Best accounts and communities`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-twitter` },
+            { title: `${query} X`, desc: `Best accounts and communities`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-x` },
             { title: `${query} YouTube`, desc: `Top channels and tutorials`, url: `https://example.com/${query.replace(/\s+/g, '-').toLowerCase()}-youtube` }
           ]
         }
@@ -90,7 +90,7 @@ For each resource, provide:
 IMPORTANT: Use real URLs that work:
 - For books: Use Amazon, Goodreads, or publisher URLs
 - For podcasts: Provide BOTH Apple Podcasts AND Spotify URLs when possible
-- For people: Include their real social media profiles (Twitter, LinkedIn, YouTube, etc.)
+- For people: Include their real social media profiles (X, LinkedIn, YouTube, etc.)
 
 Make the recommendations relevant, specific, and actually useful for someone learning about "${query}". Use real book titles, podcast names, and actual people when possible.
 
@@ -107,7 +107,7 @@ Return your response as a JSON object with this exact structure:
       "name": "Person Name", 
       "desc": "Their role/expertise", 
       "socialLinks": [
-        {"platform": "Twitter", "handle": "@username", "url": "https://twitter.com/username", "icon": "🐦"},
+        {"platform": "X", "handle": "@username", "url": "https://x.com/username", "icon": "🐦"},
         {"platform": "LinkedIn", "handle": "person-name", "url": "https://linkedin.com/in/person-name", "icon": "💼"},
         {"platform": "YouTube", "handle": "Channel Name", "url": "https://youtube.com/@channel", "icon": "📺"}
       ]
@@ -162,7 +162,7 @@ Return your response as a JSON object with this exact structure:
             name: "Alex Hormozi",
             desc: "Serial entrepreneur, gym owner, and business educator",
             socialLinks: [
-              { platform: "Twitter", handle: "@AlexHormozi", url: "https://twitter.com/AlexHormozi", icon: "🐦" },
+              { platform: "X", handle: "@AlexHormozi", url: "https://x.com/AlexHormozi", icon: "🐦" },
               { platform: "LinkedIn", handle: "alex-hormozi", url: "https://linkedin.com/in/alex-hormozi", icon: "💼" },
               { platform: "YouTube", handle: "Alex Hormozi", url: "https://youtube.com/@AlexHormozi", icon: "📺" },
               { platform: "Instagram", handle: "@hormozi", url: "https://instagram.com/hormozi", icon: "📸" }
@@ -172,7 +172,7 @@ Return your response as a JSON object with this exact structure:
             name: "Gary Vaynerchuk",
             desc: "Entrepreneur, CEO of VaynerMedia, and social media expert",
             socialLinks: [
-              { platform: "Twitter", handle: "@garyvee", url: "https://twitter.com/garyvee", icon: "🐦" },
+              { platform: "X", handle: "@garyvee", url: "https://x.com/garyvee", icon: "🐦" },
               { platform: "LinkedIn", handle: "garyvaynerchuk", url: "https://linkedin.com/in/garyvaynerchuk", icon: "💼" },
               { platform: "YouTube", handle: "GaryVee", url: "https://youtube.com/@GaryVee", icon: "📺" },
               { platform: "Instagram", handle: "@garyvee", url: "https://instagram.com/garyvee", icon: "📸" }
@@ -182,7 +182,7 @@ Return your response as a JSON object with this exact structure:
             name: "Naval Ravikant",
             desc: "Entrepreneur, investor, and philosopher",
             socialLinks: [
-              { platform: "Twitter", handle: "@naval", url: "https://twitter.com/naval", icon: "🐦" },
+              { platform: "X", handle: "@naval", url: "https://x.com/naval", icon: "🐦" },
               { platform: "LinkedIn", handle: "naval-ravikant", url: "https://linkedin.com/in/naval-ravikant", icon: "💼" },
               { platform: "YouTube", handle: "Naval Ravikant", url: "https://youtube.com/@naval", icon: "📺" }
             ]
@@ -191,7 +191,7 @@ Return your response as a JSON object with this exact structure:
             name: "Paul Graham",
             desc: "Co-founder of Y Combinator, essayist",
             socialLinks: [
-              { platform: "Twitter", handle: "@paulg", url: "https://twitter.com/paulg", icon: "🐦" },
+              { platform: "X", handle: "@paulg", url: "https://x.com/paulg", icon: "🐦" },
               { platform: "Website", handle: "paulgraham.com", url: "https://paulgraham.com", icon: "🌐" },
               { platform: "GitHub", handle: "@paulg", url: "https://github.com/paulg", icon: "💻" }
             ]
@@ -200,7 +200,7 @@ Return your response as a JSON object with this exact structure:
             name: "Reid Hoffman",
             desc: "Co-founder of LinkedIn, entrepreneur and investor",
             socialLinks: [
-              { platform: "Twitter", handle: "@reidhoffman", url: "https://twitter.com/reidhoffman", icon: "🐦" },
+              { platform: "X", handle: "@reidhoffman", url: "https://x.com/reidhoffman", icon: "🐦" },
               { platform: "LinkedIn", handle: "reidhoffman", url: "https://linkedin.com/in/reidhoffman", icon: "💼" },
               { platform: "Website", handle: "reidhoffman.org", url: "https://reidhoffman.org", icon: "🌐" }
             ]
@@ -240,7 +240,7 @@ Return your response as a JSON object with this exact structure:
             name: "Naval Ravikant", 
             desc: "Entrepreneur, investor, and philosopher", 
             socialLinks: [
-              { platform: "Twitter", handle: "@naval", url: "https://twitter.com/naval", icon: "🐦" },
+              { platform: "X", handle: "@naval", url: "https://x.com/naval", icon: "🐦" },
               { platform: "LinkedIn", handle: "naval-ravikant", url: "https://linkedin.com/in/naval-ravikant", icon: "💼" },
               { platform: "YouTube", handle: "Naval Ravikant", url: "https://youtube.com/@naval", icon: "📺" }
             ]
@@ -249,7 +249,7 @@ Return your response as a JSON object with this exact structure:
             name: "Paul Graham", 
             desc: "Co-founder of Y Combinator, essayist", 
             socialLinks: [
-              { platform: "Twitter", handle: "@paulg", url: "https://twitter.com/paulg", icon: "🐦" },
+              { platform: "X", handle: "@paulg", url: "https://x.com/paulg", icon: "🐦" },
               { platform: "Website", handle: "paulgraham.com", url: "https://paulgraham.com", icon: "🌐" },
               { platform: "GitHub", handle: "@paulg", url: "https://github.com/paulg", icon: "💻" }
             ]
@@ -283,7 +283,7 @@ Return your response as a JSON object with this exact structure:
             name: "Naval Ravikant", 
             desc: "Entrepreneur, investor, and philosopher", 
             socialLinks: [
-              { platform: "Twitter", handle: "@naval", url: "https://twitter.com/naval", icon: "🐦" },
+              { platform: "X", handle: "@naval", url: "https://x.com/naval", icon: "🐦" },
               { platform: "LinkedIn", handle: "naval-ravikant", url: "https://linkedin.com/in/naval-ravikant", icon: "💼" },
               { platform: "YouTube", handle: "Naval Ravikant", url: "https://youtube.com/@naval", icon: "📺" }
             ]
@@ -292,7 +292,7 @@ Return your response as a JSON object with this exact structure:
             name: "Paul Graham", 
             desc: "Co-founder of Y Combinator, essayist", 
             socialLinks: [
-              { platform: "Twitter", handle: "@paulg", url: "https://twitter.com/paulg", icon: "🐦" },
+              { platform: "X", handle: "@paulg", url: "https://x.com/paulg", icon: "🐦" },
               { platform: "Website", handle: "paulgraham.com", url: "https://paulgraham.com", icon: "🌐" },
               { platform: "GitHub", handle: "@paulg", url: "https://github.com/paulg", icon: "💻" }
             ]
