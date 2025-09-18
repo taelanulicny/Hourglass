@@ -207,7 +207,7 @@ function ResourcesTab({ focusAreas = [] }) {
             { title: "The 7 Habits", desc: "Highly effective people principles", url: "https://amazon.com/dp/1982137274", thumbnail: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=200&h=200&fit=crop", author: "Stephen Covey" }
           ]).map((book, index) => (
             <div key={index} className="flex-shrink-0 w-64">
-              <ResourceCard title={book.title} desc={book.desc} url={book.url} thumbnail={book.thumbnail} type="book" author={book.author} />
+              <ResourceCard title={book.title} desc={book.desc} url={book.url} thumbnail={book.thumbnail} type="book" author={book.author} spotifyUrl={book.spotifyUrl} />
             </div>
           ))}
         </div>
@@ -224,7 +224,7 @@ function ResourcesTab({ focusAreas = [] }) {
             { title: "LinkedIn Learning", desc: "Professional development courses", url: "https://linkedin.com/learning", thumbnail: "https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=200&h=200&fit=crop" }
           ]).map((social, index) => (
             <div key={index} className="flex-shrink-0 w-64">
-              <ResourceCard title={social.title} desc={social.desc} url={social.url} thumbnail={social.thumbnail} type="social" />
+              <ResourceCard title={social.title} desc={social.desc} url={social.url} thumbnail={social.thumbnail} type="social" spotifyUrl={social.spotifyUrl} />
             </div>
           ))}
         </div>
@@ -235,14 +235,14 @@ function ResourcesTab({ focusAreas = [] }) {
         <h3 className="text-lg font-semibold mb-3">Podcasts</h3>
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
           {(searchResults?.podcasts || [
-            { title: "The Tim Ferriss Show", desc: "Interviews with world-class performers", url: "https://podcasts.apple.com/podcast/id863897795", thumbnail: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop" },
-            { title: "How I Built This", desc: "Stories behind successful companies", url: "https://podcasts.apple.com/podcast/id1154105909", thumbnail: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=200&h=200&fit=crop" },
-            { title: "Huberman Lab", desc: "Neuroscience-based tools for everyday life", url: "https://podcasts.apple.com/podcast/id1545953110", thumbnail: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop" },
-            { title: "Deep Questions", desc: "Cal Newport on digital minimalism", url: "https://podcasts.apple.com/podcast/id1515788106", thumbnail: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=200&h=200&fit=crop" },
-            { title: "Smart Passive Income", desc: "Pat Flynn on online business", url: "https://podcasts.apple.com/podcast/id383651043", thumbnail: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop" }
+            { title: "The Tim Ferriss Show", desc: "Interviews with world-class performers", url: "https://podcasts.apple.com/podcast/id863897795", spotifyUrl: "https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk", thumbnail: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop" },
+            { title: "How I Built This", desc: "Stories behind successful companies", url: "https://podcasts.apple.com/podcast/id1154105909", spotifyUrl: "https://open.spotify.com/show/6E6sTsI8O5j1dpEYFqylx8", thumbnail: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=200&h=200&fit=crop" },
+            { title: "Huberman Lab", desc: "Neuroscience-based tools for everyday life", url: "https://podcasts.apple.com/podcast/id1545953110", spotifyUrl: "https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk", thumbnail: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop" },
+            { title: "Deep Questions", desc: "Cal Newport on digital minimalism", url: "https://podcasts.apple.com/podcast/id1515788106", spotifyUrl: "https://open.spotify.com/show/6E6sTsI8O5j1dpEYFqylx8", thumbnail: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=200&h=200&fit=crop" },
+            { title: "Smart Passive Income", desc: "Pat Flynn on online business", url: "https://podcasts.apple.com/podcast/id383651043", spotifyUrl: "https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk", thumbnail: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop" }
           ]).map((podcast, index) => (
             <div key={index} className="flex-shrink-0 w-64">
-              <ResourceCard title={podcast.title} desc={podcast.desc} url={podcast.url} thumbnail={podcast.thumbnail} type="podcast" />
+              <ResourceCard title={podcast.title} desc={podcast.desc} url={podcast.url} thumbnail={podcast.thumbnail} type="podcast" spotifyUrl={podcast.spotifyUrl} />
             </div>
           ))}
         </div>
@@ -354,66 +354,99 @@ function FeedCard({ title, children, cta }) {
   );
 }
 
-function ResourceCard({ title, desc, url, thumbnail, type = 'book', author }) {
-  const [imageLoaded, setImageLoaded] = React.useState(false);
-  const [imageError, setImageError] = React.useState(false);
+  function ResourceCard({ title, desc, url, thumbnail, type = 'book', author, spotifyUrl }) {
+    const [imageLoaded, setImageLoaded] = React.useState(false);
+    const [imageError, setImageError] = React.useState(false);
 
-  // Determine the appropriate placeholder icon based on type
-  const getPlaceholderIcon = (type) => {
-    switch (type) {
-      case 'book':
-        return '📖';
-      case 'podcast':
-        return '🎧';
-      case 'social':
-        return '👤';
-      default:
-        return '📚';
-    }
-  };
+    // Determine the appropriate placeholder icon based on type
+    const getPlaceholderIcon = (type) => {
+      switch (type) {
+        case 'book':
+          return '📖';
+        case 'podcast':
+          return '🎧';
+        case 'social':
+          return '👤';
+        default:
+          return '📚';
+      }
+    };
 
-  return (
-    <a className="block rounded-xl border hover:shadow-sm bg-white h-32 flex flex-row"
-       href={url} target="_blank" rel="noreferrer">
-      {/* Thumbnail on the left */}
-      <div className="w-24 h-full bg-gray-100 rounded-l-xl flex items-center justify-center overflow-hidden relative flex-shrink-0">
-        {thumbnail && !imageError ? (
-          <>
-            <img 
-              src={thumbnail} 
-              alt={title}
-              className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
-              onLoad={() => setImageLoaded(true)}
-              onError={() => {
-                setImageError(true);
-                setImageLoaded(false);
-              }}
-            />
-            {!imageLoaded && (
-              <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-2xl">
-                {getPlaceholderIcon(type)}
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-400 text-2xl">
-            {getPlaceholderIcon(type)}
-          </div>
-        )}
+    return (
+      <div className="block rounded-xl border hover:shadow-sm bg-white h-32 flex flex-row">
+        {/* Thumbnail on the left */}
+        <div className="w-24 h-full bg-gray-100 rounded-l-xl flex items-center justify-center overflow-hidden relative flex-shrink-0">
+          {thumbnail && !imageError ? (
+            <>
+              <img 
+                src={thumbnail} 
+                alt={title}
+                className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                onLoad={() => setImageLoaded(true)}
+                onError={() => {
+                  setImageError(true);
+                  setImageLoaded(false);
+                }}
+              />
+              {!imageLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-2xl">
+                  {getPlaceholderIcon(type)}
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-gray-400 text-2xl">
+              {getPlaceholderIcon(type)}
+            </div>
+          )}
+        </div>
+        
+        {/* Content on the right */}
+        <div className="p-4 flex-1 flex flex-col justify-center">
+          <div className="font-semibold leading-snug text-base line-clamp-2 mb-1">{title}</div>
+          {type === 'book' && author ? (
+            <div className="text-sm text-gray-600 line-clamp-1">by {author}</div>
+          ) : (
+            <div className="text-sm text-gray-500 line-clamp-2">{desc}</div>
+          )}
+          
+          {/* Platform buttons for podcasts */}
+          {type === 'podcast' && spotifyUrl && (
+            <div className="flex gap-2 mt-2">
+              <a 
+                href={url} 
+                target="_blank" 
+                rel="noreferrer"
+                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded text-center transition-colors"
+              >
+                🍎 Apple
+              </a>
+              <a 
+                href={spotifyUrl} 
+                target="_blank" 
+                rel="noreferrer"
+                className="flex-1 bg-green-500 hover:bg-green-600 text-white text-xs px-2 py-1 rounded text-center transition-colors"
+              >
+                🎵 Spotify
+              </a>
+            </div>
+          )}
+          
+          {/* Single link for non-podcasts or podcasts without Spotify */}
+          {type !== 'podcast' || !spotifyUrl ? (
+            <a 
+              href={url} 
+              target="_blank" 
+              rel="noreferrer"
+              className="mt-2 bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-1 rounded text-center transition-colors"
+            >
+              Open
+            </a>
+          ) : null}
+        </div>
       </div>
-      
-      {/* Content on the right */}
-      <div className="p-4 flex-1 flex flex-col justify-center">
-        <div className="font-semibold leading-snug text-base line-clamp-2 mb-1">{title}</div>
-        {type === 'book' && author ? (
-          <div className="text-sm text-gray-600 line-clamp-1">by {author}</div>
-        ) : (
-          <div className="text-sm text-gray-500 line-clamp-2">{desc}</div>
-        )}
-      </div>
-    </a>
-  );
-}
+    );
+  }
 
 // --- Focus Area Post (fake share) ------------------------------------------
 function FocusAreaPost({

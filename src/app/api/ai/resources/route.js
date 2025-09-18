@@ -76,7 +76,7 @@ For each resource, provide:
 
 IMPORTANT: Use real URLs that work:
 - For books: Use Amazon, Goodreads, or publisher URLs
-- For podcasts: Use Apple Podcasts, Spotify, or the podcast's official website
+- For podcasts: Provide BOTH Apple Podcasts AND Spotify URLs when possible
 - For social media: Use the actual Twitter, YouTube, LinkedIn, or Instagram profile URLs
 
 Make the recommendations relevant, specific, and actually useful for someone learning about "${query}". Use real book titles, podcast names, and social media accounts when possible.
@@ -87,7 +87,7 @@ Return your response as a JSON object with this exact structure:
     {"title": "Book Title", "desc": "Description", "url": "https://amazon.com/dp/BOOK_ID", "author": "Author Name"}
   ],
   "podcasts": [
-    {"title": "Podcast Name", "desc": "Description", "url": "https://podcasts.apple.com/podcast/PODCAST_ID"}
+    {"title": "Podcast Name", "desc": "Description", "url": "https://podcasts.apple.com/podcast/PODCAST_ID", "spotifyUrl": "https://open.spotify.com/show/SPOTIFY_ID"}
   ],
   "social": [
     {"title": "Account/Channel Name", "desc": "Description", "url": "https://twitter.com/username"}
@@ -133,8 +133,8 @@ Return your response as a JSON object with this exact structure:
             { title: `The Lean Startup`, desc: `How today's entrepreneurs use continuous innovation`, url: `https://amazon.com/dp/0307887898`, author: "Eric Ries" }
           ],
           podcasts: [
-            { title: `The Tim Ferriss Show`, desc: `Interviews with world-class performers`, url: `https://podcasts.apple.com/podcast/id863897795` },
-            { title: `How I Built This`, desc: `Stories behind successful companies`, url: `https://podcasts.apple.com/podcast/id1154105909` }
+            { title: `The Tim Ferriss Show`, desc: `Interviews with world-class performers`, url: `https://podcasts.apple.com/podcast/id863897795`, spotifyUrl: `https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk` },
+            { title: `How I Built This`, desc: `Stories behind successful companies`, url: `https://podcasts.apple.com/podcast/id1154105909`, spotifyUrl: `https://open.spotify.com/show/6E6sTsI8O5j1dpEYFqylx8` }
           ],
           social: [
             { title: `@naval`, desc: `Naval Ravikant on entrepreneurship and philosophy`, url: `https://twitter.com/naval` },
@@ -201,8 +201,8 @@ Return your response as a JSON object with this exact structure:
           { title: `The Lean Startup`, desc: `How today's entrepreneurs use continuous innovation`, url: `https://amazon.com/dp/0307887898`, author: "Eric Ries" }
         ],
         podcasts: [
-          { title: `The Tim Ferriss Show`, desc: `Interviews with world-class performers`, url: `https://podcasts.apple.com/podcast/id863897795` },
-          { title: `How I Built This`, desc: `Stories behind successful companies`, url: `https://podcasts.apple.com/podcast/id1154105909` }
+          { title: `The Tim Ferriss Show`, desc: `Interviews with world-class performers`, url: `https://podcasts.apple.com/podcast/id863897795`, spotifyUrl: `https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk` },
+          { title: `How I Built This`, desc: `Stories behind successful companies`, url: `https://podcasts.apple.com/podcast/id1154105909`, spotifyUrl: `https://open.spotify.com/show/6E6sTsI8O5j1dpEYFqylx8` }
         ],
         social: [
           { title: `@naval`, desc: `Naval Ravikant on entrepreneurship and philosophy`, url: `https://twitter.com/naval` },
@@ -228,8 +228,8 @@ Return your response as a JSON object with this exact structure:
         { title: `The Lean Startup`, desc: `How today's entrepreneurs use continuous innovation`, url: `https://amazon.com/dp/0307887898`, author: "Eric Ries" }
       ],
       podcasts: [
-        { title: `The Tim Ferriss Show`, desc: `Interviews with world-class performers`, url: `https://podcasts.apple.com/podcast/id863897795` },
-        { title: `How I Built This`, desc: `Stories behind successful companies`, url: `https://podcasts.apple.com/podcast/id1154105909` }
+        { title: `The Tim Ferriss Show`, desc: `Interviews with world-class performers`, url: `https://podcasts.apple.com/podcast/id863897795`, spotifyUrl: `https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk` },
+        { title: `How I Built This`, desc: `Stories behind successful companies`, url: `https://podcasts.apple.com/podcast/id1154105909`, spotifyUrl: `https://open.spotify.com/show/6E6sTsI8O5j1dpEYFqylx8` }
       ],
       social: [
         { title: `@naval`, desc: `Naval Ravikant on entrepreneurship and philosophy`, url: `https://twitter.com/naval` },
