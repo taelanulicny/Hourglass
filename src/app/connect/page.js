@@ -219,7 +219,7 @@ function ResourcesTab({ focusAreas = [], onPersonSelect }) {
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
           {(searchResults?.books || [
             { title: "$100M Offers", desc: "How to make offers so good people feel stupid saying no", url: "https://amazon.com/dp/1737475715", author: "Alex Hormozi" },
-            { title: "$100M Leads", desc: "How to get strangers to want to buy your stuff", url: "https://amazon.com/dp/1737475723", author: "Alex Hormozi" },
+            { title: "Zero to One", desc: "Notes on startups, or how to build the future", url: "https://amazon.com/dp/0804139296", author: "Peter Thiel" },
             { title: "Atomic Habits", desc: "Build good habits and break bad ones", url: "https://amazon.com/dp/0735211299", author: "James Clear" },
             { title: "Deep Work", desc: "Rules for focused success in a distracted world", url: "https://amazon.com/dp/1455586692", author: "Cal Newport" },
             { title: "The Lean Startup", desc: "How today's entrepreneurs use continuous innovation", url: "https://amazon.com/dp/0307887898", author: "Eric Ries" }
