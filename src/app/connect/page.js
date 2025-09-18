@@ -94,28 +94,52 @@ function ResourcesTab({ focusAreas = [] }) {
   const [selectedId, setSelectedId] = React.useState(areas[0]?.id || '');
   const [searchQuery, setSearchQuery] = React.useState('');
   const [searchResults, setSearchResults] = React.useState(null);
+  const [isSearching, setIsSearching] = React.useState(false);
 
   // Handle AI search for resources
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
     
-    // Simulate AI search - in a real app, this would call an AI API
-    setSearchResults({
-      query: searchQuery,
-      books: [
-        { title: `${searchQuery} - Essential Guide`, desc: `Comprehensive resource for ${searchQuery}`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-guide` },
-        { title: `Mastering ${searchQuery}`, desc: `Advanced techniques and strategies`, url: `https://example.com/mastering-${searchQuery.replace(/\s+/g, '-').toLowerCase()}` },
-        { title: `${searchQuery} for Beginners`, desc: `Perfect starting point for newcomers`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-beginners` }
-      ],
-      podcasts: [
-        { title: `${searchQuery} Podcast`, desc: `Weekly insights and discussions`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-podcast` },
-        { title: `The ${searchQuery} Show`, desc: `Expert interviews and tips`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-show` }
-      ],
-      social: [
-        { title: `${searchQuery} Twitter`, desc: `Best accounts and communities`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-twitter` },
-        { title: `${searchQuery} YouTube`, desc: `Top channels and tutorials`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-youtube` }
-      ]
-    });
+    setIsSearching(true);
+    
+    try {
+      const response = await fetch('/api/ai/resources', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query: searchQuery }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch resources');
+      }
+
+      const data = await response.json();
+      setSearchResults(data);
+    } catch (error) {
+      console.error('Error fetching resources:', error);
+      
+      // Fallback to simulated results if API fails
+      setSearchResults({
+        query: searchQuery,
+        books: [
+          { title: `${searchQuery} - Essential Guide`, desc: `Comprehensive resource for ${searchQuery}`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-guide` },
+          { title: `Mastering ${searchQuery}`, desc: `Advanced techniques and strategies`, url: `https://example.com/mastering-${searchQuery.replace(/\s+/g, '-').toLowerCase()}` },
+          { title: `${searchQuery} for Beginners`, desc: `Perfect starting point for newcomers`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-beginners` }
+        ],
+        podcasts: [
+          { title: `${searchQuery} Podcast`, desc: `Weekly insights and discussions`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-podcast` },
+          { title: `The ${searchQuery} Show`, desc: `Expert interviews and tips`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-show` }
+        ],
+        social: [
+          { title: `${searchQuery} Twitter`, desc: `Best accounts and communities`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-twitter` },
+          { title: `${searchQuery} YouTube`, desc: `Top channels and tutorials`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-youtube` }
+        ]
+      });
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   // If no focus areas exist, show message to add them
@@ -145,9 +169,10 @@ function ResourcesTab({ focusAreas = [] }) {
           />
           <button
             onClick={handleSearch}
-            className="px-4 py-2 bg-[#8CA4AF] text-white rounded-lg text-sm font-medium hover:bg-[#7A939E] transition-colors"
+            disabled={isSearching}
+            className="px-4 py-2 bg-[#8CA4AF] text-white rounded-lg text-sm font-medium hover:bg-[#7A939E] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Find
+            {isSearching ? 'Finding...' : 'Find'}
           </button>
         </div>
         {searchQuery && (
@@ -159,6 +184,7 @@ function ResourcesTab({ focusAreas = [] }) {
               onClick={() => {
                 setSearchQuery('');
                 setSearchResults(null);
+                setIsSearching(false);
               }}
               className="text-xs text-[#8CA4AF] hover:text-[#7A939E] font-medium"
             >
