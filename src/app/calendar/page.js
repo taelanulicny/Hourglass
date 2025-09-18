@@ -999,7 +999,7 @@ function CalendarContent() {
       </div>
 
       {/* Scrollable calendar area */}
-      <div className="flex-1 overflow-y-auto pt-32">
+      <div className="flex-1 overflow-y-auto pt-40">
         {/* Day view grid (hours gutter + single day column) */}
         <div ref={gridRootRef} className="relative px-2">
         <div className="grid grid-cols-[56px_minmax(0,1fr)]">
