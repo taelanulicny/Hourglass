@@ -124,17 +124,17 @@ function ResourcesTab({ focusAreas = [] }) {
       setSearchResults({
         query: searchQuery,
         books: [
-          { title: `${searchQuery} - Essential Guide`, desc: `Comprehensive resource for ${searchQuery}`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-guide` },
-          { title: `Mastering ${searchQuery}`, desc: `Advanced techniques and strategies`, url: `https://example.com/mastering-${searchQuery.replace(/\s+/g, '-').toLowerCase()}` },
-          { title: `${searchQuery} for Beginners`, desc: `Perfect starting point for newcomers`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-beginners` }
+          { title: `${searchQuery} - Essential Guide`, desc: `Comprehensive resource for ${searchQuery}`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-guide`, thumbnail: `https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=200&h=200&fit=crop` },
+          { title: `Mastering ${searchQuery}`, desc: `Advanced techniques and strategies`, url: `https://example.com/mastering-${searchQuery.replace(/\s+/g, '-').toLowerCase()}`, thumbnail: `https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=200&h=200&fit=crop` },
+          { title: `${searchQuery} for Beginners`, desc: `Perfect starting point for newcomers`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-beginners`, thumbnail: `https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop` }
         ],
         podcasts: [
-          { title: `${searchQuery} Podcast`, desc: `Weekly insights and discussions`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-podcast` },
-          { title: `The ${searchQuery} Show`, desc: `Expert interviews and tips`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-show` }
+          { title: `${searchQuery} Podcast`, desc: `Weekly insights and discussions`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-podcast`, thumbnail: `https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop` },
+          { title: `The ${searchQuery} Show`, desc: `Expert interviews and tips`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-show`, thumbnail: `https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=200&h=200&fit=crop` }
         ],
         social: [
-          { title: `${searchQuery} Twitter`, desc: `Best accounts and communities`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-twitter` },
-          { title: `${searchQuery} YouTube`, desc: `Top channels and tutorials`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-youtube` }
+          { title: `${searchQuery} Twitter`, desc: `Best accounts and communities`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-twitter`, thumbnail: `https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200&h=200&fit=crop` },
+          { title: `${searchQuery} YouTube`, desc: `Top channels and tutorials`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-youtube`, thumbnail: `https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=200&h=200&fit=crop` }
         ]
       });
     } finally {
@@ -200,14 +200,14 @@ function ResourcesTab({ focusAreas = [] }) {
         <h3 className="text-lg font-semibold mb-3">Books</h3>
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
           {(searchResults?.books || [
-            { title: "Atomic Habits", desc: "Build good habits and break bad ones", url: "https://example.com/atomic-habits" },
-            { title: "Deep Work", desc: "Rules for focused success in a distracted world", url: "https://example.com/deep-work" },
-            { title: "The Power of Habit", desc: "Why we do what we do in life and business", url: "https://example.com/power-of-habit" },
-            { title: "Getting Things Done", desc: "The art of stress-free productivity", url: "https://example.com/gtd" },
-            { title: "The 7 Habits", desc: "Highly effective people principles", url: "https://example.com/7-habits" }
+            { title: "Atomic Habits", desc: "Build good habits and break bad ones", url: "https://example.com/atomic-habits", thumbnail: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=200&h=200&fit=crop" },
+            { title: "Deep Work", desc: "Rules for focused success in a distracted world", url: "https://example.com/deep-work", thumbnail: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=200&h=200&fit=crop" },
+            { title: "The Power of Habit", desc: "Why we do what we do in life and business", url: "https://example.com/power-of-habit", thumbnail: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop" },
+            { title: "Getting Things Done", desc: "The art of stress-free productivity", url: "https://example.com/gtd", thumbnail: "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=200&h=200&fit=crop" },
+            { title: "The 7 Habits", desc: "Highly effective people principles", url: "https://example.com/7-habits", thumbnail: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=200&h=200&fit=crop" }
           ]).map((book, index) => (
             <div key={index} className="flex-shrink-0 w-48">
-              <ResourceCard title={book.title} desc={book.desc} url={book.url} />
+              <ResourceCard title={book.title} desc={book.desc} url={book.url} thumbnail={book.thumbnail} />
             </div>
           ))}
         </div>
@@ -218,13 +218,13 @@ function ResourcesTab({ focusAreas = [] }) {
         <h3 className="text-lg font-semibold mb-3">Social Media</h3>
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
           {(searchResults?.social || [
-            { title: "Productivity Twitter", desc: "Best accounts for productivity tips", url: "https://example.com/productivity-twitter" },
-            { title: "StudyTok", desc: "Study motivation and tips on TikTok", url: "https://example.com/studytok" },
-            { title: "LinkedIn Learning", desc: "Professional development courses", url: "https://example.com/linkedin-learning" },
-            { title: "YouTube Channels", desc: "Top productivity and study channels", url: "https://example.com/youtube-prod" }
+            { title: "Productivity Twitter", desc: "Best accounts for productivity tips", url: "https://example.com/productivity-twitter", thumbnail: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200&h=200&fit=crop" },
+            { title: "StudyTok", desc: "Study motivation and tips on TikTok", url: "https://example.com/studytok", thumbnail: "https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=200&h=200&fit=crop" },
+            { title: "LinkedIn Learning", desc: "Professional development courses", url: "https://example.com/linkedin-learning", thumbnail: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=200&h=200&fit=crop" },
+            { title: "YouTube Channels", desc: "Top productivity and study channels", url: "https://example.com/youtube-prod", thumbnail: "https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=200&h=200&fit=crop" }
           ]).map((social, index) => (
             <div key={index} className="flex-shrink-0 w-48">
-              <ResourceCard title={social.title} desc={social.desc} url={social.url} />
+              <ResourceCard title={social.title} desc={social.desc} url={social.url} thumbnail={social.thumbnail} />
             </div>
           ))}
         </div>
@@ -235,14 +235,14 @@ function ResourcesTab({ focusAreas = [] }) {
         <h3 className="text-lg font-semibold mb-3">Podcasts</h3>
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
           {(searchResults?.podcasts || [
-            { title: "The Tim Ferriss Show", desc: "Interviews with world-class performers", url: "https://example.com/tim-ferriss" },
-            { title: "Huberman Lab", desc: "Neuroscience-based tools for everyday life", url: "https://example.com/huberman-lab" },
-            { title: "Deep Questions", desc: "Cal Newport on digital minimalism", url: "https://example.com/deep-questions" },
-            { title: "The Productivity Show", desc: "Tips and strategies for getting things done", url: "https://example.com/productivity-show" },
-            { title: "Atomic Habits", desc: "James Clear on building better habits", url: "https://example.com/atomic-habits-podcast" }
+            { title: "The Tim Ferriss Show", desc: "Interviews with world-class performers", url: "https://example.com/tim-ferriss", thumbnail: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop" },
+            { title: "Huberman Lab", desc: "Neuroscience-based tools for everyday life", url: "https://example.com/huberman-lab", thumbnail: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=200&h=200&fit=crop" },
+            { title: "Deep Questions", desc: "Cal Newport on digital minimalism", url: "https://example.com/deep-questions", thumbnail: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop" },
+            { title: "The Productivity Show", desc: "Tips and strategies for getting things done", url: "https://example.com/productivity-show", thumbnail: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=200&h=200&fit=crop" },
+            { title: "Atomic Habits", desc: "James Clear on building better habits", url: "https://example.com/atomic-habits-podcast", thumbnail: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop" }
           ]).map((podcast, index) => (
             <div key={index} className="flex-shrink-0 w-48">
-              <ResourceCard title={podcast.title} desc={podcast.desc} url={podcast.url} />
+              <ResourceCard title={podcast.title} desc={podcast.desc} url={podcast.url} thumbnail={podcast.thumbnail} />
             </div>
           ))}
         </div>
@@ -354,12 +354,33 @@ function FeedCard({ title, children, cta }) {
   );
 }
 
-function ResourceCard({ title, desc, url }) {
+function ResourceCard({ title, desc, url, thumbnail }) {
   return (
-    <a className="block rounded-xl border px-3 py-2 hover:shadow-sm bg-white"
+    <a className="block rounded-xl border hover:shadow-sm bg-white h-32 flex flex-col"
        href={url} target="_blank" rel="noreferrer">
-      <div className="font-semibold leading-snug">{title}</div>
-      <div className="text-xs text-gray-500 mt-0.5">{desc}</div>
+      {/* Thumbnail */}
+      <div className="h-16 bg-gray-100 rounded-t-xl flex items-center justify-center overflow-hidden">
+        {thumbnail ? (
+          <img 
+            src={thumbnail} 
+            alt={title}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              e.target.style.display = 'none';
+              e.target.nextSibling.style.display = 'flex';
+            }}
+          />
+        ) : null}
+        <div className={`w-full h-full flex items-center justify-center text-gray-400 text-2xl ${thumbnail ? 'hidden' : 'flex'}`}>
+          📚
+        </div>
+      </div>
+      
+      {/* Content */}
+      <div className="p-3 flex-1 flex flex-col">
+        <div className="font-semibold leading-snug text-sm line-clamp-2">{title}</div>
+        <div className="text-xs text-gray-500 mt-1 line-clamp-2 flex-1">{desc}</div>
+      </div>
     </a>
   );
 }
