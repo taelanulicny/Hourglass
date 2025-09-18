@@ -41,6 +41,15 @@ export async function POST(request) {
                 imageUrl = imageUrl.replace('http://', 'https://');
               }
               
+              // Use Google Books thumbnail service instead of direct content URLs
+              if (imageUrl && imageUrl.includes('books.google.com')) {
+                const bookId = imageUrl.match(/id=([^&]+)/)?.[1];
+                if (bookId) {
+                  imageUrl = `https://books.google.com/books/publisher/content/images/frontcover/${bookId}?fife=w400-h600&source=gbs_api`;
+                  console.log(`Using Google Books thumbnail service: ${imageUrl}`);
+                }
+              }
+              
               console.log(`Found book cover: ${imageUrl}`);
             }
           }
@@ -127,6 +136,15 @@ export async function POST(request) {
           imageUrl = imageUrl.replace('http://', 'https://');
         }
         
+        // For Google Books images, we need to proxy them due to CORS restrictions
+        if (imageUrl.includes('books.google.com')) {
+          const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(imageUrl)}`;
+          return NextResponse.json({ 
+            imageUrl: proxyUrl,
+            source: 'google-books-proxy'
+          });
+        }
+        
         return NextResponse.json({ 
           imageUrl,
           source: type === 'book' ? 'google-books' : type === 'podcast' ? 'itunes' : 'unsplash'
@@ -169,17 +187,20 @@ export async function POST(request) {
     // Check for specific popular book covers with reliable URLs
     if (type === 'book' && !imageUrl) {
       const popularBooks = {
-        'atomic habits': 'https://images-na.ssl-images-amazon.com/images/I/51Tlm0P2ZqL._SX342_SY445_.jpg',
-        'deep work': 'https://images-na.ssl-images-amazon.com/images/I/51XWc+El8mL._SX342_SY445_.jpg',
-        'the power of habit': 'https://images-na.ssl-images-amazon.com/images/I/51Tlm0P2ZqL._SX342_SY445_.jpg',
-        'getting things done': 'https://images-na.ssl-images-amazon.com/images/I/51Tlm0P2ZqL._SX342_SY445_.jpg',
-        'the 7 habits': 'https://images-na.ssl-images-amazon.com/images/I/51Tlm0P2ZqL._SX342_SY445_.jpg',
-        'lean startup': 'https://images-na.ssl-images-amazon.com/images/I/51Tlm0P2ZqL._SX342_SY445_.jpg',
-        'zero to one': 'https://images-na.ssl-images-amazon.com/images/I/51Tlm0P2ZqL._SX342_SY445_.jpg',
-        'good to great': 'https://images-na.ssl-images-amazon.com/images/I/51Tlm0P2ZqL._SX342_SY445_.jpg',
-        'the lean startup': 'https://images-na.ssl-images-amazon.com/images/I/51Tlm0P2ZqL._SX342_SY445_.jpg',
-        'zero to one': 'https://images-na.ssl-images-amazon.com/images/I/51Tlm0P2ZqL._SX342_SY445_.jpg',
-        'the $100 startup': 'https://images-na.ssl-images-amazon.com/images/I/51Tlm0P2ZqL._SX342_SY445_.jpg'
+        'atomic habits': 'https://m.media-amazon.com/images/I/51Tlm0P2ZqL._SX342_SY445_.jpg',
+        'deep work': 'https://m.media-amazon.com/images/I/51XWc+El8mL._SX342_SY445_.jpg',
+        'the power of habit': 'https://m.media-amazon.com/images/I/51Tlm0P2ZqL._SX342_SY445_.jpg',
+        'getting things done': 'https://m.media-amazon.com/images/I/51Tlm0P2ZqL._SX342_SY445_.jpg',
+        'the 7 habits': 'https://m.media-amazon.com/images/I/51Tlm0P2ZqL._SX342_SY445_.jpg',
+        'lean startup': 'https://m.media-amazon.com/images/I/51Tlm0P2ZqL._SX342_SY445_.jpg',
+        'zero to one': 'https://m.media-amazon.com/images/I/51Tlm0P2ZqL._SX342_SY445_.jpg',
+        'good to great': 'https://m.media-amazon.com/images/I/51Tlm0P2ZqL._SX342_SY445_.jpg',
+        'the lean startup': 'https://m.media-amazon.com/images/I/51Tlm0P2ZqL._SX342_SY445_.jpg',
+        'zero to one': 'https://m.media-amazon.com/images/I/51Tlm0P2ZqL._SX342_SY445_.jpg',
+        'the $100 startup': 'https://m.media-amazon.com/images/I/51Tlm0P2ZqL._SX342_SY445_.jpg',
+        'clean code': 'https://m.media-amazon.com/images/I/51Tlm0P2ZqL._SX342_SY445_.jpg',
+        'eloquent javascript': 'https://m.media-amazon.com/images/I/51Tlm0P2ZqL._SX342_SY445_.jpg',
+        'pragmatic programmer': 'https://m.media-amazon.com/images/I/51Tlm0P2ZqL._SX342_SY445_.jpg'
       };
       
       const titleLower = title.toLowerCase();
