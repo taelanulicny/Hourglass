@@ -95,6 +95,7 @@ function ResourcesTab({ focusAreas = [] }) {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [searchResults, setSearchResults] = React.useState(null);
   const [isSearching, setIsSearching] = React.useState(false);
+  const [selectedPodcast, setSelectedPodcast] = React.useState(null);
 
   // Handle AI search for resources
   const handleSearch = async () => {
@@ -207,7 +208,7 @@ function ResourcesTab({ focusAreas = [] }) {
             { title: "The 7 Habits", desc: "Highly effective people principles", url: "https://amazon.com/dp/1982137274", thumbnail: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=200&h=200&fit=crop", author: "Stephen Covey" }
           ]).map((book, index) => (
             <div key={index} className="flex-shrink-0 w-64">
-              <ResourceCard title={book.title} desc={book.desc} url={book.url} thumbnail={book.thumbnail} type="book" author={book.author} spotifyUrl={book.spotifyUrl} />
+              <ResourceCard title={book.title} desc={book.desc} url={book.url} thumbnail={book.thumbnail} type="book" author={book.author} spotifyUrl={book.spotifyUrl} onPodcastClick={setSelectedPodcast} />
             </div>
           ))}
         </div>
@@ -224,7 +225,7 @@ function ResourcesTab({ focusAreas = [] }) {
             { title: "LinkedIn Learning", desc: "Professional development courses", url: "https://linkedin.com/learning", thumbnail: "https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=200&h=200&fit=crop" }
           ]).map((social, index) => (
             <div key={index} className="flex-shrink-0 w-64">
-              <ResourceCard title={social.title} desc={social.desc} url={social.url} thumbnail={social.thumbnail} type="social" spotifyUrl={social.spotifyUrl} />
+              <ResourceCard title={social.title} desc={social.desc} url={social.url} thumbnail={social.thumbnail} type="social" spotifyUrl={social.spotifyUrl} onPodcastClick={setSelectedPodcast} />
             </div>
           ))}
         </div>
@@ -242,7 +243,7 @@ function ResourcesTab({ focusAreas = [] }) {
             { title: "Smart Passive Income", desc: "Pat Flynn on online business", url: "https://podcasts.apple.com/podcast/id383651043", spotifyUrl: "https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk", thumbnail: "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=200&h=200&fit=crop" }
           ]).map((podcast, index) => (
             <div key={index} className="flex-shrink-0 w-64">
-              <ResourceCard title={podcast.title} desc={podcast.desc} url={podcast.url} thumbnail={podcast.thumbnail} type="podcast" spotifyUrl={podcast.spotifyUrl} />
+              <ResourceCard title={podcast.title} desc={podcast.desc} url={podcast.url} thumbnail={podcast.thumbnail} type="podcast" spotifyUrl={podcast.spotifyUrl} onPodcastClick={setSelectedPodcast} />
             </div>
           ))}
         </div>
@@ -354,7 +355,7 @@ function FeedCard({ title, children, cta }) {
   );
 }
 
-  function ResourceCard({ title, desc, url, thumbnail, type = 'book', author, spotifyUrl }) {
+  function ResourceCard({ title, desc, url, thumbnail, type = 'book', author, spotifyUrl, onPodcastClick }) {
     const [imageLoaded, setImageLoaded] = React.useState(false);
     const [imageError, setImageError] = React.useState(false);
 
@@ -372,8 +373,14 @@ function FeedCard({ title, children, cta }) {
       }
     };
 
+    const handleClick = () => {
+      if (type === 'podcast' && onPodcastClick) {
+        onPodcastClick({ title, desc, url, spotifyUrl, thumbnail });
+      }
+    };
+
     return (
-      <div className="block rounded-xl border hover:shadow-sm bg-white h-32 flex flex-row">
+      <div className="block rounded-xl border hover:shadow-sm bg-white h-32 flex flex-row cursor-pointer" onClick={handleClick}>
         {/* Thumbnail on the left */}
         <div className="w-24 h-full bg-gray-100 rounded-l-xl flex items-center justify-center overflow-hidden relative flex-shrink-0">
           {thumbnail && !imageError ? (
@@ -410,43 +417,104 @@ function FeedCard({ title, children, cta }) {
             <div className="text-sm text-gray-500 line-clamp-2">{desc}</div>
           )}
           
-          {/* Platform buttons for podcasts */}
-          {type === 'podcast' && spotifyUrl && (
-            <div className="flex gap-2 mt-2">
+          {/* Button for all resource types */}
+          <div className="mt-2">
+            {type === 'podcast' ? (
+              <div className="bg-purple-500 hover:bg-purple-600 text-white text-xs px-3 py-1 rounded text-center transition-colors">
+                🎧 Listen
+              </div>
+            ) : (
               <a 
                 href={url} 
                 target="_blank" 
                 rel="noreferrer"
-                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded text-center transition-colors"
+                className="block bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-1 rounded text-center transition-colors"
+                onClick={(e) => e.stopPropagation()}
               >
-                🍎 Apple
+                Open
               </a>
-              <a 
-                href={spotifyUrl} 
-                target="_blank" 
-                rel="noreferrer"
-                className="flex-1 bg-green-500 hover:bg-green-600 text-white text-xs px-2 py-1 rounded text-center transition-colors"
-              >
-                🎵 Spotify
-              </a>
-            </div>
-          )}
-          
-          {/* Single link for non-podcasts or podcasts without Spotify */}
-          {type !== 'podcast' || !spotifyUrl ? (
-            <a 
-              href={url} 
-              target="_blank" 
-              rel="noreferrer"
-              className="mt-2 bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-1 rounded text-center transition-colors"
-            >
-              Open
-            </a>
-          ) : null}
+            )}
+          </div>
         </div>
       </div>
     );
   }
+
+// --- Podcast Platform Modal ------------------------------------------
+function PodcastPlatformModal({ podcast, isOpen, onClose }) {
+  if (!isOpen || !podcast) return null;
+
+  const platforms = [
+    {
+      name: 'Apple Podcasts',
+      icon: '🍎',
+      url: podcast.url,
+      color: 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+    },
+    {
+      name: 'Spotify',
+      icon: '🎵',
+      url: podcast.spotifyUrl,
+      color: 'bg-green-500 hover:bg-green-600 text-white'
+    },
+    {
+      name: 'Google Podcasts',
+      icon: '📱',
+      url: `https://podcasts.google.com/search/${encodeURIComponent(podcast.title)}`,
+      color: 'bg-blue-500 hover:bg-blue-600 text-white'
+    },
+    {
+      name: 'Pocket Casts',
+      icon: '🎧',
+      url: `https://pca.st/search?q=${encodeURIComponent(podcast.title)}`,
+      color: 'bg-orange-500 hover:bg-orange-600 text-white'
+    }
+  ];
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl max-w-md w-full p-6">
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-4">
+          <img 
+            src={podcast.thumbnail} 
+            alt={podcast.title}
+            className="w-12 h-12 rounded-lg object-cover"
+          />
+          <div>
+            <h3 className="font-semibold text-lg">{podcast.title}</h3>
+            <p className="text-sm text-gray-600">{podcast.desc}</p>
+          </div>
+        </div>
+
+        {/* Platform buttons */}
+        <div className="space-y-3 mb-6">
+          <p className="text-sm text-gray-500 font-medium">Listen on:</p>
+          {platforms.map((platform, index) => (
+            <a
+              key={index}
+              href={platform.url}
+              target="_blank"
+              rel="noreferrer"
+              className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${platform.color}`}
+            >
+              <span className="text-xl">{platform.icon}</span>
+              <span className="font-medium">{platform.name}</span>
+            </a>
+          ))}
+        </div>
+
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl font-medium transition-colors"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  );
+}
 
 // --- Focus Area Post (fake share) ------------------------------------------
 function FocusAreaPost({
@@ -954,6 +1022,13 @@ export default function ConnectPage() {
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
+
+      {/* Podcast Platform Modal */}
+      <PodcastPlatformModal 
+        podcast={selectedPodcast}
+        isOpen={!!selectedPodcast}
+        onClose={() => setSelectedPodcast(null)}
+      />
     </div>
   );
 }
