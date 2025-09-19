@@ -1092,7 +1092,7 @@ export default function ConnectPage() {
               aria-haspopup="listbox"
               aria-expanded={open}
               onClick={() => setOpen(v => !v)}
-              className="inline-flex items-center gap-2 text-lg font-semibold"
+              className="inline-flex items-center gap-2 text-lg font-bold tracking-widest uppercase"
             >
               <span>{tab}</span>
               <svg
