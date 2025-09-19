@@ -739,8 +739,8 @@ function CalendarContent() {
     // Where the day column starts relative to the page
     const rect = dayColRef.current.getBoundingClientRect();
     const pageTop = window.scrollY + rect.top;
-    // Aim to put the red line about 120px below the top of the viewport
-    const target = Math.max(0, pageTop + nowTopPx - 120);
+    // Aim to put the red line about 2 hours (240px) below the top of the viewport
+    const target = Math.max(0, pageTop + nowTopPx - 240);
     window.scrollTo({ top: target, behavior: 'smooth' });
   }, [nowTopPx, selectedDate]);
 
