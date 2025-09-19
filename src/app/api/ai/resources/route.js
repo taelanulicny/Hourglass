@@ -49,7 +49,12 @@ export async function POST(request) {
     role: 'system',
     content: `Find 5 books, 5 people, 5 podcasts for any topic. Return JSON only:
 
-CRITICAL: NEVER use "Twitter" - ALWAYS use "X" for the social media platform. NEVER use twitter.com URLs - ALWAYS use x.com URLs.
+MANDATORY RULES:
+- NEVER use "Twitter" anywhere in the response
+- ALWAYS use "X" instead of "Twitter" 
+- NEVER use twitter.com URLs
+- ALWAYS use x.com URLs
+- If a person has a Twitter account, refer to it as their "X" account
 
 {
   "books": [{"title": "Book", "desc": "Description", "url": "https://amazon.com/dp/123", "author": "Author"}],
