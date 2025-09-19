@@ -1081,14 +1081,6 @@ function HomeContent() {
     // --- Layout refactor for focus area view ---
     return (
       <div className="min-h-screen bg-white text-black px-4 pb-32 font-sans flex flex-col">
-        <div className="w-full">
-          <button
-            onClick={() => setSelectedFocusArea(null)}
-            className="mb-4 mt-6 px-4 py-2 w-full rounded bg-gray-200 text-[#4E4034] font-medium shadow hover:bg-gray-300"
-          >
-            ← Back to Dashboard
-          </button>
-        </div>
         <div className="flex flex-col gap-6 w-full max-w-md mx-auto">
           {/* Focus area module */}
           <div className="w-full flex flex-col gap-4">
