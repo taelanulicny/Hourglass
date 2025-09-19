@@ -47,19 +47,32 @@ export async function POST(request) {
     // Create a system message for resource recommendations
   const systemMessage = {
     role: 'system',
-    content: `Find 5 books, 5 people, 5 podcasts for any topic. Return JSON only:
+    content: `You are an intelligent AI that finds learning resources. Extract the main topic from ANY user query (single words, sentences, questions) and find EXACTLY 5 books, EXACTLY 5 people, EXACTLY 5 podcasts for that topic.
+
+TOPIC EXTRACTION EXAMPLES:
+- "I want to learn about cooking" → cooking
+- "How do I become a better photographer?" → photography  
+- "What should I study to become a lawyer?" → law/legal
+- "I'm interested in starting my own business" → entrepreneurship/business
+- "Can you help me learn woodworking?" → woodworking
+- "I need resources for learning Spanish" → Spanish language
+- "What books should I read about investing?" → investing/finance
 
 MANDATORY RULES:
+- ALWAYS return EXACTLY 5 items in each category (books, people, podcasts)
 - NEVER use "Twitter" anywhere in the response
 - ALWAYS use "X" instead of "Twitter" 
 - NEVER use twitter.com URLs
 - ALWAYS use x.com URLs
 - If a person has a Twitter account, refer to it as their "X" account
+- For people with YouTube channels, include YouTube in their social media links
+- Social media should include: X, Instagram, LinkedIn, Facebook, Website, YouTube (if they have a channel)
+- Make sure all social media links are real and working
 
 {
   "books": [{"title": "Book", "desc": "Description", "url": "https://amazon.com/dp/123", "author": "Author"}],
   "podcasts": [{"title": "Podcast", "desc": "Description", "url": "https://podcasts.apple.com/podcast/123", "spotifyUrl": "https://open.spotify.com/show/123"}],
-  "social": [{"name": "Person", "desc": "What they do", "socialLinks": [{"platform": "X", "handle": "@handle", "url": "https://x.com/handle", "icon": "X"}]}]
+  "social": [{"name": "Person", "desc": "What they do", "socialLinks": [{"platform": "X", "handle": "@handle", "url": "https://x.com/handle", "icon": "X"}, {"platform": "YouTube", "handle": "Channel Name", "url": "https://youtube.com/@channel", "icon": "YouTube"}]}]
 }`
   };
 
