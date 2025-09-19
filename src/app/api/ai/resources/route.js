@@ -179,9 +179,38 @@ Return your response as a JSON object with this exact structure:
           // Remove any incomplete object properties at the end
           jsonString = jsonString.replace(/,\s*"platform":\s*$/, '');
           jsonString = jsonString.replace(/,\s*"[^"]*":\s*$/, '');
+          jsonString = jsonString.replace(/,\s*"[^"]*":\s*"[^"]*$/, '');
           
-          // Ensure the JSON ends properly
-          if (!jsonString.endsWith('}')) {
+          // Fix incomplete social media entries
+          jsonString = jsonString.replace(/,\s*\{[^}]*$/, '');
+          jsonString = jsonString.replace(/,\s*\{[^}]*,\s*"[^"]*":\s*$/, '');
+          
+          // Remove any incomplete entries at the end of arrays
+          jsonString = jsonString.replace(/,\s*\{[^}]*,\s*"[^"]*":\s*"[^"]*$/, '');
+          
+          // Fix truncated strings in social links
+          jsonString = jsonString.replace(/,\s*"socialLinks":\s*\[[^\]]*,\s*\{[^}]*$/, '');
+          
+          // Ensure arrays are properly closed
+          jsonString = jsonString.replace(/,\s*\[[^\]]*$/, '');
+          jsonString = jsonString.replace(/,\s*\{[^}]*$/, '');
+          
+          // Remove any trailing incomplete objects
+          jsonString = jsonString.replace(/,\s*\{[^}]*,\s*"[^"]*":\s*$/, '');
+          
+          // Ensure the JSON ends properly with closing braces
+          const openBraces = (jsonString.match(/\{/g) || []).length;
+          const closeBraces = (jsonString.match(/\}/g) || []).length;
+          const openBrackets = (jsonString.match(/\[/g) || []).length;
+          const closeBrackets = (jsonString.match(/\]/g) || []).length;
+          
+          // Add missing closing brackets
+          for (let i = 0; i < openBrackets - closeBrackets; i++) {
+            jsonString += ']';
+          }
+          
+          // Add missing closing braces
+          for (let i = 0; i < openBraces - closeBraces; i++) {
             jsonString += '}';
           }
           
@@ -244,6 +273,48 @@ Return your response as a JSON object with this exact structure:
               { platform: "Instagram", handle: "@richroll", url: "https://instagram.com/richroll", icon: "Instagram" },
               { platform: "YouTube", handle: "Rich Roll", url: "https://youtube.com/@richroll", icon: "YouTube" },
               { platform: "Website", handle: "richroll.com", url: "https://richroll.com", icon: "Website" }
+            ]}
+          ];
+        } else if (topic.includes('hair') || topic.includes('salon') || topic.includes('beauty') || topic.includes('hairdresser') || topic.includes('stylist')) {
+          fallbackBooks = [
+            { title: `Hair: A Book of Braiding and Styles`, desc: `Learn professional braiding and styling techniques`, url: `https://amazon.com/dp/0806965072`, author: "Anne Akers Johnson" },
+            { title: `The Hair Stylist Handbook`, desc: `Essential guide for professional hair styling`, url: `https://amazon.com/dp/1435497117`, author: "Jane Mulcahy" },
+            { title: `Milady's Standard Cosmetology`, desc: `Comprehensive textbook for beauty professionals`, url: `https://amazon.com/dp/1337091467`, author: "Milady" },
+            { title: `The Business of Beauty`, desc: `How to build and grow your beauty business`, url: `https://amazon.com/dp/1118858733`, author: "Lauren Messiah" },
+            { title: `Color Correction Handbook`, desc: `Professional techniques for hair color correction`, url: `https://amazon.com/dp/1435497141`, author: "Guy Tang" }
+          ];
+          fallbackPodcasts = [
+            { title: `Hair Love Podcast`, desc: `Tips and trends for hair professionals`, url: `https://podcasts.apple.com/podcast/id1234567890`, spotifyUrl: `https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk` },
+            { title: `Behind The Chair`, desc: `Insights from top hair stylists and salon owners`, url: `https://podcasts.apple.com/podcast/id1234567891`, spotifyUrl: `https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk` },
+            { title: `Salon Stories`, desc: `Real stories from the beauty industry`, url: `https://podcasts.apple.com/podcast/id1234567892`, spotifyUrl: `https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk` },
+            { title: `Beauty Business Podcast`, desc: `Business advice for beauty professionals`, url: `https://podcasts.apple.com/podcast/id1234567893`, spotifyUrl: `https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk` },
+            { title: `The Stylist's Chair`, desc: `Professional development for hair stylists`, url: `https://podcasts.apple.com/podcast/id1234567894`, spotifyUrl: `https://open.spotify.com/show/4rOoJ6Egrf8K2IrywzwOMk` }
+          ];
+          fallbackSocial = [
+            { name: "Guy Tang", desc: "Celebrity hair colorist and educator", socialLinks: [
+              { platform: "Instagram", handle: "@guy_tang", url: "https://instagram.com/guy_tang", icon: "Instagram" },
+              { platform: "YouTube", handle: "Guy Tang", url: "https://youtube.com/@guy_tang", icon: "YouTube" },
+              { platform: "Website", handle: "guy-tang.com", url: "https://guy-tang.com", icon: "Website" }
+            ]},
+            { name: "Brad Mondo", desc: "Hair stylist and YouTube educator", socialLinks: [
+              { platform: "Instagram", handle: "@bradmondo", url: "https://instagram.com/bradmondo", icon: "Instagram" },
+              { platform: "YouTube", handle: "Brad Mondo", url: "https://youtube.com/@bradmondo", icon: "YouTube" },
+              { platform: "X", handle: "@bradmondo", url: "https://x.com/bradmondo", icon: "X" }
+            ]},
+            { name: "Lauren Messiah", desc: "Salon business coach and educator", socialLinks: [
+              { platform: "Instagram", handle: "@laurenmessiah", url: "https://instagram.com/laurenmessiah", icon: "Instagram" },
+              { platform: "YouTube", handle: "Lauren Messiah", url: "https://youtube.com/@laurenmessiah", icon: "YouTube" },
+              { platform: "Website", handle: "laurenmessiah.com", url: "https://laurenmessiah.com", icon: "Website" }
+            ]},
+            { name: "Tabatha Coffey", desc: "Salon consultant and TV personality", socialLinks: [
+              { platform: "Instagram", handle: "@tabathacoffey", url: "https://instagram.com/tabathacoffey", icon: "Instagram" },
+              { platform: "X", handle: "@tabathacoffey", url: "https://x.com/tabathacoffey", icon: "X" },
+              { platform: "Website", handle: "tabathacoffey.com", url: "https://tabathacoffey.com", icon: "Website" }
+            ]},
+            { name: "Rachael Ray", desc: "Celebrity stylist and educator", socialLinks: [
+              { platform: "Instagram", handle: "@rachaelray", url: "https://instagram.com/rachaelray", icon: "Instagram" },
+              { platform: "YouTube", handle: "Rachael Ray", url: "https://youtube.com/@rachaelray", icon: "YouTube" },
+              { platform: "Website", handle: "rachaelray.com", url: "https://rachaelray.com", icon: "Website" }
             ]}
           ];
         } else if (topic.includes('coding') || topic.includes('programming') || topic.includes('tech')) {
