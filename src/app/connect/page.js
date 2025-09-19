@@ -95,12 +95,14 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState(null);
 
   // Handle AI search for resources
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
     
     setIsSearching(true);
+    setSearchError(null);
     
     try {
       const response = await fetch('/api/ai/resources/', {
@@ -111,80 +113,16 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect }) {
         body: JSON.stringify({ query: searchQuery }),
       });
 
+      const data = await response.json();
+      
       if (!response.ok) {
-        throw new Error('Failed to fetch resources');
+        throw new Error(data.error || 'Failed to fetch resources');
       }
 
-      const data = await response.json();
       setSearchResults(data);
     } catch (error) {
       console.error('Error fetching resources:', error);
-      
-      // Fallback to simulated results if API fails - now provides 5 items per category
-      setSearchResults({
-        query: searchQuery,
-        books: [
-          { title: `${searchQuery} - Essential Guide`, desc: `Comprehensive resource for ${searchQuery}`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-guide` },
-          { title: `Mastering ${searchQuery}`, desc: `Advanced techniques and strategies`, url: `https://example.com/mastering-${searchQuery.replace(/\s+/g, '-').toLowerCase()}` },
-          { title: `${searchQuery} for Beginners`, desc: `Perfect starting point for newcomers`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-beginners` },
-          { title: `The Complete Guide to ${searchQuery}`, desc: `Everything you need to know`, url: `https://example.com/complete-${searchQuery.replace(/\s+/g, '-').toLowerCase()}` },
-          { title: `${searchQuery} Best Practices`, desc: `Proven methods and techniques`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-best-practices` }
-        ],
-        podcasts: [
-          { title: `${searchQuery} Podcast`, desc: `Weekly insights and discussions`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-podcast`, spotifyUrl: `https://open.spotify.com/search/${encodeURIComponent(searchQuery)}` },
-          { title: `The ${searchQuery} Show`, desc: `Expert interviews and tips`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-show`, spotifyUrl: `https://open.spotify.com/search/${encodeURIComponent(searchQuery)}%20show` },
-          { title: `${searchQuery} Talks`, desc: `Deep dives and conversations`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-talks`, spotifyUrl: `https://open.spotify.com/search/${encodeURIComponent(searchQuery)}%20talks` },
-          { title: `${searchQuery} Weekly`, desc: `Latest updates and trends`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-weekly`, spotifyUrl: `https://open.spotify.com/search/${encodeURIComponent(searchQuery)}%20weekly` },
-          { title: `${searchQuery} Insights`, desc: `Expert analysis and commentary`, url: `https://example.com/${searchQuery.replace(/\s+/g, '-').toLowerCase()}-insights`, spotifyUrl: `https://open.spotify.com/search/${encodeURIComponent(searchQuery)}%20insights` }
-        ],
-        social: [
-          { 
-            name: `${searchQuery} Expert 1`, 
-            desc: `Leading expert in ${searchQuery}`, 
-            socialLinks: [
-              { platform: "X", handle: `@${searchQuery.toLowerCase().replace(/\s+/g, '')}1`, url: `https://x.com/${searchQuery.toLowerCase().replace(/\s+/g, '')}1`, icon: "X" },
-              { platform: "LinkedIn", handle: `${searchQuery.toLowerCase().replace(/\s+/g, '-')}-expert`, url: `https://linkedin.com/in/${searchQuery.toLowerCase().replace(/\s+/g, '-')}-expert`, icon: "LinkedIn" },
-              { platform: "YouTube", handle: `${searchQuery} Expert`, url: `https://youtube.com/@${searchQuery.toLowerCase().replace(/\s+/g, '')}expert`, icon: "YouTube" }
-            ]
-          },
-          { 
-            name: `${searchQuery} Expert 2`, 
-            desc: `Thought leader in ${searchQuery}`, 
-            socialLinks: [
-              { platform: "X", handle: `@${searchQuery.toLowerCase().replace(/\s+/g, '')}2`, url: `https://x.com/${searchQuery.toLowerCase().replace(/\s+/g, '')}2`, icon: "X" },
-              { platform: "Instagram", handle: `@${searchQuery.toLowerCase().replace(/\s+/g, '')}expert`, url: `https://instagram.com/${searchQuery.toLowerCase().replace(/\s+/g, '')}expert`, icon: "Instagram" },
-              { platform: "Website", handle: `${searchQuery.toLowerCase().replace(/\s+/g, '')}expert.com`, url: `https://${searchQuery.toLowerCase().replace(/\s+/g, '')}expert.com`, icon: "Website" }
-            ]
-          },
-          { 
-            name: `${searchQuery} Expert 3`, 
-            desc: `Innovator in ${searchQuery}`, 
-            socialLinks: [
-              { platform: "X", handle: `@${searchQuery.toLowerCase().replace(/\s+/g, '')}3`, url: `https://x.com/${searchQuery.toLowerCase().replace(/\s+/g, '')}3`, icon: "X" },
-              { platform: "LinkedIn", handle: `${searchQuery.toLowerCase().replace(/\s+/g, '-')}-innovator`, url: `https://linkedin.com/in/${searchQuery.toLowerCase().replace(/\s+/g, '-')}-innovator`, icon: "LinkedIn" },
-              { platform: "Website", handle: `${searchQuery.toLowerCase().replace(/\s+/g, '')}innovator.com`, url: `https://${searchQuery.toLowerCase().replace(/\s+/g, '')}innovator.com`, icon: "Website" }
-            ]
-          },
-          { 
-            name: `${searchQuery} Expert 4`, 
-            desc: `Educator and mentor in ${searchQuery}`, 
-            socialLinks: [
-              { platform: "X", handle: `@${searchQuery.toLowerCase().replace(/\s+/g, '')}4`, url: `https://x.com/${searchQuery.toLowerCase().replace(/\s+/g, '')}4`, icon: "X" },
-              { platform: "LinkedIn", handle: `${searchQuery.toLowerCase().replace(/\s+/g, '-')}-educator`, url: `https://linkedin.com/in/${searchQuery.toLowerCase().replace(/\s+/g, '-')}-educator`, icon: "LinkedIn" },
-              { platform: "YouTube", handle: `${searchQuery} Educator`, url: `https://youtube.com/@${searchQuery.toLowerCase().replace(/\s+/g, '')}educator`, icon: "YouTube" }
-            ]
-          },
-          { 
-            name: `${searchQuery} Expert 5`, 
-            desc: `Community leader in ${searchQuery}`, 
-            socialLinks: [
-              { platform: "X", handle: `@${searchQuery.toLowerCase().replace(/\s+/g, '')}5`, url: `https://x.com/${searchQuery.toLowerCase().replace(/\s+/g, '')}5`, icon: "X" },
-              { platform: "Instagram", handle: `@${searchQuery.toLowerCase().replace(/\s+/g, '')}leader`, url: `https://instagram.com/${searchQuery.toLowerCase().replace(/\s+/g, '')}leader`, icon: "Instagram" },
-              { platform: "Website", handle: `${searchQuery.toLowerCase().replace(/\s+/g, '')}community.com`, url: `https://${searchQuery.toLowerCase().replace(/\s+/g, '')}community.com`, icon: "Website" }
-            ]
-          }
-        ]
-      });
+      setSearchError(error.message);
     } finally {
       setIsSearching(false);
     }
@@ -233,11 +171,19 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect }) {
                 setSearchQuery('');
                 setSearchResults(null);
                 setIsSearching(false);
+                setSearchError(null);
               }}
               className="text-xs text-[#8CA4AF] hover:text-[#7A939E] font-medium"
             >
               Clear
             </button>
+          </div>
+        )}
+        {searchError && (
+          <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg">
+            <div className="text-xs text-red-600">
+              Error: {searchError}
+            </div>
           </div>
         )}
       </div>
