@@ -1154,7 +1154,7 @@ function CalendarContent() {
       {/* FAB */}
       <button
         onClick={() => { setDraft({ ...DEFAULT_DRAFT, ...nextHourDefaults(new Date()), dateYMD: ymd(selectedDate) }); setShowModal(true); }}
-        className="fixed bottom-20 right-4 bg-[#8CA4AF] text-white rounded-full w-12 h-12 flex items-center justify-center text-2xl shadow-md"
+        className="fixed bottom-20 right-4 bg-[#8CA4AF] text-white rounded-full w-12 h-12 flex items-center justify-center text-2xl shadow-md z-[70]"
         aria-label="Add Event"
       >
         +
