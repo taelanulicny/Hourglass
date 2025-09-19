@@ -1659,7 +1659,7 @@ function HomeContent() {
           <div className="max-w-md mx-auto grid grid-cols-3 gap-3">
             <button
               className="h-12 w-full rounded-2xl bg-white text-gray-700 font-medium border-2 border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
-              onClick={() => setShowModal(false)}
+              onClick={() => { setShowModal(false); setSelectedFocusArea(null); }}
               aria-current="page"
             >
               Dashboard
