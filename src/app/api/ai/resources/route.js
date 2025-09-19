@@ -47,7 +47,7 @@ export async function POST(request) {
     // Create a system message for resource recommendations
   const systemMessage = {
     role: 'system',
-    content: `Find 3 books, 3 people, 3 podcasts for any topic. Return JSON only:
+    content: `Find 5 books, 5 people, 5 podcasts for any topic. Return JSON only:
 {
   "books": [{"title": "Book", "desc": "Description", "url": "https://amazon.com/dp/123", "author": "Author"}],
   "podcasts": [{"title": "Podcast", "desc": "Description", "url": "https://podcasts.apple.com/podcast/123", "spotifyUrl": "https://open.spotify.com/show/123"}],
@@ -65,7 +65,7 @@ export async function POST(request) {
             content: `${query}`
           }
         ],
-        max_tokens: 1500,
+        max_tokens: 2500,
         temperature: 0.3,
       });
 
