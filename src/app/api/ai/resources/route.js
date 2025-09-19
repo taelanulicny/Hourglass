@@ -48,6 +48,9 @@ export async function POST(request) {
   const systemMessage = {
     role: 'system',
     content: `Find 5 books, 5 people, 5 podcasts for any topic. Return JSON only:
+
+CRITICAL: NEVER use "Twitter" - ALWAYS use "X" for the social media platform. NEVER use twitter.com URLs - ALWAYS use x.com URLs.
+
 {
   "books": [{"title": "Book", "desc": "Description", "url": "https://amazon.com/dp/123", "author": "Author"}],
   "podcasts": [{"title": "Podcast", "desc": "Description", "url": "https://podcasts.apple.com/podcast/123", "spotifyUrl": "https://open.spotify.com/show/123"}],
