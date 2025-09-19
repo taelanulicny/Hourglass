@@ -1296,7 +1296,6 @@ function HomeContent() {
                         Add
                       </button>
                     </div>
-                    <div className="text-[11px] text-gray-500 mt-2">Adjust your time log for today</div>
                   </div>
                 </div>
 
