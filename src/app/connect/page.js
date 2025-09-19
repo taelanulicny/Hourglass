@@ -1144,15 +1144,8 @@ export default function ConnectPage() {
           </button>
         </div>
 
-        {/* Subtitle */}
-        <p className="text-sm text-gray-500 mb-2 text-center">
-          {tab === 'Close Friends' && "See friends' progress and discover templates & creators."}
-          {tab === 'Challenges' && "Join challenges and track your progress with friends."}
-          {tab === 'Resources' && "Find helpful resources and tools for your focus areas."}
-          {tab === 'Templates' && "Browse and use time management templates from the community."}
-        </p>
 
-        {/* Divider line right under subtitle */}
+        {/* Divider line */}
         <hr className="border-gray-200 mb-3" />
       </header>
 
