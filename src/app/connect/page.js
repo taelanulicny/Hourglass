@@ -282,7 +282,7 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect }) {
         <h3 className="text-lg font-semibold mb-3">Podcasts</h3>
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
           {(searchResults?.podcasts || [
-            { title: "Founders", desc: "Biographies of the world's greatest entrepreneurs by David Senra", url: "https://podcasts.apple.com/podcast/id1141877104", spotifyUrl: "https://open.spotify.com/search/Founders%20David%20Senra" },
+            { title: "Founders", desc: "Biographies of the world's greatest entrepreneurs by David Senra", url: "https://podcasts.apple.com/podcast/id1141877104", spotifyUrl: "https://open.spotify.com/search/Founders%20podcast" },
             { title: "The Tim Ferriss Show", desc: "Interviews with world-class performers", url: "https://podcasts.apple.com/podcast/id863897795", spotifyUrl: "https://open.spotify.com/search/The%20Tim%20Ferriss%20Show" },
             { title: "How I Built This", desc: "Stories behind successful companies", url: "https://podcasts.apple.com/podcast/id1154105909", spotifyUrl: "https://open.spotify.com/search/How%20I%20Built%20This" },
             { title: "The GaryVee Audio Experience", desc: "Business insights and motivational content", url: "https://podcasts.apple.com/podcast/id928159684", spotifyUrl: "https://open.spotify.com/search/The%20GaryVee%20Audio%20Experience" },
