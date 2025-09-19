@@ -304,10 +304,7 @@ function AiHelper({ focusAreaId, focusContext }) {
           className="flex items-center gap-1"
         >
           {loading ? (
-            <>
-              <div className="ai-loading w-3 h-3"></div>
-              <span>Sending...</span>
-            </>
+            <div className="ai-loading w-3 h-3"></div>
           ) : (
             <>
               <span>Send</span>
