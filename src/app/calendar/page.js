@@ -11,6 +11,33 @@ const useClientOnly = () => {
   return isClient;
 };
 
+// Hook to get safe area insets for iOS devices
+const useSafeAreaInsets = () => {
+  const [insets, setInsets] = useState({ top: 0, right: 0, bottom: 0, left: 0 });
+  const isClient = useClientOnly();
+
+  useEffect(() => {
+    if (!isClient) return;
+
+    // Check if we're on iOS and get safe area insets
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    
+    if (isIOS) {
+      // Get safe area insets from CSS environment variables
+      const style = getComputedStyle(document.documentElement);
+      const top = parseInt(style.getPropertyValue('env(safe-area-inset-top)') || '0', 10);
+      const right = parseInt(style.getPropertyValue('env(safe-area-inset-right)') || '0', 10);
+      const bottom = parseInt(style.getPropertyValue('env(safe-area-inset-bottom)') || '0', 10);
+      const left = parseInt(style.getPropertyValue('env(safe-area-inset-left)') || '0', 10);
+      
+      setInsets({ top, right, bottom, left });
+    }
+  }, [isClient]);
+
+  return insets;
+};
+
 // Hours shown in the day view (24h: 0..23)
 const HOURS = Array.from({ length: 24 }, (_, i) => i); // 24h: 0..23
 const DAYS = ["Su","M","Tu","W","Th","F","Sa"]; // for the top strip only
@@ -282,6 +309,7 @@ function CalendarContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isClient = useClientOnly(); // Add client-side only rendering
+  const insets = useSafeAreaInsets(); // Get safe area insets for iOS
 
   const today = useMemo(() => {
     const d = new Date();
@@ -929,7 +957,7 @@ function CalendarContent() {
   return (
     <div className="min-h-screen bg-white text-[#4E4034] pb-24">
       {/* Fixed header and day selector - LOCKED */}
-      <div className="fixed top-0 left-0 right-0 bg-[#F7F6F3] z-50">
+      <div className="fixed top-0 left-0 right-0 bg-[#F7F6F3] z-50" style={{ paddingTop: `${insets.top}px` }}>
         {/* Top bar */}
         <header className="px-4 py-3 shadow-sm flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -999,7 +1027,7 @@ function CalendarContent() {
       </div>
 
       {/* Scrollable calendar area */}
-      <div className="flex-1 overflow-y-auto pt-40">
+      <div className="flex-1 overflow-y-auto" style={{ paddingTop: `${160 + insets.top}px` }}>
         {/* Day view grid (hours gutter + single day column) */}
         <div ref={gridRootRef} className="relative px-2">
         <div className="grid grid-cols-[56px_minmax(0,1fr)]">
@@ -1154,14 +1182,15 @@ function CalendarContent() {
       {/* FAB */}
       <button
         onClick={() => { setDraft({ ...DEFAULT_DRAFT, ...nextHourDefaults(new Date()), dateYMD: ymd(selectedDate) }); setShowModal(true); }}
-        className="fixed bottom-20 right-4 bg-[#8CA4AF] text-white rounded-full w-12 h-12 flex items-center justify-center text-2xl shadow-md z-[70]"
+        className="fixed right-4 bg-[#8CA4AF] text-white rounded-full w-12 h-12 flex items-center justify-center text-2xl shadow-md z-[70]"
+        style={{ bottom: `${80 + insets.bottom}px` }}
         aria-label="Add Event"
       >
         +
       </button>
 
       {/* Bottom buttons: Dashboard | Calendar | Discover */}
-      <div className="fixed bottom-0 left-0 right-0 p-3 pb-7 z-50">
+      <div className="fixed left-0 right-0 p-3 z-50" style={{ bottom: `${insets.bottom}px`, paddingBottom: `${28 + insets.bottom}px` }}>
         <div className="max-w-md mx-auto grid grid-cols-3 gap-3">
           <button
             onClick={() => router.push('/')}

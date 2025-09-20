@@ -20,6 +20,16 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Safe area support for iOS devices */
+@supports (padding: max(0px)) {
+  .safe-area-padding {
+    padding-top: max(env(safe-area-inset-top), 0px);
+    padding-right: max(env(safe-area-inset-right), 0px);
+    padding-bottom: max(env(safe-area-inset-bottom), 0px);
+    padding-left: max(env(safe-area-inset-left), 0px);
+  }
+}
+
 /* Custom utilities for mobile-first design */
 .scrollbar-hide {
   -ms-overflow-style: none;  /* Internet Explorer 10+ */
