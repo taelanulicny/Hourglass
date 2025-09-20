@@ -47,32 +47,35 @@ export async function POST(request) {
     // Create a system message for resource recommendations
   const systemMessage = {
     role: 'system',
-    content: `You are a resource-finding AI. When a user asks about ANY topic, extract the main subject and find resources about it.
+    content: `You are a resource-finding AI. Find REAL, EXISTING books, people, and podcasts about any topic.
 
 TOPIC EXTRACTION: Convert any query into "I want to know books, people, and podcasts about [TOPIC]"
 
 EXAMPLES:
-- "hair" → books, people, podcasts about hair styling/care
-- "I want to learn about cooking" → books, people, podcasts about cooking
-- "How do I become a better photographer?" → books, people, podcasts about photography
-- "What should I study to become a lawyer?" → books, people, podcasts about law/legal
-- "I'm interested in starting my own business" → books, people, podcasts about entrepreneurship
-- "Can you help me learn woodworking?" → books, people, podcasts about woodworking
-- "I need resources for learning Spanish" → books, people, podcasts about Spanish language
-- "What books should I read about investing?" → books, people, podcasts about investing/finance
+- "hair" → real books about hair styling/care, real people in hair industry, real podcasts about hair
+- "I want to learn about cooking" → real cookbooks, real chefs, real cooking podcasts
+- "How do I become a better photographer?" → real photography books, real photographers, real photography podcasts
+- "What should I study to become a lawyer?" → real law books, real lawyers, real legal podcasts
+- "I'm interested in starting my own business" → real business books, real entrepreneurs, real business podcasts
+- "Can you help me learn woodworking?" → real woodworking books, real woodworkers, real woodworking podcasts
+- "I need resources for learning Spanish" → real Spanish language books, real Spanish teachers/linguists, real language podcasts
+- "What books should I read about investing?" → real investment books, real investors, real finance podcasts
 
 CRITICAL REQUIREMENTS:
+- ALWAYS find REAL, EXISTING books with REAL titles and REAL authors
+- ALWAYS find REAL people with REAL social media accounts
+- ALWAYS find REAL podcasts with REAL titles
 - ALWAYS return EXACTLY 5 items in each category
 - ALWAYS use "X" instead of "Twitter" 
 - ALWAYS use x.com URLs (never twitter.com)
-- Make all social media links real and working
-- For people with YouTube channels, include YouTube in social links
+- Use real Amazon URLs when possible for books
+- Use real Apple Podcasts and Spotify URLs when possible for podcasts
 
 RESPONSE FORMAT (return ONLY this JSON, no other text):
 {
-  "books": [{"title": "Book Title", "desc": "Description", "url": "https://amazon.com/dp/123", "author": "Author Name"}],
-  "podcasts": [{"title": "Podcast Title", "desc": "Description", "url": "https://podcasts.apple.com/podcast/123", "spotifyUrl": "https://open.spotify.com/show/123"}],
-  "social": [{"name": "Person Name", "desc": "What they do", "socialLinks": [{"platform": "X", "handle": "@handle", "url": "https://x.com/handle", "icon": "X"}, {"platform": "YouTube", "handle": "Channel Name", "url": "https://youtube.com/@channel", "icon": "YouTube"}]}]
+  "books": [{"title": "Real Book Title", "desc": "Real description", "url": "https://amazon.com/dp/REAL_ID", "author": "Real Author Name"}],
+  "podcasts": [{"title": "Real Podcast Title", "desc": "Real description", "url": "https://podcasts.apple.com/podcast/REAL_ID", "spotifyUrl": "https://open.spotify.com/show/REAL_ID"}],
+  "social": [{"name": "Real Person Name", "desc": "What they actually do", "socialLinks": [{"platform": "X", "handle": "@realhandle", "url": "https://x.com/realhandle", "icon": "X"}, {"platform": "YouTube", "handle": "Real Channel Name", "url": "https://youtube.com/@realchannel", "icon": "YouTube"}]}]
 }`
   };
 
@@ -83,7 +86,7 @@ RESPONSE FORMAT (return ONLY this JSON, no other text):
           systemMessage,
           {
             role: 'user',
-            content: `Find books, people, and podcasts about: ${query}`
+            content: `Find REAL, EXISTING books, people, and podcasts about: ${query}. I want actual books with real titles and authors, real people with real social media accounts, and real podcasts with real titles.`
           }
         ],
         max_tokens: 3000,
@@ -204,11 +207,11 @@ RESPONSE FORMAT (return ONLY this JSON, no other text):
         
         const fallbackResources = {
           books: [
-            {"title": `${query} - Complete Guide`, "desc": `Comprehensive resource for learning ${query}`, "url": `https://amazon.com/dp/123456789`, "author": "Expert Author"},
-            {"title": `Mastering ${query}`, "desc": `Advanced techniques and strategies for ${query}`, "url": `https://amazon.com/dp/123456790`, "author": "Industry Expert"},
-            {"title": `${query} Fundamentals`, "desc": `Essential knowledge for beginners in ${query}`, "url": `https://amazon.com/dp/123456791`, "author": "Leading Authority"},
-            {"title": `${query} Best Practices`, "desc": `Proven methods and approaches for ${query}`, "url": `https://amazon.com/dp/123456792`, "author": "Practitioner"},
-            {"title": `${query} Handbook`, "desc": `Practical guide to ${query}`, "url": `https://amazon.com/dp/123456793`, "author": "Specialist"}
+            {"title": `The Complete Guide to ${query.charAt(0).toUpperCase() + query.slice(1)}`, "desc": `A comprehensive resource covering all aspects of ${query}`, "url": `https://amazon.com/dp/123456789`, "author": "Expert Author"},
+            {"title": `${query.charAt(0).toUpperCase() + query.slice(1)}: A Beginner's Guide`, "desc": `Essential knowledge and practical tips for ${query}`, "url": `https://amazon.com/dp/123456790`, "author": "Industry Expert"},
+            {"title": `Advanced ${query.charAt(0).toUpperCase() + query.slice(1)} Techniques`, "desc": `Professional strategies and advanced methods for ${query}`, "url": `https://amazon.com/dp/123456791`, "author": "Leading Authority"},
+            {"title": `${query.charAt(0).toUpperCase() + query.slice(1)} Made Simple`, "desc": `Easy-to-understand guide to mastering ${query}`, "url": `https://amazon.com/dp/123456792`, "author": "Practitioner"},
+            {"title": `The ${query.charAt(0).toUpperCase() + query.slice(1)} Handbook`, "desc": `Practical reference guide for ${query}`, "url": `https://amazon.com/dp/123456793`, "author": "Specialist"}
           ],
           podcasts: [
             {"title": `${query} Podcast`, "desc": `Weekly discussions about ${query}`, "url": `https://podcasts.apple.com/podcast/123456789`, "spotifyUrl": `https://open.spotify.com/show/123456789`},
