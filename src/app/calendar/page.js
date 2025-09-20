@@ -964,7 +964,7 @@ function CalendarContent() {
         {/* Main header content */}
         <div className="bg-[#F7F6F3]" style={{ marginTop: `${insets.top}px` }}>
           {/* Top bar */}
-          <header className="px-4 pt-8 pb-3 shadow-sm flex items-center justify-between">
+          <header className="px-4 pt-16 pb-3 shadow-sm flex items-center justify-between">
         <div className="flex items-center gap-2">
           <button 
             className="text-lg px-2" 
@@ -1033,7 +1033,7 @@ function CalendarContent() {
       </div>
 
       {/* Scrollable calendar area */}
-      <div className="flex-1 overflow-y-auto" style={{ paddingTop: `${188}px` }}>
+      <div className="flex-1 overflow-y-auto" style={{ paddingTop: `${220}px` }}>
         {/* Day view grid (hours gutter + single day column) */}
         <div ref={gridRootRef} className="relative px-2">
         <div className="grid grid-cols-[56px_minmax(0,1fr)]">
