@@ -336,7 +336,7 @@ function NotesContent() {
     return (
       <div className="min-h-screen bg-[#F7F6F3] text-[#4E4034]">
         {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-4 py-3">
+        <header className="bg-white border-b border-gray-200 px-4 pt-16 pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <button
@@ -352,7 +352,7 @@ function NotesContent() {
           </div>
         </header>
         
-        <div className="flex h-[calc(100vh-73px)]">
+        <div className="flex h-[calc(100vh-109px)]">
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <div className="text-lg font-semibold mb-2 text-[#4E4034]">Loading Notes...</div>
@@ -506,7 +506,7 @@ function NotesContent() {
   return (
     <div className="min-h-screen bg-[#F7F6F3] text-[#4E4034]">
       {/* Header */}
-      <header className="bg-[#F7F6F3] border-b border-gray-200 px-4 py-3">
+      <header className="bg-[#F7F6F3] border-b border-gray-200 px-4 pt-16 pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
@@ -558,7 +558,7 @@ function NotesContent() {
         </div>
       </header>
 
-      <div className="flex h-[calc(100vh-73px)]">
+      <div className="flex h-[calc(100vh-109px)]">
         {/* Sidebar */}
         <div className={`${sidebarCollapsed ? 'w-0 overflow-hidden' : 'w-64'} bg-white border-r border-gray-200 flex flex-col transition-all duration-300 ease-in-out`}>
           {/* Search */}
