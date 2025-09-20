@@ -1081,7 +1081,7 @@ function HomeContent() {
     // --- Layout refactor for focus area view ---
     return (
       <div className="min-h-screen bg-white text-black px-4 pb-32 font-sans flex flex-col">
-        <div className="flex flex-col gap-6 w-full max-w-md mx-auto">
+        <div className="flex flex-col gap-6 w-full max-w-md mx-auto pt-16">
           {/* Focus area module */}
           <div className="w-full flex flex-col gap-4">
             <div className="bg-white rounded-xl shadow-md p-6">

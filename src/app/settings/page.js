@@ -84,7 +84,7 @@ export default function SettingsPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-900">
       {/* Header */}
       <header className="bg-white/95 backdrop-blur-lg shadow-sm border-b border-gray-100">
-        <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center justify-between px-4 pt-16 pb-3">
           <button
             onClick={() => router.back()}
             className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
