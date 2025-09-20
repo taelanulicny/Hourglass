@@ -1080,7 +1080,7 @@ export default function ConnectPage() {
   return (
     <div className="min-h-screen bg-[#F7F6F3] text-[#4E4034] pb-36">
       {/* Header */}
-      <header className="px-4 py-3">
+      <header className="px-4 pt-16 pb-3">
         <div className="flex items-center justify-between mb-2">
           {/* Left: Empty space */}
           <div className="w-10 h-10"></div>

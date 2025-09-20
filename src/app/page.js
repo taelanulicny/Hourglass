@@ -1677,7 +1677,7 @@ function HomeContent() {
   return (
     <>
             <div className="min-h-screen bg-white text-gray-900 pb-40 font-sans flex flex-col gap-6">
-      <header className="w-full pt-12 pb-3 px-4 flex justify-between items-center">
+      <header className="w-full pt-16 pb-3 px-4 flex justify-between items-center">
         <div className="flex items-center gap-2">
           <button
             className={`text-gray-700 text-xl px-3 ${offset <= MIN_OFFSET ? 'opacity-30 cursor-not-allowed' : 'hover:text-gray-900'}`}
