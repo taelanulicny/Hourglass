@@ -8,6 +8,11 @@ const PWAInstallPrompt = dynamic(() => import("../components/PWAInstallPrompt"),
   loading: () => null
 });
 
+const SwipeNavigation = dynamic(() => import("../components/SwipeNavigation"), {
+  ssr: false,
+  loading: () => null
+});
+
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -73,6 +78,7 @@ export default function RootLayout({ children }) {
         className={`${inter.variable} antialiased`}
       >
         {children}
+        <SwipeNavigation />
         <PWAInstallPrompt />
       </body>
     </html>
