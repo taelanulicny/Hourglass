@@ -1160,7 +1160,7 @@ export default function ConnectPage() {
       </main>
 
       {/* Bottom nav (matches your style) */}
-      <nav className="fixed bottom-0 left-0 right-0 p-3 pb-7 z-50">
+      <nav className="fixed bottom-0 left-0 right-0 p-3 pb-7 z-[9999]">
         <div className="max-w-md mx-auto grid grid-cols-3 gap-3">
           <Link
             href="/"

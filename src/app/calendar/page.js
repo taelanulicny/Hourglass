@@ -1196,7 +1196,7 @@ function CalendarContent() {
       </button>
 
       {/* Bottom buttons: Dashboard | Calendar | Discover */}
-      <div className="fixed left-0 right-0 p-3 z-50" style={{ bottom: `${insets.bottom}px`, paddingBottom: `${28 + insets.bottom}px` }}>
+      <div className="fixed left-0 right-0 p-3 z-[9999]" style={{ bottom: `${insets.bottom}px`, paddingBottom: `${28 + insets.bottom}px` }}>
         <div className="max-w-md mx-auto grid grid-cols-3 gap-3">
           <button
             onClick={() => router.push('/')}
