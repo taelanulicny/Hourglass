@@ -729,6 +729,8 @@ function CalendarContent() {
     moved: false,
   });
   const dragDelayTimerRef = useRef(null); // timer for drag delay
+  const startTouchRef = useRef(null);
+  const unmountedRef = useRef(false);
 
   const dayStartMs = useMemo(() => {
     if (!selectedDate) return 0;
@@ -805,6 +807,7 @@ function CalendarContent() {
     };
 
     const onUp = () => {
+      if (unmountedRef.current) return;
       // Commit only once when the drag finishes
       const moved = dragRef.current.moved;
       const finalStart = dragRef.current.lastStartMs;
@@ -841,6 +844,34 @@ function CalendarContent() {
     };
   }, []);
 
+  // Add new effect (after dragDelay cleanup effect):
+  useEffect(() => {
+    const hardReset = () => {
+      if (dragDelayTimerRef.current) {
+        clearTimeout(dragDelayTimerRef.current);
+        dragDelayTimerRef.current = null;
+      }
+      setDraggingId(null);
+      setDragGhostTop(null);
+      document.body.style.touchAction = '';
+      document.body.style.userSelect = '';
+      setDragDelayActive(false);
+      setDragDelayEventId(null);
+    };
+
+    window.addEventListener('pagehide', hardReset);
+    window.addEventListener('blur', hardReset);
+    document.addEventListener('visibilitychange', hardReset);
+
+    return () => {
+      unmountedRef.current = true;
+      window.removeEventListener('pagehide', hardReset);
+      window.removeEventListener('blur', hardReset);
+      document.removeEventListener('visibilitychange', hardReset);
+      hardReset();
+    };
+  }, []);
+
   // Clear drag delay when dragging actually starts
   useEffect(() => {
     if (draggingId) {
@@ -857,26 +888,23 @@ function CalendarContent() {
     if (!isClient) return;
 
     const eventElements = document.querySelectorAll('.calendar-event');
+    const MOVE_TOL = 10;
     
     const onTouchStart = (e) => {
       const eventId = e.currentTarget.getAttribute('data-event-id');
       if (!eventId) return;
-      
       const ev = events.find(x => x.id === eventId);
       if (!ev) return;
-      
-      // Clear any existing drag delay timer
-      if (dragDelayTimerRef.current) {
-        clearTimeout(dragDelayTimerRef.current);
-      }
-      
-      // Start drag delay - user must hold for 500ms before dragging starts
+      if (dragDelayTimerRef.current) clearTimeout(dragDelayTimerRef.current);
+
+      const t = e.touches[0];
+      startTouchRef.current = { x: t.clientX, y: t.clientY };
+
       setDragDelayActive(true);
       setDragDelayEventId(ev.id);
-      
-      const t = e.touches[0];
+
       dragDelayTimerRef.current = setTimeout(() => {
-        // After 500ms, allow dragging to begin
+        if (unmountedRef.current) return;
         const dur = ev.end - ev.start;
         setDraggingId(ev.id);
         setDragDelayActive(false);
@@ -895,39 +923,46 @@ function CalendarContent() {
       }, 500);
     };
 
-    const onTouchEnd = (e) => {
-      // Cancel drag delay if user releases before 500ms
-      if (dragDelayActive && dragDelayEventId) {
+    const onTouchMove = (e) => {
+      if (!dragDelayActive || !dragDelayEventId) return;
+      const t = e.touches && e.touches[0];
+      if (!t) return;
+      const sx = startTouchRef.current?.x ?? t.clientX;
+      const sy = startTouchRef.current?.y ?? t.clientY;
+      const moved = Math.hypot(t.clientX - sx, t.clientY - sy) > MOVE_TOL;
+      if (moved) {
         if (dragDelayTimerRef.current) {
           clearTimeout(dragDelayTimerRef.current);
+          dragDelayTimerRef.current = null;
         }
         setDragDelayActive(false);
         setDragDelayEventId(null);
       }
     };
 
-    const onTouchCancel = (e) => {
-      // Cancel drag delay if touch is cancelled
+    const onTouchEnd = () => {
       if (dragDelayActive && dragDelayEventId) {
-        if (dragDelayTimerRef.current) {
-          clearTimeout(dragDelayTimerRef.current);
-        }
+        if (dragDelayTimerRef.current) clearTimeout(dragDelayTimerRef.current);
         setDragDelayActive(false);
         setDragDelayEventId(null);
       }
     };
+
+    const onTouchCancel = onTouchEnd;
 
     eventElements.forEach(el => {
       el.addEventListener('touchstart', onTouchStart, { passive: false });
+      el.addEventListener('touchmove', onTouchMove, { passive: true });
       el.addEventListener('touchend', onTouchEnd, { passive: false });
       el.addEventListener('touchcancel', onTouchCancel, { passive: false });
     });
 
     return () => {
       eventElements.forEach(el => {
-        el.removeEventListener('touchstart', onTouchStart, { passive: false });
-        el.removeEventListener('touchend', onTouchEnd, { passive: false });
-        el.removeEventListener('touchcancel', onTouchCancel, { passive: false });
+        el.removeEventListener('touchstart', onTouchStart);
+        el.removeEventListener('touchmove', onTouchMove);
+        el.removeEventListener('touchend', onTouchEnd);
+        el.removeEventListener('touchcancel', onTouchCancel);
       });
     };
   }, [isClient, events, dayStartMs, pxPerHour, dragDelayActive, dragDelayEventId]);
@@ -1116,12 +1151,10 @@ function CalendarContent() {
                     borderLeft: `3px solid ${renderColor}`,
                     willChange: draggingId === ev.id ? 'top' : undefined,
                     opacity: dragDelayActive && dragDelayEventId === ev.id ? 0.7 : 1,
+                    touchAction: draggingId === ev.id ? 'none' : 'pan-y',
                   }}
                   title={ev.title}
                   onMouseDown={(e) => {
-                    // Only prevent default if the event is cancelable
-                    if (e.cancelable) e.preventDefault();
-                    
                     // Clear any existing drag delay timer
                     if (dragDelayTimerRef.current) {
                       clearTimeout(dragDelayTimerRef.current);
@@ -1132,6 +1165,7 @@ function CalendarContent() {
                     setDragDelayEventId(ev.id);
                     
                     dragDelayTimerRef.current = setTimeout(() => {
+                      if (unmountedRef.current) return;
                       // After 500ms, allow dragging to begin
                       const dur = ev.end - ev.start;
                       setDraggingId(ev.id);
