@@ -2272,6 +2272,31 @@ function HomeContent() {
       </svg>
     </button>
 
+    {/* FALLBACK navigation - always visible with highest z-index */}
+    <div className="fixed bottom-0 left-0 right-0 p-3 pb-7 z-[99999]">
+      <div className="max-w-md mx-auto grid grid-cols-3 gap-3">
+        <button
+          className="h-12 w-full rounded-2xl bg-gray-900 text-white font-semibold shadow-lg"
+          onClick={() => { setShowModal(false); setSelectedFocusArea(null); }}
+          aria-current="page"
+        >
+          Dashboard
+        </button>
+        <button
+          onClick={() => router.push('/calendar')}
+          className="h-12 w-full rounded-2xl bg-white text-gray-700 font-medium border-2 border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
+        >
+          Calendar
+        </button>
+        <button
+          onClick={() => router.push('/connect')}
+          className="h-12 w-full rounded-2xl bg-white text-gray-700 font-medium border-2 border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
+        >
+          Discover
+        </button>
+      </div>
+    </div>
+
     </>
   );
 }
