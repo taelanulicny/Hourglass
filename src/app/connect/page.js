@@ -99,7 +99,7 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, saved
 
   // Helper function to check if a resource is already saved
   const isResourceSaved = (resource) => {
-    const isSaved = savedResources.some(saved => {
+    return savedResources.some(saved => {
       // For people, compare name; for books/podcasts, compare title
       const resourceName = resource.title || resource.name;
       const savedName = saved.title || saved.name;
@@ -108,14 +108,6 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, saved
              saved.type === resource.type &&
              (saved.author === resource.author || saved.author === resource.name);
     });
-    
-    console.log('Checking if saved:', {
-      resource: { title: resource.title, name: resource.name, type: resource.type, author: resource.author },
-      savedResources: savedResources.length,
-      isSaved
-    });
-    
-    return isSaved;
   };
 
   // Handle AI search for resources
@@ -230,8 +222,6 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, saved
                 author={book.author} 
                 spotifyUrl={book.spotifyUrl} 
                 onResourceClick={onResourceSelect}
-                isSaved={isResourceSaved(book)}
-                onSave={onSaveResource}
               />
             </div>
           ))}
@@ -305,8 +295,6 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, saved
               <PersonCard 
                 person={person} 
                 onClick={onPersonSelect}
-                isSaved={isResourceSaved({ name: person.name, type: 'person', author: person.name })}
-                onSave={onSaveResource}
               />
             </div>
           ))}
@@ -332,8 +320,6 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, saved
                 type="podcast" 
                 spotifyUrl={podcast.spotifyUrl} 
                 onResourceClick={onResourceSelect}
-                isSaved={isResourceSaved(podcast)}
-                onSave={onSaveResource}
               />
             </div>
           ))}
@@ -504,20 +490,7 @@ function FeedCard({ title, children, cta }) {
     return getLogo(platform);
   }
 
-  function PersonCard({ person, onClick, isSaved = false, onSave, onRemove }) {
-    const handleSave = (e) => {
-      e.stopPropagation();
-      if (onSave) {
-        const resource = {
-          id: `person-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          name: person.name,
-          desc: person.desc,
-          socialLinks: person.socialLinks,
-          type: 'person'
-        };
-        onSave(resource);
-      }
-    };
+  function PersonCard({ person, onClick, showRemoveButton = false, onRemove }) {
 
     const handleRemove = (e) => {
       e.stopPropagation();
@@ -544,43 +517,25 @@ function FeedCard({ title, children, cta }) {
             <div className="text-sm text-gray-500 line-clamp-2">{person.desc}</div>
           </div>
 
-          {/* Save/Remove Button */}
-          <div className="flex-shrink-0">
-            {isSaved ? (
-              showRemoveButton ? (
-                <button
-                  onClick={handleRemove}
-                  className="text-red-500 hover:text-red-700 text-sm font-medium"
-                  title="Remove from Vault"
-                >
-                  ✕
-                </button>
-              ) : (
-                <button
-                  onClick={handleRemove}
-                  className="text-green-600 text-sm font-medium cursor-default"
-                  title="Already added to Vault"
-                >
-                  Added!
-                </button>
-              )
-            ) : (
+          {/* Save/Remove Button - Only show in Vault page */}
+          {showRemoveButton && (
+            <div className="flex-shrink-0">
               <button
-                onClick={handleSave}
-                className="text-green-600 text-sm font-medium cursor-pointer"
-                title="Add to Vault"
+                onClick={handleRemove}
+                className="text-red-500 hover:text-red-700 text-sm font-medium"
+                title="Remove from Vault"
               >
-                + Add
+                ✕
               </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     );
   }
 
 // --- Resource Preview Modal ------------------------------------------
-function ResourcePreviewModal({ resource, isOpen, onClose }) {
+function ResourcePreviewModal({ resource, isOpen, onClose, onSave, isSaved }) {
   if (!isOpen || !resource) return null;
 
   const handleVisitResource = () => {
@@ -639,10 +594,37 @@ function ResourcePreviewModal({ resource, isOpen, onClose }) {
           <div className="text-3xl">
             {getResourceIcon(resource.type)}
           </div>
-          <div>
+          <div className="flex-1">
             <h2 className="text-xl font-bold text-gray-900">{resource.title || resource.name}</h2>
             <p className="text-sm text-gray-500">{getResourceTypeLabel(resource.type)}</p>
           </div>
+          {/* Add to Vault Button */}
+          {onSave && (
+            <button
+              onClick={() => {
+                const resourceToSave = {
+                  id: `${resource.type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                  title: resource.title,
+                  name: resource.name,
+                  desc: resource.desc,
+                  url: resource.url,
+                  type: resource.type,
+                  author: resource.author,
+                  spotifyUrl: resource.spotifyUrl,
+                  socialLinks: resource.socialLinks
+                };
+                onSave(resourceToSave);
+              }}
+              className={`px-4 py-2 rounded-lg font-medium text-sm ${
+                isSaved 
+                  ? 'bg-green-100 text-green-700 cursor-default' 
+                  : 'bg-green-600 text-white hover:bg-green-700'
+              }`}
+              disabled={isSaved}
+            >
+              {isSaved ? 'Added!' : '+ Add to Vault'}
+            </button>
+          )}
         </div>
 
         {/* Resource Info */}
@@ -694,7 +676,7 @@ function ResourcePreviewModal({ resource, isOpen, onClose }) {
   );
 }
 
-  function ResourceCard({ title, desc, url, type = 'book', author, spotifyUrl, onResourceClick, name, socialLinks, isSaved = false, onSave, onRemove, showRemoveButton = false }) {
+  function ResourceCard({ title, desc, url, type = 'book', author, spotifyUrl, onResourceClick, name, socialLinks, showRemoveButton = false, onRemove }) {
     // Determine the appropriate icon based on type
     const getIcon = (type) => {
       switch (type) {
@@ -723,22 +705,6 @@ function ResourcePreviewModal({ resource, isOpen, onClose }) {
       }
     };
 
-    const handleSave = (e) => {
-      e.stopPropagation();
-      if (onSave && !isSaved) {
-        const resource = {
-          id: `${type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          title: title || name,
-          desc,
-          url,
-          type,
-          author,
-          spotifyUrl,
-          socialLinks
-        };
-        onSave(resource);
-      }
-    };
 
     const handleRemove = (e) => {
       e.stopPropagation();
@@ -766,43 +732,25 @@ function ResourcePreviewModal({ resource, isOpen, onClose }) {
             )}
           </div>
 
-          {/* Save/Remove Button */}
-          <div className="flex-shrink-0">
-            {isSaved ? (
-              showRemoveButton ? (
-                <button
-                  onClick={handleRemove}
-                  className="text-red-500 hover:text-red-700 text-sm font-medium"
-                  title="Remove from Vault"
-                >
-                  ✕
-                </button>
-              ) : (
-                <button
-                  onClick={handleRemove}
-                  className="text-green-600 text-sm font-medium cursor-default"
-                  title="Already added to Vault"
-                >
-                  Added!
-                </button>
-              )
-            ) : (
+          {/* Save/Remove Button - Only show in Vault page */}
+          {showRemoveButton && (
+            <div className="flex-shrink-0">
               <button
-                onClick={handleSave}
-                className="text-green-600 text-sm font-medium cursor-pointer"
-                title="Add to Vault"
+                onClick={handleRemove}
+                className="text-red-500 hover:text-red-700 text-sm font-medium"
+                title="Remove from Vault"
               >
-                + Add
+                ✕
               </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     );
   }
 
 // --- Person Social Media Modal ------------------------------------------
-function PersonSocialModal({ person, isOpen, onClose }) {
+function PersonSocialModal({ person, isOpen, onClose, onSave, isSaved }) {
   if (!isOpen || !person) return null;
 
   return (
@@ -813,10 +761,33 @@ function PersonSocialModal({ person, isOpen, onClose }) {
           <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-2xl">
             👤
           </div>
-          <div>
+          <div className="flex-1">
             <h3 className="font-semibold text-xl">{person.name}</h3>
             <p className="text-sm text-gray-600">{person.desc}</p>
           </div>
+          {/* Add to Vault Button */}
+          {onSave && (
+            <button
+              onClick={() => {
+                const resourceToSave = {
+                  id: `person-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                  name: person.name,
+                  desc: person.desc,
+                  socialLinks: person.socialLinks,
+                  type: 'person'
+                };
+                onSave(resourceToSave);
+              }}
+              className={`px-4 py-2 rounded-lg font-medium text-sm ${
+                isSaved 
+                  ? 'bg-green-100 text-green-700 cursor-default' 
+                  : 'bg-green-600 text-white hover:bg-green-700'
+              }`}
+              disabled={isSaved}
+            >
+              {isSaved ? 'Added!' : '+ Add to Vault'}
+            </button>
+          )}
         </div>
 
         {/* Social media links */}
@@ -1339,11 +1310,9 @@ export default function ConnectPage() {
 
   // Save resources to localStorage
   const saveResource = (resource) => {
-    console.log('Saving resource:', resource);
     const newSavedResources = [...savedResources, { ...resource, savedAt: new Date().toISOString() }];
     setSavedResources(newSavedResources);
     localStorage.setItem("myLearningPath", JSON.stringify(newSavedResources));
-    console.log('Updated savedResources:', newSavedResources);
   };
 
   // Remove resource from saved list
@@ -1496,6 +1465,8 @@ export default function ConnectPage() {
         person={selectedPerson}
         isOpen={!!selectedPerson}
         onClose={() => setSelectedPerson(null)}
+        onSave={saveResource}
+        isSaved={selectedPerson ? isResourceSaved({ name: selectedPerson.name, type: 'person', author: selectedPerson.name }) : false}
       />
 
       {/* Resource Preview Modal */}
@@ -1503,6 +1474,8 @@ export default function ConnectPage() {
         resource={selectedResource}
         isOpen={!!selectedResource}
         onClose={() => setSelectedResource(null)}
+        onSave={saveResource}
+        isSaved={selectedResource ? isResourceSaved(selectedResource) : false}
       />
 
     </div>
