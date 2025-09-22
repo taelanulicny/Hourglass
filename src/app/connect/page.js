@@ -144,22 +144,6 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, saved
   if (showVaultContent) {
     return (
       <div className="space-y-4">
-        {/* Vault Header */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-800 tracking-widest uppercase">T H E   V A U L T</h2>
-              <p className="text-sm text-gray-600 mt-1">Your personal collection of resources</p>
-            </div>
-            <button
-              onClick={onBackToResources}
-              className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-
         {/* Vault Content */}
         <MyLearningPathTab 
           savedResources={savedResources} 
@@ -1380,43 +1364,63 @@ export default function ConnectPage() {
       {/* Header */}
       <header className="px-4 pt-16 pb-3">
         <div className="flex items-center justify-between mb-2">
-          {/* Left: Empty space */}
-          <div className="w-10 h-10"></div>
-
-          {/* Center: Title dropdown */}
-          <div className="relative" ref={menuRef}>
+          {/* Left: Back button when in vault, empty space otherwise */}
+          {showVaultContent ? (
             <button
-              type="button"
-              aria-haspopup="listbox"
-              aria-expanded={open}
-              onClick={() => setOpen(v => !v)}
-              className="inline-flex items-center gap-2 text-lg font-bold tracking-widest uppercase"
+              onClick={() => setShowVaultContent(false)}
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
             >
-              <span>{tab}</span>
-              <svg
-                width="16" height="16" viewBox="0 0 20 20"
-                className={`transition-transform ${open ? 'rotate-180' : ''}`}
-              >
-                <path d="M5 7l5 5 5-5" fill="none" stroke="currentColor" strokeWidth="2"/>
+              <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
-            {mounted && open && (
-              <ul
-                role="listbox"
-                className="absolute z-10 mt-2 w-56 rounded-lg border bg-white shadow-md left-1/2 transform -translate-x-1/2"
+          ) : (
+            <div className="w-10 h-10"></div>
+          )}
+
+          {/* Center: Title dropdown or Vault title */}
+          {showVaultContent ? (
+            <div className="text-lg font-bold tracking-widest uppercase">
+              T H E   V A U L T
+            </div>
+          ) : (
+            <div className="relative" ref={menuRef}>
+              <button
+                type="button"
+                aria-haspopup="listbox"
+                aria-expanded={open}
+                onClick={() => setOpen(v => !v)}
+                className="inline-flex items-center gap-2 text-lg font-bold tracking-widest uppercase"
               >
-                {['Close Friends', 'Challenges', 'Resources', 'Templates'].filter(t => t !== tab).map((name) => (
-                  <li key={name}>
-                    <button
-                      onClick={() => { setTab(name); setOpen(false); }}
-                      className="w-full text-left px-3 py-2 hover:bg-gray-100 font-bold tracking-widest uppercase"
-                    >
-                      {name}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
+                <span>{tab}</span>
+                <svg
+                  width="16" height="16" viewBox="0 0 20 20"
+                  className={`transition-transform ${open ? 'rotate-180' : ''}`}
+                >
+                  <path d="M5 7l5 5 5-5" fill="none" stroke="currentColor" strokeWidth="2"/>
+                </svg>
+              </button>
+            </div>
+          )}
+
+          {/* Dropdown menu - only show when not in vault content */}
+          {!showVaultContent && mounted && open && (
+            <ul
+              role="listbox"
+              className="absolute z-10 mt-2 w-56 rounded-lg border bg-white shadow-md left-1/2 transform -translate-x-1/2"
+            >
+              {['Close Friends', 'Challenges', 'Resources', 'Templates'].filter(t => t !== tab).map((name) => (
+                <li key={name}>
+                  <button
+                    onClick={() => { setTab(name); setOpen(false); }}
+                    className="w-full text-left px-3 py-2 hover:bg-gray-100 font-bold tracking-widest uppercase"
+                  >
+                    {name}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
           </div>
 
           {/* Right: Settings button */}
