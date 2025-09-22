@@ -99,11 +99,23 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, saved
 
   // Helper function to check if a resource is already saved
   const isResourceSaved = (resource) => {
-    return savedResources.some(saved => 
-      saved.title === resource.title && 
-      saved.type === resource.type &&
-      saved.author === resource.author
-    );
+    const isSaved = savedResources.some(saved => {
+      // For people, compare name; for books/podcasts, compare title
+      const resourceName = resource.title || resource.name;
+      const savedName = saved.title || saved.name;
+      
+      return savedName === resourceName && 
+             saved.type === resource.type &&
+             (saved.author === resource.author || saved.author === resource.name);
+    });
+    
+    console.log('Checking if saved:', {
+      resource: { title: resource.title, name: resource.name, type: resource.type, author: resource.author },
+      savedResources: savedResources.length,
+      isSaved
+    });
+    
+    return isSaved;
   };
 
   // Handle AI search for resources
@@ -1327,9 +1339,11 @@ export default function ConnectPage() {
 
   // Save resources to localStorage
   const saveResource = (resource) => {
+    console.log('Saving resource:', resource);
     const newSavedResources = [...savedResources, { ...resource, savedAt: new Date().toISOString() }];
     setSavedResources(newSavedResources);
     localStorage.setItem("myLearningPath", JSON.stringify(newSavedResources));
+    console.log('Updated savedResources:', newSavedResources);
   };
 
   // Remove resource from saved list
