@@ -865,13 +865,13 @@ function CalendarContent() {
       let newStart = resizeRef.current.origStart;
       let newEnd = resizeRef.current.origEnd;
 
-      if (resizeHandle === 'top') {
+      if (resizeHandle === 'top-left' || resizeHandle === 'top-right') {
         // Resizing from top - adjust start time
         newStart = resizeRef.current.origStart + deltaMs;
         newStart = snapMs(newStart);
         // Ensure start doesn't go past end
         newStart = Math.min(newStart, newEnd - 15 * 60 * 1000); // minimum 15 minutes
-      } else if (resizeHandle === 'bottom') {
+      } else if (resizeHandle === 'bottom-left' || resizeHandle === 'bottom-right') {
         // Resizing from bottom - adjust end time
         newEnd = resizeRef.current.origEnd + deltaMs;
         newEnd = snapMs(newEnd);
@@ -1310,9 +1310,9 @@ function CalendarContent() {
                   {/* Resize handles - only show when not dragging */}
                   {!draggingId && (
                     <>
-                      {/* Top resize handle */}
+                      {/* Top-left resize handle (adjusts start time) */}
                       <div
-                        className={`absolute top-0 right-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'top' ? 'opacity-100' : 'opacity-0'}`}
+                        className={`absolute top-0 left-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'top-left' ? 'opacity-100' : 'opacity-0'}`}
                         onMouseDown={(e) => {
                           e.stopPropagation();
                           e.preventDefault();
@@ -1324,7 +1324,7 @@ function CalendarContent() {
                           setDragDelayActive(false);
                           setDragDelayEventId(null);
                           setResizingId(ev.id);
-                          setResizeHandle('top');
+                          setResizeHandle('top-left');
                           resizeRef.current = {
                             startY: e.clientY,
                             origStart: ev.start,
@@ -1345,7 +1345,56 @@ function CalendarContent() {
                           setDragDelayActive(false);
                           setDragDelayEventId(null);
                           setResizingId(ev.id);
-                          setResizeHandle('top');
+                          setResizeHandle('top-left');
+                          resizeRef.current = {
+                            startY: e.touches[0].clientY,
+                            origStart: ev.start,
+                            origEnd: ev.end,
+                            lastStartMs: ev.start,
+                            lastEndMs: ev.end,
+                            moved: false,
+                          };
+                        }}
+                      >
+                        {/* Invisible resize handle - no visual circle */}
+                      </div>
+
+                      {/* Top-right resize handle (adjusts start time) */}
+                      <div
+                        className={`absolute top-0 right-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'top-right' ? 'opacity-100' : 'opacity-0'}`}
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          // Clear any drag delay timer since we're resizing
+                          if (dragDelayTimerRef.current) {
+                            clearTimeout(dragDelayTimerRef.current);
+                            dragDelayTimerRef.current = null;
+                          }
+                          setDragDelayActive(false);
+                          setDragDelayEventId(null);
+                          setResizingId(ev.id);
+                          setResizeHandle('top-right');
+                          resizeRef.current = {
+                            startY: e.clientY,
+                            origStart: ev.start,
+                            origEnd: ev.end,
+                            lastStartMs: ev.start,
+                            lastEndMs: ev.end,
+                            moved: false,
+                          };
+                        }}
+                        onTouchStart={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          // Clear any drag delay timer since we're resizing
+                          if (dragDelayTimerRef.current) {
+                            clearTimeout(dragDelayTimerRef.current);
+                            dragDelayTimerRef.current = null;
+                          }
+                          setDragDelayActive(false);
+                          setDragDelayEventId(null);
+                          setResizingId(ev.id);
+                          setResizeHandle('top-right');
                           resizeRef.current = {
                             startY: e.touches[0].clientY,
                             origStart: ev.start,
@@ -1373,7 +1422,7 @@ function CalendarContent() {
                           setDragDelayActive(false);
                           setDragDelayEventId(null);
                           setResizingId(ev.id);
-                          setResizeHandle('bottom');
+                          setResizeHandle('bottom-left');
                           resizeRef.current = {
                             startY: e.clientY,
                             origStart: ev.start,
@@ -1394,7 +1443,56 @@ function CalendarContent() {
                           setDragDelayActive(false);
                           setDragDelayEventId(null);
                           setResizingId(ev.id);
-                          setResizeHandle('bottom');
+                          setResizeHandle('bottom-left');
+                          resizeRef.current = {
+                            startY: e.touches[0].clientY,
+                            origStart: ev.start,
+                            origEnd: ev.end,
+                            lastStartMs: ev.start,
+                            lastEndMs: ev.end,
+                            moved: false,
+                          };
+                        }}
+                      >
+                        {/* Invisible resize handle - no visual circle */}
+                      </div>
+
+                      {/* Bottom-right resize handle (adjusts end time) */}
+                      <div
+                        className={`absolute bottom-0 right-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'bottom-right' ? 'opacity-100' : 'opacity-0'}`}
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          // Clear any drag delay timer since we're resizing
+                          if (dragDelayTimerRef.current) {
+                            clearTimeout(dragDelayTimerRef.current);
+                            dragDelayTimerRef.current = null;
+                          }
+                          setDragDelayActive(false);
+                          setDragDelayEventId(null);
+                          setResizingId(ev.id);
+                          setResizeHandle('bottom-right');
+                          resizeRef.current = {
+                            startY: e.clientY,
+                            origStart: ev.start,
+                            origEnd: ev.end,
+                            lastStartMs: ev.start,
+                            lastEndMs: ev.end,
+                            moved: false,
+                          };
+                        }}
+                        onTouchStart={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          // Clear any drag delay timer since we're resizing
+                          if (dragDelayTimerRef.current) {
+                            clearTimeout(dragDelayTimerRef.current);
+                            dragDelayTimerRef.current = null;
+                          }
+                          setDragDelayActive(false);
+                          setDragDelayEventId(null);
+                          setResizingId(ev.id);
+                          setResizeHandle('bottom-right');
                           resizeRef.current = {
                             startY: e.touches[0].clientY,
                             origStart: ev.start,
