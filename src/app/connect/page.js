@@ -1315,6 +1315,12 @@ export default function ConnectPage() {
       const resourceName = resource.title || resource.name;
       const savedName = saved.title || saved.name;
       
+      // For people, only compare name and type (no author field)
+      if (resource.type === 'person') {
+        return savedName === resourceName && saved.type === resource.type;
+      }
+      
+      // For books/podcasts, compare title, type, and author
       return savedName === resourceName && 
              saved.type === resource.type &&
              (saved.author === resource.author || saved.author === resource.name);
