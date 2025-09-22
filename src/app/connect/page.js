@@ -545,9 +545,9 @@ function FeedCard({ title, children, cta }) {
               <button
                 onClick={handleSave}
                 className="text-[#8CA4AF] hover:text-[#7A939E] text-sm font-medium"
-                title="Save for Later"
+                title="Add to Vault"
               >
-                + Save
+                + Add
               </button>
             )}
           </div>
@@ -756,9 +756,9 @@ function ResourcePreviewModal({ resource, isOpen, onClose }) {
               <button
                 onClick={handleSave}
                 className="text-[#8CA4AF] hover:text-[#7A939E] text-sm font-medium"
-                title="Save for Later"
+                title="Add to Vault"
               >
-                + Save
+                + Add
               </button>
             )}
           </div>
@@ -1164,7 +1164,7 @@ function MyLearningPathTab({ savedResources, onRemoveResource, onResourceSelect 
           Save resources from the Resources tab to build your personal collection
         </div>
         <div className="text-xs text-gray-400">
-          Look for the "Save for Later" button on books, people, and podcasts
+          Look for the "+ Add" button on books, people, and podcasts
         </div>
       </div>
     );
@@ -1301,10 +1301,15 @@ export default function ConnectPage() {
   }, []);
 
   // Save resources to localStorage
+  const [addedToVault, setAddedToVault] = useState(null);
   const saveResource = (resource) => {
     const newSavedResources = [...savedResources, { ...resource, savedAt: new Date().toISOString() }];
     setSavedResources(newSavedResources);
     localStorage.setItem("myLearningPath", JSON.stringify(newSavedResources));
+    
+    // Show "Added to the Vault" feedback
+    setAddedToVault(resource.title || resource.name);
+    setTimeout(() => setAddedToVault(null), 2000); // Hide after 2 seconds
   };
 
   // Remove resource from saved list
@@ -1411,6 +1416,13 @@ export default function ConnectPage() {
       </header>
 
 
+
+      {/* Added to Vault Feedback */}
+      {addedToVault && (
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg">
+          ✓ Added "{addedToVault}" to the Vault
+        </div>
+      )}
 
       {/* Tab Content */}
       <main className="px-4 mt-4">
