@@ -82,8 +82,8 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-900">
-      {/* Header */}
-      <header className="bg-white/95 backdrop-blur-lg shadow-sm border-b border-gray-100">
+      {/* Fixed Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-lg shadow-sm border-b border-gray-100">
         <div className="flex items-center justify-between px-4 pt-16 pb-3">
           <button
             onClick={() => router.back()}
@@ -99,7 +99,8 @@ export default function SettingsPage() {
         </div>
       </header>
 
-      <div className="px-4 py-6 space-y-6">
+      {/* Content with top padding to account for fixed header */}
+      <div className="pt-24 px-4 py-6 space-y-6">
         {/* Profile Section */}
         <section className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100">
