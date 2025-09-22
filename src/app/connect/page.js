@@ -509,10 +509,10 @@ function FeedCard({ title, children, cta }) {
 
     const handleRemove = (e) => {
       e.stopPropagation();
-      // Don't actually remove - just show "Added!" status
-      // if (onRemove) {
-      //   onRemove();
-      // }
+      if (showRemoveButton && onRemove) {
+        onRemove();
+      }
+      // If not showRemoveButton, this is just showing "Added!" status
     };
 
     return (
@@ -535,13 +535,23 @@ function FeedCard({ title, children, cta }) {
           {/* Save/Remove Button */}
           <div className="flex-shrink-0">
             {isSaved ? (
-              <button
-                onClick={handleRemove}
-                className="text-green-600 text-sm font-medium cursor-default"
-                title="Already added to Vault"
-              >
-                Added!
-              </button>
+              showRemoveButton ? (
+                <button
+                  onClick={handleRemove}
+                  className="text-red-500 hover:text-red-700 text-sm font-medium"
+                  title="Remove from Vault"
+                >
+                  ✕
+                </button>
+              ) : (
+                <button
+                  onClick={handleRemove}
+                  className="text-green-600 text-sm font-medium cursor-default"
+                  title="Already added to Vault"
+                >
+                  Added!
+                </button>
+              )
             ) : (
               <button
                 onClick={handleSave}
@@ -672,7 +682,7 @@ function ResourcePreviewModal({ resource, isOpen, onClose }) {
   );
 }
 
-  function ResourceCard({ title, desc, url, type = 'book', author, spotifyUrl, onResourceClick, name, socialLinks, isSaved = false, onSave, onRemove }) {
+  function ResourceCard({ title, desc, url, type = 'book', author, spotifyUrl, onResourceClick, name, socialLinks, isSaved = false, onSave, onRemove, showRemoveButton = false }) {
     // Determine the appropriate icon based on type
     const getIcon = (type) => {
       switch (type) {
@@ -720,10 +730,10 @@ function ResourcePreviewModal({ resource, isOpen, onClose }) {
 
     const handleRemove = (e) => {
       e.stopPropagation();
-      // Don't actually remove - just show "Added!" status
-      // if (onRemove) {
-      //   onRemove();
-      // }
+      if (showRemoveButton && onRemove) {
+        onRemove();
+      }
+      // If not showRemoveButton, this is just showing "Added!" status
     };
 
     return (
@@ -747,13 +757,23 @@ function ResourcePreviewModal({ resource, isOpen, onClose }) {
           {/* Save/Remove Button */}
           <div className="flex-shrink-0">
             {isSaved ? (
-              <button
-                onClick={handleRemove}
-                className="text-green-600 text-sm font-medium cursor-default"
-                title="Already added to Vault"
-              >
-                Added!
-              </button>
+              showRemoveButton ? (
+                <button
+                  onClick={handleRemove}
+                  className="text-red-500 hover:text-red-700 text-sm font-medium"
+                  title="Remove from Vault"
+                >
+                  ✕
+                </button>
+              ) : (
+                <button
+                  onClick={handleRemove}
+                  className="text-green-600 text-sm font-medium cursor-default"
+                  title="Already added to Vault"
+                >
+                  Added!
+                </button>
+              )
             ) : (
               <button
                 onClick={handleSave}
@@ -1201,6 +1221,7 @@ function MyLearningPathTab({ savedResources, onRemoveResource, onResourceSelect 
                   author={book.author} 
                   onResourceClick={onResourceSelect}
                   isSaved={true}
+                  showRemoveButton={true}
                   onRemove={() => onRemoveResource(book.id)}
                 />
               </div>
@@ -1223,6 +1244,7 @@ function MyLearningPathTab({ savedResources, onRemoveResource, onResourceSelect 
                   type="person" 
                   onResourceClick={onResourceSelect}
                   isSaved={true}
+                  showRemoveButton={true}
                   onRemove={() => onRemoveResource(person.id)}
                 />
               </div>
@@ -1247,6 +1269,7 @@ function MyLearningPathTab({ savedResources, onRemoveResource, onResourceSelect 
                   spotifyUrl={podcast.spotifyUrl}
                   onResourceClick={onResourceSelect}
                   isSaved={true}
+                  showRemoveButton={true}
                   onRemove={() => onRemoveResource(podcast.id)}
                 />
               </div>
