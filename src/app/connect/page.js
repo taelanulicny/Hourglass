@@ -330,9 +330,12 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, saved
       {/* Enter The Vault Button */}
       <button
         onClick={onShowVault}
-        className="w-full py-4 bg-gradient-to-r from-[#8CA4AF] to-[#7A939E] text-white font-bold text-lg tracking-widest uppercase rounded-lg hover:from-[#7A939E] hover:to-[#6B828C] transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+        className="w-full py-4 bg-gradient-to-r from-[#8CA4AF] to-[#7A939E] text-white font-bold text-lg tracking-widest uppercase rounded-lg hover:from-[#7A939E] hover:to-[#6B828C] transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] flex items-center justify-center gap-3"
       >
-        ----&gt; E N T E R   T H E   V A U L T
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+        </svg>
+        E N T E R   T H E         V A U L T
       </button>
     </div>
   );
