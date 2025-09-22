@@ -359,6 +359,9 @@ function HomeContent() {
     } catch (_) { /* ignore */ }
   }
   useEffect(() => {
+    // Add cleanup flag to prevent race conditions during fast navigation
+    let isCleanedUp = false;
+    
     // Load categories snapshot for the viewed week.
     // For the CURRENT week, prefer the live "focusCategories" so slug/calendar writes are reflected immediately.
     const key = STORAGE_PREFIX + viewWeekKey;
@@ -422,11 +425,23 @@ function HomeContent() {
     } catch (_) {
       data = [];
     }
-    setCategories(data);
+    
+    // Only update state if component hasn't been cleaned up
+    if (!isCleanedUp) {
+      setCategories(data);
+    }
+    
+    // Cleanup function to prevent race conditions
+    return () => {
+      isCleanedUp = true;
+    };
   }, [viewWeekKey, currentWeekKey]);
 
   // Handle URL parameters for focus area selection and scroll to top
   useEffect(() => {
+    // Add cleanup flag to prevent race conditions during fast navigation
+    let isCleanedUp = false;
+    
     const focusParam = searchParams.get('focus');
     const scrollParam = searchParams.get('scroll');
     
@@ -436,7 +451,7 @@ function HomeContent() {
         normalizeLabel(cat.label) === normalizeLabel(focusParam)
       );
       
-      if (focusArea) {
+      if (focusArea && !isCleanedUp) {
         // Mark this focus area as manually set to prevent auto-reset
         const focusAreaWithFlag = { ...focusArea, _manuallySet: true };
         setSelectedFocusArea(focusAreaWithFlag);
@@ -458,6 +473,11 @@ function HomeContent() {
         }
       }
     }
+    
+    // Cleanup function to prevent race conditions
+    return () => {
+      isCleanedUp = true;
+    };
   }, [searchParams, categories, currentWeekKey]);
 
   // Scroll to top and reset date whenever a focus area is selected (from dashboard clicks)
