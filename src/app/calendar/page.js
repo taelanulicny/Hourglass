@@ -1229,7 +1229,7 @@ function CalendarContent() {
                 <div
                   key={ev.id}
                   data-event-id={ev.id}
-                  className={`absolute left-1 right-1 rounded-md shadow calendar-event ${draggingId === ev.id ? 'cursor-grabbing' : dragDelayActive && dragDelayEventId === ev.id ? 'cursor-wait' : resizingId === ev.id ? 'cursor-ns-resize' : 'cursor-grab'}`}
+                  className={`absolute left-1 right-1 rounded-md shadow calendar-event select-none ${draggingId === ev.id ? 'cursor-grabbing' : dragDelayActive && dragDelayEventId === ev.id ? 'cursor-wait' : resizingId === ev.id ? 'cursor-ns-resize' : 'cursor-grab'}`}
                   style={{
                     top: (draggingId === ev.id && dragGhostTop != null ? dragGhostTop : Math.max(0, topPx)) + 'px',
                     height: Math.max(24, heightPx) + 'px',
@@ -1241,6 +1241,10 @@ function CalendarContent() {
                   }}
                   title={ev.title}
                   onMouseDown={(e) => {
+                    // Prevent text selection immediately
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
                     // Clear any existing drag delay timer
                     if (dragDelayTimerRef.current) {
                       clearTimeout(dragDelayTimerRef.current);
@@ -1303,7 +1307,7 @@ function CalendarContent() {
                     <>
                       {/* Top resize handle */}
                       <div
-                        className={`absolute top-0 right-0 w-3 h-3 cursor-ns-resize transition-opacity ${resizingId === ev.id && resizeHandle === 'top' ? 'opacity-100' : 'opacity-0 hover:opacity-100'}`}
+                        className={`absolute top-0 right-0 w-3 h-3 cursor-ns-resize transition-opacity select-none ${resizingId === ev.id && resizeHandle === 'top' ? 'opacity-100' : 'opacity-0 hover:opacity-100'}`}
                         onMouseDown={(e) => {
                           e.stopPropagation();
                           e.preventDefault();
@@ -1338,7 +1342,7 @@ function CalendarContent() {
                       
                       {/* Bottom resize handle */}
                       <div
-                        className={`absolute bottom-0 left-0 w-3 h-3 cursor-ns-resize transition-opacity ${resizingId === ev.id && resizeHandle === 'bottom' ? 'opacity-100' : 'opacity-0 hover:opacity-100'}`}
+                        className={`absolute bottom-0 left-0 w-3 h-3 cursor-ns-resize transition-opacity select-none ${resizingId === ev.id && resizeHandle === 'bottom' ? 'opacity-100' : 'opacity-0 hover:opacity-100'}`}
                         onMouseDown={(e) => {
                           e.stopPropagation();
                           e.preventDefault();
