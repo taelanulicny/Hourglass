@@ -1440,7 +1440,7 @@ function CalendarContent() {
 
             <div className="flex justify-end gap-2">
               <button className="px-4 py-2 bg-gray-200 rounded" onClick={() => { setShowModal(false); setDraft(DEFAULT_DRAFT); }}>Close</button>
-              <button className="px-4 py-2 bg-[#BCA88F] text-white rounded" onClick={addEvent}>Add</button>
+              <button className="px-4 py-2 bg-[#6B7280] text-white rounded" onClick={addEvent}>Add</button>
             </div>
           </div>
         </div>
@@ -1532,7 +1532,7 @@ function CalendarContent() {
               <button className="px-4 py-2 bg-red-500 text-white rounded" onClick={deleteEvent}>Delete</button>
               <div className="flex gap-2">
                 <button className="px-4 py-2 bg-gray-200 rounded" onClick={() => { setShowEditModal(false); setEditingId(null); }}>Cancel</button>
-                <button className="px-4 py-2 bg-[#BCA88F] text-white rounded" onClick={updateEvent}>Save</button>
+                <button className="px-4 py-2 bg-[#6B7280] text-white rounded" onClick={updateEvent}>Save</button>
               </div>
             </div>
           </div>
