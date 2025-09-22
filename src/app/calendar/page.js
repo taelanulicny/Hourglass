@@ -722,6 +722,7 @@ function CalendarContent() {
   const [dragDelayEventId, setDragDelayEventId] = useState(null); // event ID waiting for delay
   const [resizingId, setResizingId] = useState(null); // event ID being resized
   const [resizeHandle, setResizeHandle] = useState(null); // 'top' or 'bottom' handle being dragged
+  const [resizeGhost, setResizeGhost] = useState(null); // force re-render during resize
   const dragRef = useRef({
     startY: 0,
     origStart: 0,
@@ -885,6 +886,9 @@ function CalendarContent() {
       resizeRef.current.lastStartMs = newStart;
       resizeRef.current.lastEndMs = newEnd;
       resizeRef.current.moved = true;
+      
+      // Force re-render to show live updates
+      setResizeGhost({ start: newStart, end: newEnd });
     };
 
     const onUp = () => {
@@ -895,6 +899,7 @@ function CalendarContent() {
       const finalEnd = resizeRef.current.lastEndMs;
       setResizingId(null);
       setResizeHandle(null);
+      setResizeGhost(null);
       resizeRef.current = { startY: 0, origStart: 0, origEnd: 0, lastStartMs: null, lastEndMs: null, moved: false };
       
       if (moved && finalStart != null && finalEnd != null) {
@@ -1216,8 +1221,8 @@ function CalendarContent() {
 
             {isClient && eventsForSelected.map(ev => {
               // Use resize values if currently resizing this event
-              const currentStart = resizingId === ev.id && resizeRef.current.lastStartMs != null ? resizeRef.current.lastStartMs : ev.start;
-              const currentEnd = resizingId === ev.id && resizeRef.current.lastEndMs != null ? resizeRef.current.lastEndMs : ev.end;
+              const currentStart = resizingId === ev.id && resizeGhost ? resizeGhost.start : ev.start;
+              const currentEnd = resizingId === ev.id && resizeGhost ? resizeGhost.end : ev.end;
               
               const visibleStart = Math.max(currentStart, dayStartMs);
               const visibleEnd   = Math.min(currentEnd, dayEndMs);
@@ -1233,7 +1238,7 @@ function CalendarContent() {
                   style={{
                     top: (draggingId === ev.id && dragGhostTop != null ? dragGhostTop : Math.max(0, topPx)) + 'px',
                     height: Math.max(24, heightPx) + 'px',
-                    background: toRGBA(renderColor, dragDelayActive && dragDelayEventId === ev.id ? 0.2 : resizingId === ev.id ? 0.6 : 0.4),
+                    background: toRGBA(renderColor, dragDelayActive && dragDelayEventId === ev.id ? 0.2 : resizingId === ev.id ? 0.7 : 0.4),
                     borderLeft: `3px solid ${renderColor}`,
                     willChange: (draggingId === ev.id || resizingId === ev.id) ? 'top, height' : undefined,
                     opacity: dragDelayActive && dragDelayEventId === ev.id ? 0.7 : resizingId === ev.id ? 0.9 : 1,
