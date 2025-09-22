@@ -1181,9 +1181,9 @@ function MyLearningPathTab({ savedResources, onRemoveResource, onResourceSelect 
 
   return (
     <div className="space-y-4">
-      <div className="text-center mb-6">
+      <div className="text-center mb-4">
         <p className="text-sm text-gray-600">
-          Your personal collection of resources to help you grow
+          Welcome to your personal collection of resources to help you grow
         </p>
       </div>
 
