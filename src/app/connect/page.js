@@ -83,7 +83,7 @@ function ChallengesTab() {
   );
 }
 
-function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, savedResources = [], onSaveResource, onRemoveResource, onTabChange, isResourceSaved }) {
+function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, savedResources = [], onSaveResource, onRemoveResource, onTabChange, isResourceSaved, onShowVault }) {
   const DEMO = [{ id:'lsat', name:'LSAT Prep' }, { id:'fitness', name:'Fitness' }];
   
   // Convert focus areas to the format expected by the selector
@@ -314,14 +314,12 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, saved
       </div>
 
       {/* Enter The Vault Button */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
-        <button
-          onClick={() => onTabChange('T H E   V A U L T')}
-          className="w-full py-4 bg-gradient-to-r from-[#8CA4AF] to-[#7A939E] text-white font-bold text-lg tracking-widest uppercase rounded-lg hover:from-[#7A939E] hover:to-[#6B828C] transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
-        >
-          ----&gt; E N T E R   T H E   V A U L T
-        </button>
-      </div>
+      <button
+        onClick={onShowVault}
+        className="w-full py-4 bg-gradient-to-r from-[#8CA4AF] to-[#7A939E] text-white font-bold text-lg tracking-widest uppercase rounded-lg hover:from-[#7A939E] hover:to-[#6B828C] transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+      >
+        ----&gt; E N T E R   T H E   V A U L T
+      </button>
     </div>
   );
 }
@@ -1262,6 +1260,7 @@ export default function ConnectPage() {
   const [mounted, setMounted] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState(null);
   const [selectedResource, setSelectedResource] = useState(null);
+  const [showVault, setShowVault] = useState(false);
   const menuRef = useRef(null);
   const router = useRouter();
 
@@ -1376,7 +1375,7 @@ export default function ConnectPage() {
                 role="listbox"
                 className="absolute z-10 mt-2 w-56 rounded-lg border bg-white shadow-md left-1/2 transform -translate-x-1/2"
               >
-                {['Close Friends', 'Challenges', 'Resources', 'T H E   V A U L T', 'Templates'].filter(t => t !== tab).map((name) => (
+                {['Close Friends', 'Challenges', 'Resources', 'Templates'].filter(t => t !== tab).map((name) => (
                   <li key={name}>
                     <button
                       onClick={() => { setTab(name); setOpen(false); }}
@@ -1424,8 +1423,7 @@ export default function ConnectPage() {
       <main className="px-4 mt-4">
         {tab === 'Close Friends' && <FeedTab />}
         {tab === 'Challenges' && <ChallengesTab />}
-        {tab === 'Resources' && <ResourcesTab focusAreas={focusAreas} onPersonSelect={setSelectedPerson} onResourceSelect={setSelectedResource} savedResources={savedResources} onSaveResource={saveResource} onRemoveResource={removeSavedResource} onTabChange={setTab} isResourceSaved={isResourceSaved} />}
-        {tab === 'T H E   V A U L T' && <MyLearningPathTab savedResources={savedResources} onRemoveResource={removeSavedResource} onResourceSelect={setSelectedResource} />}
+        {tab === 'Resources' && <ResourcesTab focusAreas={focusAreas} onPersonSelect={setSelectedPerson} onResourceSelect={setSelectedResource} savedResources={savedResources} onSaveResource={saveResource} onRemoveResource={removeSavedResource} onTabChange={setTab} isResourceSaved={isResourceSaved} onShowVault={() => setShowVault(true)} />}
         {tab === 'Templates' && <TemplatesTab />}
       </main>
 
@@ -1477,6 +1475,36 @@ export default function ConnectPage() {
         onSave={saveResource}
         isSaved={selectedResource ? isResourceSaved(selectedResource) : false}
       />
+
+      {/* Vault Overlay */}
+      {showVault && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            {/* Vault Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-800 tracking-widest uppercase">T H E   V A U L T</h2>
+                <p className="text-sm text-gray-600 mt-1">Your personal collection of resources</p>
+              </div>
+              <button
+                onClick={() => setShowVault(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Vault Content */}
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+              <MyLearningPathTab 
+                savedResources={savedResources} 
+                onRemoveResource={removeSavedResource} 
+                onResourceSelect={setSelectedResource} 
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
