@@ -1182,7 +1182,6 @@ function MyLearningPathTab({ savedResources, onRemoveResource, onResourceSelect 
   return (
     <div className="space-y-4">
       <div className="text-center mb-6">
-        <h2 className="text-xl font-bold text-gray-800 mb-2 tracking-widest uppercase">T H E   V A U L T</h2>
         <p className="text-sm text-gray-600">
           Your personal collection of resources to help you grow
         </p>
