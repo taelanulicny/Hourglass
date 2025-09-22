@@ -1149,9 +1149,9 @@ function MyLearningPathTab({ savedResources, onRemoveResource, onResourceSelect 
   if (savedResources.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="text-gray-500 mb-2 text-lg">Your Learning Path is Empty</div>
+        <div className="text-gray-500 mb-2 text-lg">The Vault is Empty</div>
         <div className="text-sm text-gray-400 mb-4">
-          Save resources from the Resources tab to build your personal learning journey
+          Save resources from the Resources tab to build your personal collection
         </div>
         <div className="text-xs text-gray-400">
           Look for the "Save for Later" button on books, people, and podcasts
@@ -1168,7 +1168,7 @@ function MyLearningPathTab({ savedResources, onRemoveResource, onResourceSelect 
   return (
     <div className="space-y-4">
       <div className="text-center mb-6">
-        <h2 className="text-xl font-bold text-gray-800 mb-2">My Learning Path</h2>
+        <h2 className="text-xl font-bold text-gray-800 mb-2 tracking-widest uppercase">T H E   V A U L T</h2>
         <p className="text-sm text-gray-600">
           Your personal collection of resources to help you grow
         </p>
@@ -1356,9 +1356,9 @@ export default function ConnectPage() {
             {mounted && open && (
               <ul
                 role="listbox"
-                className="absolute z-10 mt-2 w-40 rounded-lg border bg-white shadow-md left-1/2 transform -translate-x-1/2"
+                className="absolute z-10 mt-2 w-56 rounded-lg border bg-white shadow-md left-1/2 transform -translate-x-1/2"
               >
-                {['Close Friends', 'Challenges', 'Resources', 'My Learning Path', 'Templates'].filter(t => t !== tab).map((name) => (
+                {['Close Friends', 'Challenges', 'Resources', 'T H E   V A U L T', 'Templates'].filter(t => t !== tab).map((name) => (
                   <li key={name}>
                     <button
                       onClick={() => { setTab(name); setOpen(false); }}
@@ -1407,7 +1407,7 @@ export default function ConnectPage() {
         {tab === 'Close Friends' && <FeedTab />}
         {tab === 'Challenges' && <ChallengesTab />}
         {tab === 'Resources' && <ResourcesTab focusAreas={focusAreas} onPersonSelect={setSelectedPerson} onResourceSelect={setSelectedResource} savedResources={savedResources} onSaveResource={saveResource} onRemoveResource={removeSavedResource} />}
-        {tab === 'My Learning Path' && <MyLearningPathTab savedResources={savedResources} onRemoveResource={removeSavedResource} onResourceSelect={setSelectedResource} />}
+        {tab === 'T H E   V A U L T' && <MyLearningPathTab savedResources={savedResources} onRemoveResource={removeSavedResource} onResourceSelect={setSelectedResource} />}
         {tab === 'Templates' && <TemplatesTab />}
       </main>
 
