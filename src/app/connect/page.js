@@ -83,7 +83,7 @@ function ChallengesTab() {
   );
 }
 
-function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, savedResources = [], onSaveResource, onRemoveResource, onTabChange }) {
+function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, savedResources = [], onSaveResource, onRemoveResource, onTabChange, isResourceSaved }) {
   const DEMO = [{ id:'lsat', name:'LSAT Prep' }, { id:'fitness', name:'Fitness' }];
   
   // Convert focus areas to the format expected by the selector
@@ -96,19 +96,6 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, saved
   const [searchResults, setSearchResults] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState(null);
-
-  // Helper function to check if a resource is already saved
-  const isResourceSaved = (resource) => {
-    return savedResources.some(saved => {
-      // For people, compare name; for books/podcasts, compare title
-      const resourceName = resource.title || resource.name;
-      const savedName = saved.title || saved.name;
-      
-      return savedName === resourceName && 
-             saved.type === resource.type &&
-             (saved.author === resource.author || saved.author === resource.name);
-    });
-  };
 
   // Handle AI search for resources
   const handleSearch = async () => {
@@ -1308,6 +1295,19 @@ export default function ConnectPage() {
     }
   }, []);
 
+  // Helper function to check if a resource is already saved
+  const isResourceSaved = (resource) => {
+    return savedResources.some(saved => {
+      // For people, compare name; for books/podcasts, compare title
+      const resourceName = resource.title || resource.name;
+      const savedName = saved.title || saved.name;
+      
+      return savedName === resourceName && 
+             saved.type === resource.type &&
+             (saved.author === resource.author || saved.author === resource.name);
+    });
+  };
+
   // Save resources to localStorage
   const saveResource = (resource) => {
     const newSavedResources = [...savedResources, { ...resource, savedAt: new Date().toISOString() }];
@@ -1424,7 +1424,7 @@ export default function ConnectPage() {
       <main className="px-4 mt-4">
         {tab === 'Close Friends' && <FeedTab />}
         {tab === 'Challenges' && <ChallengesTab />}
-        {tab === 'Resources' && <ResourcesTab focusAreas={focusAreas} onPersonSelect={setSelectedPerson} onResourceSelect={setSelectedResource} savedResources={savedResources} onSaveResource={saveResource} onRemoveResource={removeSavedResource} onTabChange={setTab} />}
+        {tab === 'Resources' && <ResourcesTab focusAreas={focusAreas} onPersonSelect={setSelectedPerson} onResourceSelect={setSelectedResource} savedResources={savedResources} onSaveResource={saveResource} onRemoveResource={removeSavedResource} onTabChange={setTab} isResourceSaved={isResourceSaved} />}
         {tab === 'T H E   V A U L T' && <MyLearningPathTab savedResources={savedResources} onRemoveResource={removeSavedResource} onResourceSelect={setSelectedResource} />}
         {tab === 'Templates' && <TemplatesTab />}
       </main>
