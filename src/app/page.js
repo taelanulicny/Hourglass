@@ -547,8 +547,9 @@ function HomeContent() {
   const [renameTarget, setRenameTarget] = useState(null);
   const [renameValue, setRenameValue] = useState("");
   const [renameGoal, setRenameGoal] = useState("");
-  // Cascade renaming of a focus area label across storage, notes, and events
-  function cascadeRename(oldLabel, newLabel){
+  const [renameColor, setRenameColor] = useState("#8CA4AF");
+  // Cascade renaming and color updates of a focus area across storage, notes, and events
+  function cascadeRename(oldLabel, newLabel, newColor = null){
     const norm = normalizeLabel;
     const KEYS = [
       "focusCategories",
@@ -564,7 +565,7 @@ function HomeContent() {
         const arr = safeJsonParse(raw, []);
         const updated = Array.isArray(arr) ? arr.map(c => {
           if (norm(c.label) === norm(oldLabel)) {
-            return { ...c, label: newLabel };
+            return { ...c, label: newLabel, ...(newColor && { color: newColor }) };
           }
           return c;
         }) : arr;
@@ -596,6 +597,8 @@ function HomeContent() {
             if ("area" in next) next.area = newLabel;
             if ("focusArea" in next) next.focusArea = newLabel;
             if ("category" in next) next.category = newLabel;
+            // Update color if provided
+            if (newColor) next.color = newColor;
             // do not change ev.title
             return next;
           }
@@ -1835,6 +1838,7 @@ function HomeContent() {
                     setRenameTarget(label);
                     setRenameValue(label);
                     setRenameGoal(goal || 0);
+                    setRenameColor(color || "#8CA4AF");
                   }}
                 >
                   ⋯
@@ -2199,9 +2203,31 @@ function HomeContent() {
               max="24"
             />
           </div>
+          
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Color</label>
+            <div className="flex items-center gap-3">
+              <input
+                type="color"
+                value={renameColor}
+                onChange={(e)=> setRenameColor(e.target.value)}
+                className="w-12 h-10 border border-gray-300 rounded cursor-pointer"
+              />
+              <div className="flex-1">
+                <input
+                  type="text"
+                  value={renameColor}
+                  onChange={(e)=> setRenameColor(e.target.value)}
+                  className="w-full border border-gray-300 rounded px-3 py-2 text-black text-sm"
+                  placeholder="#8CA4AF"
+                />
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">This color will be used for rings, calendar events, and progress bars</p>
+          </div>
           <div className="flex justify-between items-center gap-3">
             <button
-              onClick={()=>{ setRenameTarget(null); setRenameValue(""); setRenameGoal(""); }}
+              onClick={()=>{ setRenameTarget(null); setRenameValue(""); setRenameGoal(""); setRenameColor("#8CA4AF"); }}
               className="px-4 py-2 bg-gray-300 rounded"
             >
               Cancel
@@ -2237,14 +2263,15 @@ function HomeContent() {
                     return;
                   }
                   
-                  const updated = (categories || []).map(c => c.label === oldName ? { ...c, label: newName, goal: newGoal } : c);
+                  const updated = (categories || []).map(c => c.label === oldName ? { ...c, label: newName, goal: newGoal, color: renameColor } : c);
                   setCategories(updated);
                   saveWeekAndLive(updated);
                   // cascade to notes, events, and snapshots
-                  cascadeRename(oldName, newName);
+                  cascadeRename(oldName, newName, renameColor);
                   setRenameTarget(null);
                   setRenameValue("");
                   setRenameGoal("");
+                  setRenameColor("#8CA4AF");
                 }}
                 className="px-4 py-2 bg-[#BCA88F] text-white rounded"
               >
