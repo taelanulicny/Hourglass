@@ -170,7 +170,7 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, saved
           <button
             onClick={handleSearch}
             disabled={isSearching}
-            className="px-4 py-2 bg-[#8CA4AF] text-white rounded-lg text-sm font-medium hover:bg-[#7A939E] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-[#6B7280] text-white rounded-lg text-sm font-medium hover:bg-[#5B6B73] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSearching ? 'Finding...' : 'Find'}
           </button>
@@ -187,7 +187,7 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, saved
                 setIsSearching(false);
                 setSearchError(null);
               }}
-              className="text-xs text-[#8CA4AF] hover:text-[#7A939E] font-medium"
+              className="text-xs text-[#6B7280] hover:text-[#5B6B73] font-medium"
             >
               Clear
             </button>
@@ -330,7 +330,7 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, saved
       {/* Enter The Vault Button */}
       <button
         onClick={onShowVault}
-        className="w-full py-4 bg-gradient-to-r from-[#8CA4AF] to-[#7A939E] text-white font-bold text-lg tracking-widest uppercase rounded-lg hover:from-[#7A939E] hover:to-[#6B828C] transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] flex items-center justify-center gap-3"
+        className="w-full py-4 bg-gradient-to-r from-[#6B7280] to-[#5B6B73] text-white font-bold text-lg tracking-widest uppercase rounded-lg hover:from-[#5B6B73] hover:to-[#4B5563] transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] flex items-center justify-center gap-3"
       >
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -394,7 +394,7 @@ function TemplatesTab() {
 }
 
 // --- Tiny ring component -----------------------------------------------------
-function StoryRing({ percent = 0, label = "", tint = "#8CA4AF" }) {
+function StoryRing({ percent = 0, label = "", tint = "#6B7280" }) {
   // 48px ring
   const size = 56;
   const r = 24;
@@ -405,7 +405,7 @@ function StoryRing({ percent = 0, label = "", tint = "#8CA4AF" }) {
     <div className="w-[72px] flex-shrink-0 snap-start flex flex-col items-center">
       <svg width={size} height={size} viewBox="0 0 56 56" className="block">
         {/* track */}
-        <circle cx="28" cy="28" r={r} fill="none" stroke="#ECEAE6" strokeWidth="6" />
+        <circle cx="28" cy="28" r={r} fill="none" stroke="#F3F4F6" strokeWidth="6" />
         {/* progress */}
         <circle
           cx="28"
@@ -420,11 +420,11 @@ function StoryRing({ percent = 0, label = "", tint = "#8CA4AF" }) {
           style={{ transition: "stroke-dashoffset 300ms" }}
         />
         {/* % label */}
-        <text x="28" y="32" textAnchor="middle" fontSize="12" fontWeight="600" fill="#4E4034">
+        <text x="28" y="32" textAnchor="middle" fontSize="12" fontWeight="600" fill="#374151">
           {Math.round(percent)}%
         </text>
       </svg>
-      <div className="mt-1 text-[11px] text-[#4E4034] text-center leading-tight truncate w-full">{label}</div>
+      <div className="mt-1 text-[11px] text-[#374151] text-center leading-tight truncate w-full">{label}</div>
     </div>
   );
 }
@@ -433,10 +433,10 @@ function StoryRing({ percent = 0, label = "", tint = "#8CA4AF" }) {
 function FeedCard({ title, children, cta }) {
   return (
     <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4">
-      <div className="font-semibold text-[#4E4034] mb-1">{title}</div>
-      <div className="text-[13px] text-[#6A5E53] mb-3">{children}</div>
+      <div className="font-semibold text-[#374151] mb-1">{title}</div>
+      <div className="text-[13px] text-[#6B7280] mb-3">{children}</div>
       {cta && (
-        <button className="px-3 py-1.5 rounded-lg border border-[#4E4034] text-[#4E4034] text-sm">
+        <button className="px-3 py-1.5 rounded-lg border border-[#374151] text-[#374151] text-sm">
           {cta}
         </button>
       )}
@@ -662,7 +662,7 @@ function ResourcePreviewModal({ resource, isOpen, onClose, onSave, isSaved }) {
         <div className="flex gap-3">
           <button
             onClick={handleVisitResource}
-            className="flex-1 bg-[#8CA4AF] hover:bg-[#7A939E] text-white py-3 rounded-xl font-medium transition-colors"
+            className="flex-1 bg-[#6B7280] hover:bg-[#5B6B73] text-white py-3 rounded-xl font-medium transition-colors"
           >
             {getActionButtonText(resource.type)}
           </button>
@@ -879,7 +879,7 @@ function FocusAreaPost({
             }}
           />
         </div>
-        <div className="text-xs text-[#4E4034] text-center mt-1">{day}</div>
+        <div className="text-xs text-[#374151] text-center mt-1">{day}</div>
         <div className="h-[10px] mt-1" />
       </div>
     );
@@ -890,15 +890,15 @@ function FocusAreaPost({
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-[#ECEAE6] grid place-items-center text-sm font-semibold text-[#4E4034]">
+          <div className="w-10 h-10 rounded-full bg-[#F3F4F6] grid place-items-center text-sm font-semibold text-[#374151]">
             {author.split(" ").map(s => s[0]).join("").slice(0, 2)}
           </div>
           <div>
-            <div className="text-sm font-semibold text-[#4E4034]">{author} <span className="text-[#6A5E53] font-normal">{handle}</span></div>
-            <div className="text-xs text-[#6A5E53]">Shared a Focus Area • {weekLabel}</div>
+            <div className="text-sm font-semibold text-[#374151]">{author} <span className="text-[#6B7280] font-normal">{handle}</span></div>
+            <div className="text-xs text-[#6B7280]">Shared a Focus Area • {weekLabel}</div>
           </div>
         </div>
-        <button className="text-xs px-2 py-1 rounded-lg border border-[#4E4034]">Follow</button>
+        <button className="text-xs px-2 py-1 rounded-lg border border-[#374151]">Follow</button>
       </div>
 
       {/* Focus area snapshot - exact match to dashboard styling */}
@@ -906,7 +906,7 @@ function FocusAreaPost({
         <div className="flex gap-4 items-center">
           {/* Left: label + ring + small texts (same proportions as dashboard) */}
           <div className="flex flex-col items-center w-28">
-            <div className="text-sm font-semibold text-[#4E4034] text-center mb-1">{title}</div>
+            <div className="text-sm font-semibold text-[#374151] text-center mb-1">{title}</div>
             <div className="relative w-20 h-20">
               <svg className="w-full h-full" viewBox="0 0 36 36">
                 <path
@@ -931,7 +931,7 @@ function FocusAreaPost({
                         a 15.9155 15.9155 0 0 1 0 -31.831"
                 />
               </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-xs font-bold text-[#4E4034] leading-tight">
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-xs font-bold text-[#374151] leading-tight">
                 <div className="text-sm">{percent}%</div>
                 <div className="text-[10px] uppercase text-gray-500">week</div>
               </div>
@@ -958,9 +958,9 @@ function FocusAreaPost({
 
       {/* Actions */}
       <div className="mt-3 flex items-center gap-3 text-sm">
-        <button className="px-3 py-1.5 rounded-lg border border-[#4E4034] text-[#4E4034]">Like</button>
-        <button className="px-3 py-1.5 rounded-lg border border-[#4E4034] text-[#4E4034]">Comment</button>
-        <button className="ml-auto px-3 py-1.5 rounded-lg border border-[#4E4034] text-[#4E4034]">Duplicate</button>
+        <button className="px-3 py-1.5 rounded-lg border border-[#374151] text-[#374151]">Like</button>
+        <button className="px-3 py-1.5 rounded-lg border border-[#374151] text-[#374151]">Comment</button>
+        <button className="ml-auto px-3 py-1.5 rounded-lg border border-[#374151] text-[#374151]">Duplicate</button>
       </div>
     </article>
   );
@@ -1031,7 +1031,7 @@ function FocusAreaSlideshowPost({
             }}
           />
         </div>
-        <div className="text-xs text-[#4E4034] text-center mt-1">{day}</div>
+        <div className="text-xs text-[#374151] text-center mt-1">{day}</div>
         <div className="h-[10px] mt-1" />
       </div>
     );
@@ -1053,15 +1053,15 @@ function FocusAreaSlideshowPost({
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-[#ECEAE6] grid place-items-center text-sm font-semibold text-[#4E4034]">
+          <div className="w-10 h-10 rounded-full bg-[#F3F4F6] grid place-items-center text-sm font-semibold text-[#374151]">
             {author.split(" ").map(s => s[0]).join("").slice(0, 2)}
           </div>
           <div>
-            <div className="text-sm font-semibold text-[#4E4034]">{author} <span className="text-[#6A5E53] font-normal">{handle}</span></div>
-            <div className="text-xs text-[#6A5E53]">Shared {focusAreas.length} Focus Areas • {weekLabel}</div>
+            <div className="text-sm font-semibold text-[#374151]">{author} <span className="text-[#6B7280] font-normal">{handle}</span></div>
+            <div className="text-xs text-[#6B7280]">Shared {focusAreas.length} Focus Areas • {weekLabel}</div>
           </div>
         </div>
-        <button className="text-xs px-2 py-1 rounded-lg border border-[#4E4034]">Follow</button>
+        <button className="text-xs px-2 py-1 rounded-lg border border-[#374151]">Follow</button>
       </div>
 
       {/* Slideshow container */}
@@ -1072,7 +1072,7 @@ function FocusAreaSlideshowPost({
             <div
               key={index}
               className={`w-2 h-2 rounded-full ${
-                index === currentSlide ? 'bg-[#4E4034]' : 'bg-gray-300'
+                index === currentSlide ? 'bg-[#374151]' : 'bg-gray-300'
               }`}
             />
           ))}
@@ -1085,7 +1085,7 @@ function FocusAreaSlideshowPost({
               onClick={prevSlide}
               className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-sm hover:bg-white transition-colors"
             >
-              <svg className="w-4 h-4 text-[#4E4034]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 text-[#374151]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
@@ -1093,7 +1093,7 @@ function FocusAreaSlideshowPost({
               onClick={nextSlide}
               className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-sm hover:bg-white transition-colors"
             >
-              <svg className="w-4 h-4 text-[#4E4034]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 text-[#374151]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>
@@ -1103,7 +1103,7 @@ function FocusAreaSlideshowPost({
         {/* Focus area content */}
         <div className="flex gap-4 items-center">
           <div className="flex flex-col items-center w-28">
-            <div className="text-sm font-semibold text-[#4E4034] text-center mb-1">{currentFocusArea.title}</div>
+            <div className="text-sm font-semibold text-[#374151] text-center mb-1">{currentFocusArea.title}</div>
             <div className="relative w-20 h-20">
               <svg className="w-full h-full" viewBox="0 0 36 36">
                 <path
@@ -1127,7 +1127,7 @@ function FocusAreaSlideshowPost({
                         a 15.9155 15.9155 0 0 1 0 -31.831"
                 />
               </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-xs font-bold text-[#4E4034] leading-tight">
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-xs font-bold text-[#374151] leading-tight">
                 <div className="text-sm">{percent}%</div>
                 <div className="text-[10px] uppercase text-gray-500">week</div>
               </div>
@@ -1153,9 +1153,9 @@ function FocusAreaSlideshowPost({
 
       {/* Actions */}
       <div className="mt-3 flex items-center gap-3 text-sm">
-        <button className="px-3 py-1.5 rounded-lg border border-[#4E4034] text-[#4E4034]">Like</button>
-        <button className="px-3 py-1.5 rounded-lg border border-[#4E4034] text-[#4E4034]">Comment</button>
-        <button className="ml-auto px-3 py-1.5 rounded-lg border border-[#4E4034] text-[#4E4034]">Duplicate</button>
+        <button className="px-3 py-1.5 rounded-lg border border-[#374151] text-[#374151]">Like</button>
+        <button className="px-3 py-1.5 rounded-lg border border-[#374151] text-[#374151]">Comment</button>
+        <button className="ml-auto px-3 py-1.5 rounded-lg border border-[#374151] text-[#374151]">Duplicate</button>
       </div>
     </article>
   );
@@ -1368,7 +1368,7 @@ export default function ConnectPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F7F6F3] text-[#4E4034] pb-36">
+    <div className="min-h-screen bg-[#F7F6F3] text-[#374151] pb-36">
       {/* Header */}
       <header className="px-4 pt-16 pb-3">
         <div className="flex items-center justify-between mb-2">

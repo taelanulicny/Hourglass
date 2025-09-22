@@ -547,7 +547,7 @@ function HomeContent() {
   const [renameTarget, setRenameTarget] = useState(null);
   const [renameValue, setRenameValue] = useState("");
   const [renameGoal, setRenameGoal] = useState("");
-  const [renameColor, setRenameColor] = useState("#8CA4AF");
+  const [renameColor, setRenameColor] = useState("#6B7280");
   // Cascade renaming and color updates of a focus area across storage, notes, and events
   function cascadeRename(oldLabel, newLabel, newColor = null){
     const norm = normalizeLabel;
@@ -620,8 +620,8 @@ function HomeContent() {
   const remainingToday = Math.max(0, availableHours - plannedToday);
   const overByToday = Math.max(0, plannedToday - availableHours);
   // Preset colors for focus areas
-  const PRESET_COLORS = ["#8CA4AF", "#BCA88F", "#9ACD32", "#E46C6C", "#7D7ACF", "#F2C94C", "#56CCF2"];
-  const [newColor, setNewColor] = useState("#8CA4AF");
+  const PRESET_COLORS = ["#6B7280", "#9CA3AF", "#9ACD32", "#E46C6C", "#7D7ACF", "#F2C94C", "#56CCF2"];
+  const [newColor, setNewColor] = useState("#6B7280");
 
 
 
@@ -681,7 +681,7 @@ function HomeContent() {
   // Reset defaults whenever the add-modal opens
   useEffect(() => {
     if (showModal) {
-      setNewColor("#8CA4AF");
+      setNewColor("#6B7280");
     }
   }, [showModal]);
 
@@ -892,7 +892,7 @@ function HomeContent() {
     const focusArea = (categories || []).find(
       c => norm(c.label) === norm(selectedFocusArea.label)
     ) || selectedFocusArea;
-    const areaColor = focusArea?.color || "#8CA4AF";
+    const areaColor = focusArea?.color || "#6B7280";
     const goal = Number(focusArea?.goal) || 0;
     // Progress for the currently selected day only
     const selectedDayKey = ["Su","M","Tu","W","Th","F","Sa"][parseYMD(selectedDateFA).getDay()];
@@ -1112,7 +1112,7 @@ function HomeContent() {
               <div className="flex items-center gap-6 w-full">
                 {/* Left: label + ring + small texts (same proportions as dashboard) */}
                 <div className="flex flex-col items-center w-28">
-                  <div className="text-sm font-semibold text-[#4E4034] text-center mb-1">{focusArea.label}</div>
+                  <div className="text-sm font-semibold text-[#374151] text-center mb-1">{focusArea.label}</div>
                   <div className="relative w-20 h-20">
                     <svg className="w-full h-full" viewBox="0 0 36 36">
                       <path
@@ -1154,7 +1154,7 @@ function HomeContent() {
                         </g>
                       )}
                     </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center text-xs font-bold text-[#4E4034] leading-tight">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-xs font-bold text-[#374151] leading-tight">
                       <div className="text-sm">{formatCenterAmount(centerAmount)}</div>
                       <div className="text-[10px] uppercase text-gray-500">
                         {(Number(spentToday || 0) > Number(goal || 0)) ? 'OVER' : 'LEFT'}
@@ -1181,7 +1181,7 @@ function HomeContent() {
                     >
                       ◀
                     </button>
-                    <div className="text-[#4E4034] text-xs font-medium">
+                    <div className="text-[#374151] text-xs font-medium">
                       {parseYMD(selectedDateFA).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                     </div>
                     <button
@@ -1225,7 +1225,7 @@ function HomeContent() {
                               style={{ height: `${pct * bottomFraction * 100}%`, backgroundColor: hexToRGBA(areaColor, 0.4) }}
                             />
                           </div>
-                          <div className="text-xs text-[#4E4034] text-center mt-1">{day}</div>
+                          <div className="text-xs text-[#374151] text-center mt-1">{day}</div>
                           {day === selectedAbbrev ? (
                             <div className="text-[10px] text-[#BCA88F] leading-none mt-1">★</div>
                           ) : (
@@ -1243,7 +1243,7 @@ function HomeContent() {
                   {/* Countdown */}
                   <div className="rounded-xl border border-gray-200 bg-white p-3 flex flex-col">
                     <div className="text-sm text-gray-500 mb-2">Countdown</div>
-                    <div className="text-2xl font-mono tracking-wider text-[#4E4034]">
+                    <div className="text-2xl font-mono tracking-wider text-[#374151]">
                       {secondsToHMMSS(remaining)}
                     </div>
                     <div className="text-[11px] text-gray-500 mt-1">
@@ -1253,21 +1253,21 @@ function HomeContent() {
                       {!running ? (
                         <button
                           onClick={() => setRunning(true)}
-                          className="h-9 px-3 text-sm rounded bg-[#8CA4AF] text-white font-medium"
+                          className="h-9 px-3 text-sm rounded bg-[#6B7280] text-white font-medium"
                         >
                           Start
                         </button>
                       ) : (
                         <button
                           onClick={() => setRunning(false)}
-                          className="h-9 px-3 text-sm rounded bg-gray-300 text-[#4E4034] font-medium"
+                          className="h-9 px-3 text-sm rounded bg-gray-300 text-[#374151] font-medium"
                         >
                           Pause
                         </button>
                       )}
                       <button
                         onClick={handleResetTimer}
-                        className="h-9 px-3 text-sm rounded bg-gray-200 text-[#4E4034] font-medium disabled:opacity-50"
+                        className="h-9 px-3 text-sm rounded bg-gray-200 text-[#374151] font-medium disabled:opacity-50"
                         disabled={remaining === initialRemaining}
                       >
                         Reset
@@ -1286,7 +1286,7 @@ function HomeContent() {
                           inputMode="numeric"
                           value={logHours}
                           onChange={(e) => setLogHours(e.target.value)}
-                          className="w-full border border-gray-300 rounded px-3 py-2 text-[#4E4034]"
+                          className="w-full border border-gray-300 rounded px-3 py-2 text-[#374151]"
                           placeholder="0"
                           min="0"
                         />
@@ -1298,7 +1298,7 @@ function HomeContent() {
                           inputMode="numeric"
                           value={logMinutes}
                           onChange={(e) => setLogMinutes(e.target.value)}
-                          className="w-full border border-gray-300 rounded px-3 py-2 text-[#4E4034]"
+                          className="w-full border border-gray-300 rounded px-3 py-2 text-[#374151]"
                           placeholder="0"
                           min="0"
                         />
@@ -1362,7 +1362,7 @@ function HomeContent() {
                 return (
                   <div className="rounded-2xl border-2 border-gray-200 bg-white p-3 mt-3">
                     <div className="text-sm text-gray-500 mb-2">Data</div>
-                    <div className="grid grid-cols-3 gap-3 text-[#4E4034]">
+                    <div className="grid grid-cols-3 gap-3 text-[#374151]">
                       <div className="rounded-xl border border-gray-200 bg-white px-3 py-2">
                         <div className="text-[11px] text-gray-500">Total this week</div>
                         <div className="font-semibold">{formatHoursAndMinutes(totalHoursThisWeek)}</div>
@@ -1389,7 +1389,7 @@ function HomeContent() {
               
               {/* Timeline module - Future Planning Tool */}
               <div className="rounded-2xl border-2 border-gray-200 bg-white p-3 mt-3">
-                <div className="text-[#4E4034] font-semibold text-base mb-2">
+                <div className="text-[#374151] font-semibold text-base mb-2">
                   <span>Timeline - Future Planning</span>
                 </div>
                 <div className="text-[12px] text-gray-600 mb-3">
@@ -1400,7 +1400,7 @@ function HomeContent() {
                 <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-50">
                   <div className="bg-white rounded-lg shadow-lg p-5 w-[90%] max-w-md">
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-lg font-semibold text-[#4E4034]">Plan Future Session</h3>
+                      <h3 className="text-lg font-semibold text-[#374151]">Plan Future Session</h3>
                       <button onClick={() => setShowNewEventForm(false)} className="text-sm text-gray-500">Close</button>
                     </div>
                     <div className="text-[12px] text-gray-600 mb-3">
@@ -1411,7 +1411,7 @@ function HomeContent() {
                     <input
                       value={newEvent.title || ""}
                       onChange={(e) => setNewEvent((prev) => ({ ...prev, title: e.target.value }))}
-                      className="w-full border border-gray-300 rounded px-3 py-2 mb-3 text-[#4E4034]"
+                      className="w-full border border-gray-300 rounded px-3 py-2 mb-3 text-[#374151]"
                       placeholder="e.g., Product Development"
                     />
 
@@ -1419,7 +1419,7 @@ function HomeContent() {
                     <select
                       value={newEvent.area || (focusArea.label || "")}
                       onChange={(e) => setNewEvent((prev) => ({ ...prev, area: e.target.value }))}
-                      className="w-full border border-gray-300 rounded px-3 py-2 mb-1 text-[#4E4034]"
+                      className="w-full border border-gray-300 rounded px-3 py-2 mb-1 text-[#374151]"
                     >
                       {(categories || []).map(c => (
                         <option key={c.label} value={c.label}>{c.label}</option>
@@ -1433,7 +1433,7 @@ function HomeContent() {
                       type="date"
                       value={newEvent.date || selectedDateFA}
                       onChange={(e) => setNewEvent((prev) => ({ ...prev, date: e.target.value }))}
-                      className="w-full border border-gray-300 rounded px-3 py-2 text-[#4E4034] mb-3"
+                      className="w-full border border-gray-300 rounded px-3 py-2 text-[#374151] mb-3"
                     />
                     <div className="grid grid-cols-2 gap-3">
                       <div>
@@ -1442,7 +1442,7 @@ function HomeContent() {
                           type="time"
                           value={newEvent.start || "09:00"}
                           onChange={(e) => setNewEvent((prev) => ({ ...prev, start: e.target.value }))}
-                          className="w-full border border-gray-300 rounded px-3 py-2 text-[#4E4034]"
+                          className="w-full border border-gray-300 rounded px-3 py-2 text-[#374151]"
                         />
                       </div>
                       <div>
@@ -1451,7 +1451,7 @@ function HomeContent() {
                           type="time"
                           value={newEvent.end || "10:00"}
                           onChange={(e) => setNewEvent((prev) => ({ ...prev, end: e.target.value }))}
-                          className="w-full border border-gray-300 rounded px-3 py-2 text-[#4E4034]"
+                          className="w-full border border-gray-300 rounded px-3 py-2 text-[#374151]"
                         />
                       </div>
                     </div>
@@ -1460,14 +1460,14 @@ function HomeContent() {
                     <textarea
                       value={newEvent.notes || ""}
                       onChange={(e) => setNewEvent((prev) => ({ ...prev, notes: e.target.value }))}
-                      className="w-full min-h-[80px] border border-gray-300 rounded px-3 py-2 text-[#4E4034]"
+                      className="w-full min-h-[80px] border border-gray-300 rounded px-3 py-2 text-[#374151]"
                       placeholder="What will you do during this session?"
                     />
 
                     <div className="mt-4 flex justify-end gap-2">
                       <button
                         onClick={() => setShowNewEventForm(false)}
-                        className="px-3 py-2 rounded bg-gray-200 text-[#4E4034]"
+                        className="px-3 py-2 rounded bg-gray-200 text-[#374151]"
                       >
                         Cancel
                       </button>
@@ -1494,8 +1494,8 @@ function HomeContent() {
                         style={{ backgroundColor: hexToRGBA(areaColor, 0.4), borderColor: areaColor, borderWidth: '3px', borderStyle: 'solid' }}
                       >
                         <div>
-                          <div className="font-semibold text-[#4E4034]">{ev.title || ev.area}</div>
-                          <div className="text-[#4E4034]/80">
+                          <div className="font-semibold text-[#374151]">{ev.title || ev.area}</div>
+                          <div className="text-[#374151]/80">
                             {new Date(ev.start).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}
                             {" • "}
                             {new Date(ev.start).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
@@ -1541,7 +1541,7 @@ function HomeContent() {
             <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-50">
               <div className="bg-white rounded-lg shadow-lg p-5 w-[90%] max-w-md">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-lg font-semibold text-[#4E4034]">Edit Event</h3>
+                  <h3 className="text-lg font-semibold text-[#374151]">Edit Event</h3>
                   <button onClick={() => setShowEditEventModal(false)} className="text-sm text-gray-500">Close</button>
                 </div>
 
@@ -1549,14 +1549,14 @@ function HomeContent() {
                 <input
                   value={editDraft.title}
                   onChange={(e)=> setEditDraft(d=>({ ...d, title: e.target.value }))}
-                  className="w-full border border-gray-300 rounded px-3 py-2 mb-3 text-[#4E4034]"
+                  className="w-full border border-gray-300 rounded px-3 py-2 mb-3 text-[#374151]"
                 />
 
                 <label className="block text-xs text-gray-600 mb-1">Focus Area</label>
                 <select
                   value={editDraft.area}
                   onChange={(e)=> setEditDraft(d=>({ ...d, area: e.target.value }))}
-                  className="w-full border border-gray-300 rounded px-3 py-2 mb-3 text-[#4E4034]"
+                  className="w-full border border-gray-300 rounded px-3 py-2 mb-3 text-[#374151]"
                 >
                   {(categories || []).map(c => (
                     <option key={c.label} value={c.label}>{c.label}</option>
@@ -1569,7 +1569,7 @@ function HomeContent() {
                   type="date"
                   value={editDraft.dateYMD}
                   onChange={(e)=> setEditDraft(d=>({ ...d, dateYMD: e.target.value }))}
-                  className="w-full border border-gray-300 rounded px-3 py-2 mb-3 text-[#4E4034]"
+                  className="w-full border border-gray-300 rounded px-3 py-2 mb-3 text-[#374151]"
                 />
 
                 <div className="grid grid-cols-2 gap-3">
@@ -1579,7 +1579,7 @@ function HomeContent() {
                       type="time"
                       value={editDraft.start}
                       onChange={(e)=> setEditDraft(d=>({ ...d, start: e.target.value }))}
-                      className="w-full border border-gray-300 rounded px-3 py-2 text-[#4E4034]"
+                      className="w-full border border-gray-300 rounded px-3 py-2 text-[#374151]"
                     />
                   </div>
                   <div>
@@ -1588,7 +1588,7 @@ function HomeContent() {
                       type="time"
                       value={editDraft.end}
                       onChange={(e)=> setEditDraft(d=>({ ...d, end: e.target.value }))}
-                      className="w-full border border-gray-300 rounded px-3 py-2 text-[#4E4034]"
+                      className="w-full border border-gray-300 rounded px-3 py-2 text-[#374151]"
                     />
                   </div>
                 </div>
@@ -1597,7 +1597,7 @@ function HomeContent() {
                 <textarea
                   value={editDraft.notes}
                   onChange={(e)=> setEditDraft(d=>({ ...d, notes: e.target.value }))}
-                  className="w-full min-h-[80px] border border-gray-300 rounded px-3 py-2 text-[#4E4034]"
+                  className="w-full min-h-[80px] border border-gray-300 rounded px-3 py-2 text-[#374151]"
                 />
 
                 <div className="mt-4 flex justify-between items-center">
@@ -1621,7 +1621,7 @@ function HomeContent() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => setShowEditEventModal(false)}
-                      className="px-3 py-2 rounded bg-gray-200 text-[#4E4034]"
+                      className="px-3 py-2 rounded bg-gray-200 text-[#374151]"
                     >
                       Cancel
                     </button>
@@ -1660,7 +1660,7 @@ function HomeContent() {
         {/* Floating notes button for focus area view */}
         <button
           onClick={() => router.push('/notes')}
-          className="fixed bottom-20 right-4 bg-[#8CA4AF] text-white rounded-full w-12 h-12 flex items-center justify-center text-2xl shadow-md z-[10000]"
+          className="fixed bottom-20 right-4 bg-[#6B7280] text-white rounded-full w-12 h-12 flex items-center justify-center text-2xl shadow-md z-[10000]"
           aria-label="Go to Notes"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1804,7 +1804,7 @@ function HomeContent() {
 
           const category = { label, timeSpent, goal, days, color };
           // Insert areaColor constant based on category color
-          const areaColor = category?.color || "#8CA4AF";
+          const areaColor = category?.color || "#6B7280";
           // Compute weekday abbreviation from selected date (for use on slug page)
           const selectedDayAbbrev = (() => {
             const d = parseYMD(selectedDate);
@@ -1831,14 +1831,14 @@ function HomeContent() {
               {canEditWeek && (
                 <button
                   type="button"
-                  className="absolute -top-1 right-2 text-[#4E4034] text-xl px-2"
+                  className="absolute -top-1 right-2 text-[#374151] text-xl px-2"
                   aria-label="Delete or Rename"
                   onClick={(e) => {
                     e.stopPropagation();
                     setRenameTarget(label);
                     setRenameValue(label);
                     setRenameGoal(goal || 0);
-                    setRenameColor(color || "#8CA4AF");
+                    setRenameColor(color || "#6B7280");
                   }}
                 >
                   ⋯
@@ -1931,7 +1931,7 @@ function HomeContent() {
                             }}
                           />
                         </div>
-                        <div className="text-xs text-[#4E4034] text-center mt-1">{day}</div>
+                        <div className="text-xs text-[#374151] text-center mt-1">{day}</div>
                         {isCurrentWeek && day === todayAbbrev ? (
                           <div className="text-[10px] text-[#BCA88F] leading-none mt-1">★</div>
                         ) : (
@@ -1952,7 +1952,7 @@ function HomeContent() {
               {/* Show planning message for next week */}
               {isNextWeek && (
                 <div className="mb-2" aria-hidden="true" role="presentation">
-                  <div className="w-full rounded-xl bg-[#8CA4AF] text-white py-3 text-center font-medium shadow-sm select-none">
+                  <div className="w-full rounded-xl bg-[#6B7280] text-white py-3 text-center font-medium shadow-sm select-none">
                     Continue working on last week&apos;s focus areas
                   </div>
                 </div>
@@ -1963,7 +1963,7 @@ function HomeContent() {
                 className="relative bg-white p-3 rounded-xl shadow-md w-full flex flex-row items-center gap-3 opacity-50 cursor-pointer"
               >
                 <div className="flex flex-col items-center w-28">
-                  <div className="text-sm font-semibold text-[#4E4034] text-center">Add a Focus Area</div>
+                  <div className="text-sm font-semibold text-[#374151] text-center">Add a Focus Area</div>
                   <div className="relative w-20 h-20">
                     <svg className="w-full h-full" viewBox="0 0 36 36">
                       <path
@@ -1976,7 +1976,7 @@ function HomeContent() {
                            a 15.9155 15.9155 0 0 1 0 -31.831"
                       />
                     </svg>
-                    <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-[#4E4034]">
+                    <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-[#374151]">
                       0hrs left
                     </div>
                   </div>
@@ -1985,7 +1985,7 @@ function HomeContent() {
                   </div>
                 </div>
                 <button
-                  className="absolute -top-1 right-2 text-[#4E4034] text-xl px-2"
+                  className="absolute -top-1 right-2 text-[#374151] text-xl px-2"
                   aria-label="Focus Area Options"
                   tabIndex={-1}
                   style={{ pointerEvents: 'none', opacity: 1 }}
@@ -2000,7 +2000,7 @@ function HomeContent() {
                           <div className="h-1" />
                           <div className="w-full h-14 rounded-b-sm border border-[#EAECEC] bg-[#DDE5ED]" />
                         </div>
-                        <div className="text-xs text-[#4E4034] text-center mt-1">{day}</div>
+                        <div className="text-xs text-[#374151] text-center mt-1">{day}</div>
                         {isCurrentWeek && day === todayAbbrev ? (
                           <div className="text-[10px] text-[#BCA88F] leading-none mt-1">★</div>
                         ) : (
@@ -2013,7 +2013,7 @@ function HomeContent() {
             </>
           ) : (
             // Older week with no focus areas—show a read-only notice (NO adding in past weeks)
-            <div className="mt-2 w-full rounded-xl border border-gray-200 bg-white text-[#4E4034]/70 py-6 text-center">
+            <div className="mt-2 w-full rounded-xl border border-gray-200 bg-white text-[#374151]/70 py-6 text-center">
               No logged focus areas.
             </div>
           )
@@ -2032,7 +2032,7 @@ function HomeContent() {
                   setShowModal(true);
                 }}
                 type="button"
-                className="mt-4 w-full rounded-xl bg-[#8CA4AF] text-white py-3 font-semibold shadow-lg hover:bg-[#7A8F9A] active:bg-[#6B7A85] transition-all duration-200"
+                className="mt-4 w-full rounded-xl bg-[#6B7280] text-white py-3 font-semibold shadow-lg hover:bg-[#7A8F9A] active:bg-[#6B7A85] transition-all duration-200"
                 aria-label={addBtnLabel}
               >
                 {addBtnLabel}
@@ -2109,7 +2109,7 @@ function HomeContent() {
                   className="w-7 h-7 rounded-full border"
                   style={{
                     backgroundColor: c,
-                    outline: newColor === c ? "2px solid #4E4034" : "none"
+                    outline: newColor === c ? "2px solid #374151" : "none"
                   }}
                   aria-label={`Choose color ${c}`}
                 />
@@ -2219,7 +2219,7 @@ function HomeContent() {
                   value={renameColor}
                   onChange={(e)=> setRenameColor(e.target.value)}
                   className="w-full border border-gray-300 rounded px-3 py-2 text-black text-sm"
-                  placeholder="#8CA4AF"
+                  placeholder="#6B7280"
                 />
               </div>
             </div>
@@ -2227,7 +2227,7 @@ function HomeContent() {
           </div>
           <div className="flex justify-between items-center gap-3">
             <button
-              onClick={()=>{ setRenameTarget(null); setRenameValue(""); setRenameGoal(""); setRenameColor("#8CA4AF"); }}
+              onClick={()=>{ setRenameTarget(null); setRenameValue(""); setRenameGoal(""); setRenameColor("#6B7280"); }}
               className="px-4 py-2 bg-gray-300 rounded"
             >
               Cancel
@@ -2271,7 +2271,7 @@ function HomeContent() {
                   setRenameTarget(null);
                   setRenameValue("");
                   setRenameGoal("");
-                  setRenameColor("#8CA4AF");
+                  setRenameColor("#6B7280");
                 }}
                 className="px-4 py-2 bg-[#BCA88F] text-white rounded"
               >
@@ -2336,7 +2336,7 @@ function HomeContent() {
     {/* Floating notes button for dashboard view */}
     <button
       onClick={() => router.push('/notes')}
-      className="fixed bottom-20 right-4 bg-[#8CA4AF] text-white rounded-full w-12 h-12 flex items-center justify-center text-2xl shadow-md z-[10000]"
+      className="fixed bottom-20 right-4 bg-[#6B7280] text-white rounded-full w-12 h-12 flex items-center justify-center text-2xl shadow-md z-[10000]"
       aria-label="Go to Notes"
     >
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

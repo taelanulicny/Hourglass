@@ -279,7 +279,7 @@ function MiniMonthPicker({ valueYMD, onChange, onClose }){
     <div className="absolute z-50 mt-1 w-72 rounded-lg border border-gray-200 bg-white shadow-lg p-2">
       <div className="flex items-center justify-between px-1 pb-2">
         <button className="px-2 py-1 rounded hover:bg-gray-100" onClick={()=>setView(addMonths(view,-1))} aria-label="Previous month">‹</button>
-        <div className="font-semibold text-[#4E4034]">{view.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</div>
+        <div className="font-semibold text-[#374151]">{view.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</div>
         <button className="px-2 py-1 rounded hover:bg-gray-100" onClick={()=>setView(addMonths(view,1))} aria-label="Next month">›</button>
       </div>
       <div className="grid grid-cols-7 text-center text-[11px] text-gray-500">
@@ -294,7 +294,7 @@ function MiniMonthPicker({ valueYMD, onChange, onClose }){
             <button
               key={idx}
               onClick={()=>{ onChange && onChange(ymd(d)); onClose && onClose(); }}
-              className={`h-9 rounded-md text-sm ${inMonth? 'text-[#4E4034]':'text-gray-400'} ${isSel? 'bg-[#8CA4AF] text-white' : 'hover:bg-gray-100'} ${isToday && !isSel ? 'ring-1 ring-[#8CA4AF]' : ''}`}
+              className={`h-9 rounded-md text-sm ${inMonth? 'text-[#374151]':'text-gray-400'} ${isSel? 'bg-[#6B7280] text-white' : 'hover:bg-gray-100'} ${isToday && !isSel ? 'ring-1 ring-[#6B7280]' : ''}`}
               title={d.toDateString()}
             >{d.getDate()}</button>
           );
@@ -980,7 +980,7 @@ function CalendarContent() {
   // Show loading state if no date is selected yet
   if (!selectedDate) {
     return (
-      <div className="min-h-screen bg-white text-[#4E4034] flex items-center justify-center">
+      <div className="min-h-screen bg-white text-[#374151] flex items-center justify-center">
         <div className="text-center">
           <div className="text-lg font-semibold mb-2">Loading Calendar...</div>
           <div className="text-sm text-gray-500">Please wait while we prepare your calendar view.</div>
@@ -990,7 +990,7 @@ function CalendarContent() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-[#4E4034] pb-24">
+    <div className="min-h-screen bg-white text-[#374151] pb-24">
       {/* Fixed header and day selector - LOCKED */}
       <div className="fixed top-0 left-0 right-0 z-50">
         {/* Safe area background filler */}
@@ -1053,13 +1053,13 @@ function CalendarContent() {
               ref={(el) => (stripBtnRefs.current[i] = el)}
               key={i}
               onClick={() => setSelectedDate(new Date(d))}
-              className={`relative flex flex-col items-center w-14 flex-shrink-0 py-2 rounded-md border outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 focus-visible:ring-0 ${isSel ? "bg-[#8CA4AF] text-white border-transparent" : "text-[#4E4034] bg-transparent border-transparent"}`}
+              className={`relative flex flex-col items-center w-14 flex-shrink-0 py-2 rounded-md border outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 focus-visible:ring-0 ${isSel ? "bg-[#6B7280] text-white border-transparent" : "text-[#374151] bg-transparent border-transparent"}`}
               title={d.toDateString()}
             >
               <div className="text-[11px]">{DAYS[d.getDay()]}</div>
               <div className="text-sm font-semibold">{d.getDate()}</div>
               {/* Today dot (does not affect layout height) */}
-              <div className={`absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#8CA4AF] ${isToday && !isSel ? 'opacity-100' : 'opacity-0'}`} />
+              <div className={`absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#6B7280] ${isToday && !isSel ? 'opacity-100' : 'opacity-0'}`} />
             </button>
           );
         })}
@@ -1222,7 +1222,7 @@ function CalendarContent() {
       {/* FAB */}
       <button
         onClick={() => { setDraft({ ...DEFAULT_DRAFT, ...nextHourDefaults(new Date()), dateYMD: ymd(selectedDate) }); setShowModal(true); }}
-        className="fixed right-4 bg-[#8CA4AF] text-white rounded-full w-12 h-12 flex items-center justify-center text-2xl shadow-md z-[70]"
+        className="fixed right-4 bg-[#6B7280] text-white rounded-full w-12 h-12 flex items-center justify-center text-2xl shadow-md z-[70]"
         style={{ bottom: `${80 + insets.bottom}px` }}
         aria-label="Add Event"
       >
@@ -1278,7 +1278,7 @@ function CalendarContent() {
           const overAmount = isOverGoal ? Math.min(overAmountRaw, 100).toFixed(0) : 0;
 
           const category = { label, timeSpent, goal, days, color };
-          const areaColor = category?.color || "#8CA4AF";
+          const areaColor = category?.color || "#6B7280";
           
           // Center label shows how much LEFT/OVER for today (day-aware)
           const centerAmount = Math.abs((goalNum || 0) - (daySpent || 0));
@@ -1337,7 +1337,7 @@ function CalendarContent() {
                 {/* Center label */}
                 <foreignObject x="8" y="8" width="20" height="20">
                   <div xmlns="http://www.w3.org/1999/xhtml" className="w-full h-full flex flex-col items-center justify-center leading-tight">
-                    <div className={`text-[7px] font-bold ${isOverGoal ? 'text-red-600' : 'text-[#4E4034]'}`}>
+                    <div className={`text-[7px] font-bold ${isOverGoal ? 'text-red-600' : 'text-[#374151]'}`}>
                       {formatCenterAmount(centerAmount)}
                     </div>
                     <div className={`text-[5px] uppercase -mt-0.5 ${isOverGoal ? 'text-red-500 font-semibold' : 'text-gray-500'}`}>
@@ -1346,7 +1346,7 @@ function CalendarContent() {
                   </div>
                 </foreignObject>
               </svg>
-              <div className="text-xs font-medium text-[#4E4034] truncate max-w-[60px]">{label}</div>
+              <div className="text-xs font-medium text-[#374151] truncate max-w-[60px]">{label}</div>
             </div>
           );
         })}
@@ -1547,7 +1547,7 @@ export default function CalendarPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-[#F7F6F3] flex items-center justify-center">
-        <div className="text-[#4E4034]">Loading calendar...</div>
+        <div className="text-[#374151]">Loading calendar...</div>
       </div>
     }>
       <CalendarContent />
