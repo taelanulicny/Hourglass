@@ -83,7 +83,7 @@ function ChallengesTab() {
   );
 }
 
-function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, savedResources = [], onSaveResource, onRemoveResource, onTabChange, isResourceSaved, onShowVault }) {
+function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, savedResources = [], onSaveResource, onRemoveResource, onTabChange, isResourceSaved, onShowVault, showVaultContent = false, onBackToResources }) {
   const DEMO = [{ id:'lsat', name:'LSAT Prep' }, { id:'fitness', name:'Fitness' }];
   
   // Convert focus areas to the format expected by the selector
@@ -136,6 +136,36 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, saved
         <div className="text-sm text-gray-400">
           Go to your dashboard and add a focus area to see personalized resources
         </div>
+      </div>
+    );
+  }
+
+  // If showing vault content, render the vault page
+  if (showVaultContent) {
+    return (
+      <div className="space-y-4">
+        {/* Vault Header */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800 tracking-widest uppercase">T H E   V A U L T</h2>
+              <p className="text-sm text-gray-600 mt-1">Your personal collection of resources</p>
+            </div>
+            <button
+              onClick={onBackToResources}
+              className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+
+        {/* Vault Content */}
+        <MyLearningPathTab 
+          savedResources={savedResources} 
+          onRemoveResource={onRemoveResource} 
+          onResourceSelect={onResourceSelect} 
+        />
       </div>
     );
   }
@@ -1260,7 +1290,7 @@ export default function ConnectPage() {
   const [mounted, setMounted] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState(null);
   const [selectedResource, setSelectedResource] = useState(null);
-  const [showVault, setShowVault] = useState(false);
+  const [showVaultContent, setShowVaultContent] = useState(false);
   const menuRef = useRef(null);
   const router = useRouter();
 
@@ -1423,7 +1453,7 @@ export default function ConnectPage() {
       <main className="px-4 mt-4">
         {tab === 'Close Friends' && <FeedTab />}
         {tab === 'Challenges' && <ChallengesTab />}
-        {tab === 'Resources' && <ResourcesTab focusAreas={focusAreas} onPersonSelect={setSelectedPerson} onResourceSelect={setSelectedResource} savedResources={savedResources} onSaveResource={saveResource} onRemoveResource={removeSavedResource} onTabChange={setTab} isResourceSaved={isResourceSaved} onShowVault={() => setShowVault(true)} />}
+        {tab === 'Resources' && <ResourcesTab focusAreas={focusAreas} onPersonSelect={setSelectedPerson} onResourceSelect={setSelectedResource} savedResources={savedResources} onSaveResource={saveResource} onRemoveResource={removeSavedResource} onTabChange={setTab} isResourceSaved={isResourceSaved} onShowVault={() => setShowVaultContent(true)} showVaultContent={showVaultContent} onBackToResources={() => setShowVaultContent(false)} />}
         {tab === 'Templates' && <TemplatesTab />}
       </main>
 
@@ -1476,35 +1506,6 @@ export default function ConnectPage() {
         isSaved={selectedResource ? isResourceSaved(selectedResource) : false}
       />
 
-      {/* Vault Overlay */}
-      {showVault && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-            {/* Vault Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-800 tracking-widest uppercase">T H E   V A U L T</h2>
-                <p className="text-sm text-gray-600 mt-1">Your personal collection of resources</p>
-              </div>
-              <button
-                onClick={() => setShowVault(false)}
-                className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Vault Content */}
-            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-              <MyLearningPathTab 
-                savedResources={savedResources} 
-                onRemoveResource={removeSavedResource} 
-                onResourceSelect={setSelectedResource} 
-              />
-            </div>
-          </div>
-        </div>
-      )}
 
     </div>
   );
