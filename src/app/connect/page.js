@@ -83,7 +83,7 @@ function ChallengesTab() {
   );
 }
 
-function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, savedResources = [], onSaveResource, onRemoveResource }) {
+function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, savedResources = [], onSaveResource, onRemoveResource, onTabChange }) {
   const DEMO = [{ id:'lsat', name:'LSAT Prep' }, { id:'fitness', name:'Fitness' }];
   
   // Convert focus areas to the format expected by the selector
@@ -326,6 +326,16 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, saved
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Enter The Vault Button */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <button
+          onClick={() => onTabChange('T H E   V A U L T')}
+          className="w-full py-4 bg-gradient-to-r from-[#8CA4AF] to-[#7A939E] text-white font-bold text-lg tracking-widest uppercase rounded-lg hover:from-[#7A939E] hover:to-[#6B828C] transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+        >
+          ----&gt; E N T E R   T H E   V A U L T
+        </button>
       </div>
     </div>
   );
@@ -1406,7 +1416,7 @@ export default function ConnectPage() {
       <main className="px-4 mt-4">
         {tab === 'Close Friends' && <FeedTab />}
         {tab === 'Challenges' && <ChallengesTab />}
-        {tab === 'Resources' && <ResourcesTab focusAreas={focusAreas} onPersonSelect={setSelectedPerson} onResourceSelect={setSelectedResource} savedResources={savedResources} onSaveResource={saveResource} onRemoveResource={removeSavedResource} />}
+        {tab === 'Resources' && <ResourcesTab focusAreas={focusAreas} onPersonSelect={setSelectedPerson} onResourceSelect={setSelectedResource} savedResources={savedResources} onSaveResource={saveResource} onRemoveResource={removeSavedResource} onTabChange={setTab} />}
         {tab === 'T H E   V A U L T' && <MyLearningPathTab savedResources={savedResources} onRemoveResource={removeSavedResource} onResourceSelect={setSelectedResource} />}
         {tab === 'Templates' && <TemplatesTab />}
       </main>
