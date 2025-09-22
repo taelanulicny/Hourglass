@@ -1307,10 +1307,17 @@ function CalendarContent() {
                     <>
                       {/* Top resize handle */}
                       <div
-                        className={`absolute top-0 right-0 w-3 h-3 cursor-ns-resize transition-opacity select-none ${resizingId === ev.id && resizeHandle === 'top' ? 'opacity-100' : 'opacity-0 hover:opacity-100'}`}
+                        className={`absolute top-0 right-0 w-4 h-4 cursor-ns-resize transition-opacity select-none ${resizingId === ev.id && resizeHandle === 'top' ? 'opacity-100' : 'opacity-70 hover:opacity-100'}`}
                         onMouseDown={(e) => {
                           e.stopPropagation();
                           e.preventDefault();
+                          // Clear any drag delay timer since we're resizing
+                          if (dragDelayTimerRef.current) {
+                            clearTimeout(dragDelayTimerRef.current);
+                            dragDelayTimerRef.current = null;
+                          }
+                          setDragDelayActive(false);
+                          setDragDelayEventId(null);
                           setResizingId(ev.id);
                           setResizeHandle('top');
                           resizeRef.current = {
@@ -1325,6 +1332,13 @@ function CalendarContent() {
                         onTouchStart={(e) => {
                           e.stopPropagation();
                           e.preventDefault();
+                          // Clear any drag delay timer since we're resizing
+                          if (dragDelayTimerRef.current) {
+                            clearTimeout(dragDelayTimerRef.current);
+                            dragDelayTimerRef.current = null;
+                          }
+                          setDragDelayActive(false);
+                          setDragDelayEventId(null);
                           setResizingId(ev.id);
                           setResizeHandle('top');
                           resizeRef.current = {
@@ -1337,15 +1351,22 @@ function CalendarContent() {
                           };
                         }}
                       >
-                        <div className="w-2 h-2 bg-white rounded-full border border-gray-300 shadow-sm" />
+                        <div className="w-3 h-3 bg-white rounded-full border-2 border-gray-400 shadow-lg" />
                       </div>
                       
                       {/* Bottom resize handle */}
                       <div
-                        className={`absolute bottom-0 left-0 w-3 h-3 cursor-ns-resize transition-opacity select-none ${resizingId === ev.id && resizeHandle === 'bottom' ? 'opacity-100' : 'opacity-0 hover:opacity-100'}`}
+                        className={`absolute bottom-0 left-0 w-4 h-4 cursor-ns-resize transition-opacity select-none ${resizingId === ev.id && resizeHandle === 'bottom' ? 'opacity-100' : 'opacity-70 hover:opacity-100'}`}
                         onMouseDown={(e) => {
                           e.stopPropagation();
                           e.preventDefault();
+                          // Clear any drag delay timer since we're resizing
+                          if (dragDelayTimerRef.current) {
+                            clearTimeout(dragDelayTimerRef.current);
+                            dragDelayTimerRef.current = null;
+                          }
+                          setDragDelayActive(false);
+                          setDragDelayEventId(null);
                           setResizingId(ev.id);
                           setResizeHandle('bottom');
                           resizeRef.current = {
@@ -1360,6 +1381,13 @@ function CalendarContent() {
                         onTouchStart={(e) => {
                           e.stopPropagation();
                           e.preventDefault();
+                          // Clear any drag delay timer since we're resizing
+                          if (dragDelayTimerRef.current) {
+                            clearTimeout(dragDelayTimerRef.current);
+                            dragDelayTimerRef.current = null;
+                          }
+                          setDragDelayActive(false);
+                          setDragDelayEventId(null);
                           setResizingId(ev.id);
                           setResizeHandle('bottom');
                           resizeRef.current = {
@@ -1372,7 +1400,7 @@ function CalendarContent() {
                           };
                         }}
                       >
-                        <div className="w-2 h-2 bg-white rounded-full border border-gray-300 shadow-sm" />
+                        <div className="w-3 h-3 bg-white rounded-full border-2 border-gray-400 shadow-lg" />
                       </div>
                     </>
                   )}
