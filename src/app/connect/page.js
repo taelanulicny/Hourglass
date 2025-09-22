@@ -1400,28 +1400,27 @@ export default function ConnectPage() {
                   <path d="M5 7l5 5 5-5" fill="none" stroke="currentColor" strokeWidth="2"/>
                 </svg>
               </button>
+              
+              {/* Dropdown menu - only show when not in vault content */}
+              {mounted && open && (
+                <ul
+                  role="listbox"
+                  className="absolute z-10 mt-2 w-56 rounded-lg border bg-white shadow-md left-1/2 transform -translate-x-1/2"
+                >
+                  {['Close Friends', 'Challenges', 'Resources', 'Templates'].filter(t => t !== tab).map((name) => (
+                    <li key={name}>
+                      <button
+                        onClick={() => { setTab(name); setOpen(false); }}
+                        className="w-full text-left px-3 py-2 hover:bg-gray-100 font-bold tracking-widest uppercase"
+                      >
+                        {name}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           )}
-
-          {/* Dropdown menu - only show when not in vault content */}
-          {!showVaultContent && mounted && open && (
-            <ul
-              role="listbox"
-              className="absolute z-10 mt-2 w-56 rounded-lg border bg-white shadow-md left-1/2 transform -translate-x-1/2"
-            >
-              {['Close Friends', 'Challenges', 'Resources', 'Templates'].filter(t => t !== tab).map((name) => (
-                <li key={name}>
-                  <button
-                    onClick={() => { setTab(name); setOpen(false); }}
-                    className="w-full text-left px-3 py-2 hover:bg-gray-100 font-bold tracking-widest uppercase"
-                  >
-                    {name}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-          </div>
 
           {/* Right: Settings button */}
           <button
