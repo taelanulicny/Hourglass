@@ -1443,6 +1443,7 @@ export default function ConnectPage() {
               <circle cx="12" cy="12" r="3" />
             </svg>
           </button>
+        </div>
 
         {/* Divider line */}
         <hr className="border-gray-200 mb-3" />
