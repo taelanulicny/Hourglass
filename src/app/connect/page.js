@@ -1343,7 +1343,7 @@ export default function ConnectPage() {
               aria-haspopup="listbox"
               aria-expanded={open}
               onClick={() => setOpen(v => !v)}
-              className="inline-flex items-center gap-2 text-lg font-bold tracking-widest"
+              className="inline-flex items-center gap-2 text-lg font-bold tracking-widest uppercase"
             >
               <span>{tab}</span>
               <svg
@@ -1362,7 +1362,7 @@ export default function ConnectPage() {
                   <li key={name}>
                     <button
                       onClick={() => { setTab(name); setOpen(false); }}
-                      className="w-full text-left px-3 py-2 hover:bg-gray-100"
+                      className="w-full text-left px-3 py-2 hover:bg-gray-100 font-bold tracking-widest uppercase"
                     >
                       {name}
                     </button>
