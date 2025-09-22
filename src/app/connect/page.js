@@ -509,9 +509,10 @@ function FeedCard({ title, children, cta }) {
 
     const handleRemove = (e) => {
       e.stopPropagation();
-      if (onRemove) {
-        onRemove();
-      }
+      // Don't actually remove - just show "Added!" status
+      // if (onRemove) {
+      //   onRemove();
+      // }
     };
 
     return (
@@ -536,15 +537,15 @@ function FeedCard({ title, children, cta }) {
             {isSaved ? (
               <button
                 onClick={handleRemove}
-                className="text-red-500 hover:text-red-700 text-sm font-medium"
-                title="Remove from Learning Path"
+                className="text-green-600 text-sm font-medium cursor-default"
+                title="Already added to Vault"
               >
-                ✕
+                Added!
               </button>
             ) : (
               <button
                 onClick={handleSave}
-                className="text-[#8CA4AF] hover:text-[#7A939E] text-sm font-medium"
+                className="text-green-600 text-sm font-medium cursor-pointer"
                 title="Add to Vault"
               >
                 + Add
@@ -702,7 +703,7 @@ function ResourcePreviewModal({ resource, isOpen, onClose }) {
 
     const handleSave = (e) => {
       e.stopPropagation();
-      if (onSave) {
+      if (onSave && !isSaved) {
         const resource = {
           id: `${type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           title: title || name,
@@ -719,9 +720,10 @@ function ResourcePreviewModal({ resource, isOpen, onClose }) {
 
     const handleRemove = (e) => {
       e.stopPropagation();
-      if (onRemove) {
-        onRemove();
-      }
+      // Don't actually remove - just show "Added!" status
+      // if (onRemove) {
+      //   onRemove();
+      // }
     };
 
     return (
@@ -747,15 +749,15 @@ function ResourcePreviewModal({ resource, isOpen, onClose }) {
             {isSaved ? (
               <button
                 onClick={handleRemove}
-                className="text-red-500 hover:text-red-700 text-sm font-medium"
-                title="Remove from Learning Path"
+                className="text-green-600 text-sm font-medium cursor-default"
+                title="Already added to Vault"
               >
-                ✕
+                Added!
               </button>
             ) : (
               <button
                 onClick={handleSave}
-                className="text-[#8CA4AF] hover:text-[#7A939E] text-sm font-medium"
+                className="text-green-600 text-sm font-medium cursor-pointer"
                 title="Add to Vault"
               >
                 + Add
@@ -1301,15 +1303,10 @@ export default function ConnectPage() {
   }, []);
 
   // Save resources to localStorage
-  const [addedToVault, setAddedToVault] = useState(null);
   const saveResource = (resource) => {
     const newSavedResources = [...savedResources, { ...resource, savedAt: new Date().toISOString() }];
     setSavedResources(newSavedResources);
     localStorage.setItem("myLearningPath", JSON.stringify(newSavedResources));
-    
-    // Show "Added to the Vault" feedback
-    setAddedToVault(resource.title || resource.name);
-    setTimeout(() => setAddedToVault(null), 2000); // Hide after 2 seconds
   };
 
   // Remove resource from saved list
@@ -1416,13 +1413,6 @@ export default function ConnectPage() {
       </header>
 
 
-
-      {/* Added to Vault Feedback */}
-      {addedToVault && (
-        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg">
-          ✓ Added!
-        </div>
-      )}
 
       {/* Tab Content */}
       <main className="px-4 mt-4">
