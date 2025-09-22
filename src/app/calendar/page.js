@@ -1312,7 +1312,7 @@ function CalendarContent() {
                     <>
                       {/* Top resize handle */}
                       <div
-                        className={`absolute top-0 right-0 w-4 h-4 cursor-ns-resize transition-opacity select-none ${resizingId === ev.id && resizeHandle === 'top' ? 'opacity-100' : 'opacity-70 hover:opacity-100'}`}
+                        className={`absolute top-0 right-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'top' ? 'opacity-100' : 'opacity-0'}`}
                         onMouseDown={(e) => {
                           e.stopPropagation();
                           e.preventDefault();
@@ -1356,12 +1356,12 @@ function CalendarContent() {
                           };
                         }}
                       >
-                        <div className="w-3 h-3 bg-white rounded-full border-2 border-gray-400 shadow-lg" />
+                        {/* Invisible resize handle - no visual circle */}
                       </div>
                       
                       {/* Bottom resize handle */}
                       <div
-                        className={`absolute bottom-0 left-0 w-4 h-4 cursor-ns-resize transition-opacity select-none ${resizingId === ev.id && resizeHandle === 'bottom' ? 'opacity-100' : 'opacity-70 hover:opacity-100'}`}
+                        className={`absolute bottom-0 left-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'bottom' ? 'opacity-100' : 'opacity-0'}`}
                         onMouseDown={(e) => {
                           e.stopPropagation();
                           e.preventDefault();
@@ -1405,7 +1405,7 @@ function CalendarContent() {
                           };
                         }}
                       >
-                        <div className="w-3 h-3 bg-white rounded-full border-2 border-gray-400 shadow-lg" />
+                        {/* Invisible resize handle - no visual circle */}
                       </div>
                     </>
                   )}
