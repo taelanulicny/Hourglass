@@ -720,12 +720,22 @@ function CalendarContent() {
   const [dragGhostTop, setDragGhostTop] = useState(null); // live pixel top while dragging
   const [dragDelayActive, setDragDelayActive] = useState(false); // true when waiting for hold delay
   const [dragDelayEventId, setDragDelayEventId] = useState(null); // event ID waiting for delay
+  const [resizingId, setResizingId] = useState(null); // event ID being resized
+  const [resizeHandle, setResizeHandle] = useState(null); // 'top' or 'bottom' handle being dragged
   const dragRef = useRef({
     startY: 0,
     origStart: 0,
     origEnd: 0,
     duration: 0,
     lastStartMs: null,
+    moved: false,
+  });
+  const resizeRef = useRef({
+    startY: 0,
+    origStart: 0,
+    origEnd: 0,
+    lastStartMs: null,
+    lastEndMs: null,
     moved: false,
   });
   const dragDelayTimerRef = useRef(null); // timer for drag delay
@@ -834,6 +844,78 @@ function CalendarContent() {
       window.removeEventListener('touchend', onUp);
     };
   }, [draggingId, pxPerHour, dayStartMs, dayEndMs, clampToDay]);
+
+  // Global resize effect
+  useEffect(() => {
+    if (!resizingId || !resizeHandle) return;
+
+    // Disable page scrolling/selection while resizing
+    const prevTouchAction = document.body.style.touchAction;
+    const prevUserSelect = document.body.style.userSelect;
+    document.body.style.touchAction = 'none';
+    document.body.style.userSelect = 'none';
+
+    const onMove = (e) => {
+      if (e.cancelable) e.preventDefault();
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const dy = clientY - resizeRef.current.startY;
+      const deltaMs = (dy / pxPerHour) * 3600000; // px → hours → ms
+
+      let newStart = resizeRef.current.origStart;
+      let newEnd = resizeRef.current.origEnd;
+
+      if (resizeHandle === 'top') {
+        // Resizing from top - adjust start time
+        newStart = resizeRef.current.origStart + deltaMs;
+        newStart = snapMs(newStart);
+        // Ensure start doesn't go past end
+        newStart = Math.min(newStart, newEnd - 15 * 60 * 1000); // minimum 15 minutes
+      } else if (resizeHandle === 'bottom') {
+        // Resizing from bottom - adjust end time
+        newEnd = resizeRef.current.origEnd + deltaMs;
+        newEnd = snapMs(newEnd);
+        // Ensure end doesn't go before start
+        newEnd = Math.max(newEnd, newStart + 15 * 60 * 1000); // minimum 15 minutes
+      }
+
+      // Clamp to day boundaries
+      [newStart, newEnd] = clampToDay(newStart, newEnd);
+
+      // Remember for commit
+      resizeRef.current.lastStartMs = newStart;
+      resizeRef.current.lastEndMs = newEnd;
+      resizeRef.current.moved = true;
+    };
+
+    const onUp = () => {
+      if (unmountedRef.current) return;
+      // Commit resize
+      const moved = resizeRef.current.moved;
+      const finalStart = resizeRef.current.lastStartMs;
+      const finalEnd = resizeRef.current.lastEndMs;
+      setResizingId(null);
+      setResizeHandle(null);
+      resizeRef.current = { startY: 0, origStart: 0, origEnd: 0, lastStartMs: null, lastEndMs: null, moved: false };
+      
+      if (moved && finalStart != null && finalEnd != null) {
+        setEvents((prev) => prev.map((x) => (x.id === resizingId ? { ...x, start: finalStart, end: finalEnd } : x)));
+      }
+    };
+
+    window.addEventListener('mousemove', onMove, { passive: false });
+    window.addEventListener('mouseup', onUp, { passive: true });
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('touchend', onUp, { passive: true });
+
+    return () => {
+      document.body.style.touchAction = prevTouchAction;
+      document.body.style.userSelect = prevUserSelect;
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('touchend', onUp);
+    };
+  }, [resizingId, resizeHandle, pxPerHour, dayStartMs, dayEndMs, clampToDay, snapMs]);
 
   // Cleanup drag delay timer on unmount
   useEffect(() => {
@@ -1133,8 +1215,12 @@ function CalendarContent() {
             )}
 
             {isClient && eventsForSelected.map(ev => {
-              const visibleStart = Math.max(ev.start, dayStartMs);
-              const visibleEnd   = Math.min(ev.end,   dayEndMs);
+              // Use resize values if currently resizing this event
+              const currentStart = resizingId === ev.id && resizeRef.current.lastStartMs != null ? resizeRef.current.lastStartMs : ev.start;
+              const currentEnd = resizingId === ev.id && resizeRef.current.lastEndMs != null ? resizeRef.current.lastEndMs : ev.end;
+              
+              const visibleStart = Math.max(currentStart, dayStartMs);
+              const visibleEnd   = Math.min(currentEnd, dayEndMs);
               const vs = new Date(visibleStart);
               const topPx = (vs.getHours() + vs.getMinutes() / 60) * pxPerHour;
               const heightPx = ((visibleEnd - visibleStart) / (1000 * 60 * 60)) * pxPerHour;
@@ -1143,15 +1229,15 @@ function CalendarContent() {
                 <div
                   key={ev.id}
                   data-event-id={ev.id}
-                  className={`absolute left-1 right-1 rounded-md shadow calendar-event ${draggingId === ev.id ? 'cursor-grabbing' : dragDelayActive && dragDelayEventId === ev.id ? 'cursor-wait' : 'cursor-grab'}`}
+                  className={`absolute left-1 right-1 rounded-md shadow calendar-event ${draggingId === ev.id ? 'cursor-grabbing' : dragDelayActive && dragDelayEventId === ev.id ? 'cursor-wait' : resizingId === ev.id ? 'cursor-ns-resize' : 'cursor-grab'}`}
                   style={{
                     top: (draggingId === ev.id && dragGhostTop != null ? dragGhostTop : Math.max(0, topPx)) + 'px',
                     height: Math.max(24, heightPx) + 'px',
-                    background: toRGBA(renderColor, dragDelayActive && dragDelayEventId === ev.id ? 0.2 : 0.4),
+                    background: toRGBA(renderColor, dragDelayActive && dragDelayEventId === ev.id ? 0.2 : resizingId === ev.id ? 0.6 : 0.4),
                     borderLeft: `3px solid ${renderColor}`,
-                    willChange: draggingId === ev.id ? 'top' : undefined,
-                    opacity: dragDelayActive && dragDelayEventId === ev.id ? 0.7 : 1,
-                    touchAction: draggingId === ev.id ? 'none' : 'pan-y',
+                    willChange: (draggingId === ev.id || resizingId === ev.id) ? 'top, height' : undefined,
+                    opacity: dragDelayActive && dragDelayEventId === ev.id ? 0.7 : resizingId === ev.id ? 0.9 : 1,
+                    touchAction: (draggingId === ev.id || resizingId === ev.id) ? 'none' : 'pan-y',
                   }}
                   title={ev.title}
                   onMouseDown={(e) => {
@@ -1205,12 +1291,87 @@ function CalendarContent() {
                       setDragDelayEventId(null);
                     }
                   }}
-                  onClick={(e) => { if (dragRef.current.moved) { if (e.cancelable) e.preventDefault(); e.stopPropagation(); } else { openEdit(ev); } }}
+                  onClick={(e) => { if (dragRef.current.moved || resizeRef.current.moved) { if (e.cancelable) e.preventDefault(); e.stopPropagation(); } else { openEdit(ev); } }}
                 >
                   <div className="text-[11px] px-2 py-1 leading-tight">
                     <div className="font-semibold truncate">{ev.title}</div>
                     {ev.area && <div className="text-[10px] opacity-70 truncate">{ev.area}</div>}
                   </div>
+                  
+                  {/* Resize handles - only show when not dragging */}
+                  {!draggingId && (
+                    <>
+                      {/* Top resize handle */}
+                      <div
+                        className={`absolute top-0 right-0 w-3 h-3 cursor-ns-resize transition-opacity ${resizingId === ev.id && resizeHandle === 'top' ? 'opacity-100' : 'opacity-0 hover:opacity-100'}`}
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          setResizingId(ev.id);
+                          setResizeHandle('top');
+                          resizeRef.current = {
+                            startY: e.clientY,
+                            origStart: ev.start,
+                            origEnd: ev.end,
+                            lastStartMs: ev.start,
+                            lastEndMs: ev.end,
+                            moved: false,
+                          };
+                        }}
+                        onTouchStart={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          setResizingId(ev.id);
+                          setResizeHandle('top');
+                          resizeRef.current = {
+                            startY: e.touches[0].clientY,
+                            origStart: ev.start,
+                            origEnd: ev.end,
+                            lastStartMs: ev.start,
+                            lastEndMs: ev.end,
+                            moved: false,
+                          };
+                        }}
+                      >
+                        <div className="w-2 h-2 bg-white rounded-full border border-gray-300 shadow-sm" />
+                      </div>
+                      
+                      {/* Bottom resize handle */}
+                      <div
+                        className={`absolute bottom-0 left-0 w-3 h-3 cursor-ns-resize transition-opacity ${resizingId === ev.id && resizeHandle === 'bottom' ? 'opacity-100' : 'opacity-0 hover:opacity-100'}`}
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          setResizingId(ev.id);
+                          setResizeHandle('bottom');
+                          resizeRef.current = {
+                            startY: e.clientY,
+                            origStart: ev.start,
+                            origEnd: ev.end,
+                            lastStartMs: ev.start,
+                            lastEndMs: ev.end,
+                            moved: false,
+                          };
+                        }}
+                        onTouchStart={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          setResizingId(ev.id);
+                          setResizeHandle('bottom');
+                          resizeRef.current = {
+                            startY: e.touches[0].clientY,
+                            origStart: ev.start,
+                            origEnd: ev.end,
+                            lastStartMs: ev.start,
+                            lastEndMs: ev.end,
+                            moved: false,
+                          };
+                        }}
+                      >
+                        <div className="w-2 h-2 bg-white rounded-full border border-gray-300 shadow-sm" />
+                      </div>
+                    </>
+                  )}
                 </div>
               );
             })}
