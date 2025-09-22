@@ -83,7 +83,7 @@ function ChallengesTab() {
   );
 }
 
-function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect }) {
+function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, savedResources = [], onSaveResource, onRemoveResource }) {
   const DEMO = [{ id:'lsat', name:'LSAT Prep' }, { id:'fitness', name:'Fitness' }];
   
   // Convert focus areas to the format expected by the selector
@@ -96,6 +96,15 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect }) {
   const [searchResults, setSearchResults] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState(null);
+
+  // Helper function to check if a resource is already saved
+  const isResourceSaved = (resource) => {
+    return savedResources.some(saved => 
+      saved.title === resource.title && 
+      saved.type === resource.type &&
+      saved.author === resource.author
+    );
+  };
 
   // Handle AI search for resources
   const handleSearch = async () => {
@@ -201,7 +210,17 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect }) {
             { title: "The Lean Startup", desc: "How today's entrepreneurs use continuous innovation", url: "https://amazon.com/dp/0307887898", author: "Eric Ries" }
           ]).map((book, index) => (
             <div key={index} className="flex-shrink-0 w-64">
-              <ResourceCard title={book.title} desc={book.desc} url={book.url} type="book" author={book.author} spotifyUrl={book.spotifyUrl} onResourceClick={onResourceSelect} />
+              <ResourceCard 
+                title={book.title} 
+                desc={book.desc} 
+                url={book.url} 
+                type="book" 
+                author={book.author} 
+                spotifyUrl={book.spotifyUrl} 
+                onResourceClick={onResourceSelect}
+                isSaved={isResourceSaved(book)}
+                onSave={onSaveResource}
+              />
             </div>
           ))}
         </div>
@@ -271,7 +290,12 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect }) {
             }
           ]).map((person, index) => (
             <div key={index} className="flex-shrink-0 w-64">
-              <PersonCard person={person} onClick={onPersonSelect} />
+              <PersonCard 
+                person={person} 
+                onClick={onPersonSelect}
+                isSaved={isResourceSaved({ name: person.name, type: 'person', author: person.name })}
+                onSave={onSaveResource}
+              />
             </div>
           ))}
         </div>
@@ -289,7 +313,16 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect }) {
             { title: "Masters of Scale", desc: "How great companies grow from zero to a gazillion", url: "https://podcasts.apple.com/podcast/id1227971746", spotifyUrl: "https://open.spotify.com/search/Masters%20of%20Scale" }
           ]).map((podcast, index) => (
             <div key={index} className="flex-shrink-0 w-64">
-              <ResourceCard title={podcast.title} desc={podcast.desc} url={podcast.url} type="podcast" spotifyUrl={podcast.spotifyUrl} onResourceClick={onResourceSelect} />
+              <ResourceCard 
+                title={podcast.title} 
+                desc={podcast.desc} 
+                url={podcast.url} 
+                type="podcast" 
+                spotifyUrl={podcast.spotifyUrl} 
+                onResourceClick={onResourceSelect}
+                isSaved={isResourceSaved(podcast)}
+                onSave={onSaveResource}
+              />
             </div>
           ))}
         </div>
@@ -449,10 +482,31 @@ function FeedCard({ title, children, cta }) {
     return getLogo(platform);
   }
 
-  function PersonCard({ person, onClick }) {
+  function PersonCard({ person, onClick, isSaved = false, onSave, onRemove }) {
+    const handleSave = (e) => {
+      e.stopPropagation();
+      if (onSave) {
+        const resource = {
+          id: `person-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          name: person.name,
+          desc: person.desc,
+          socialLinks: person.socialLinks,
+          type: 'person'
+        };
+        onSave(resource);
+      }
+    };
+
+    const handleRemove = (e) => {
+      e.stopPropagation();
+      if (onRemove) {
+        onRemove();
+      }
+    };
+
     return (
       <div 
-        className="block rounded-xl border hover:shadow-sm bg-white p-4 cursor-pointer h-24"
+        className="block rounded-xl border hover:shadow-sm bg-white p-4 cursor-pointer h-24 relative"
         onClick={() => onClick(person)}
       >
         <div className="flex items-start gap-3 h-full">
@@ -465,6 +519,27 @@ function FeedCard({ title, children, cta }) {
           <div className="flex-1 min-w-0 flex flex-col justify-center">
             <div className="font-semibold leading-snug text-base line-clamp-1 mb-1">{person.name}</div>
             <div className="text-sm text-gray-500 line-clamp-2">{person.desc}</div>
+          </div>
+
+          {/* Save/Remove Button */}
+          <div className="flex-shrink-0">
+            {isSaved ? (
+              <button
+                onClick={handleRemove}
+                className="text-red-500 hover:text-red-700 text-sm font-medium"
+                title="Remove from Learning Path"
+              >
+                ✕
+              </button>
+            ) : (
+              <button
+                onClick={handleSave}
+                className="text-[#8CA4AF] hover:text-[#7A939E] text-sm font-medium"
+                title="Save for Later"
+              >
+                + Save
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -586,7 +661,7 @@ function ResourcePreviewModal({ resource, isOpen, onClose }) {
   );
 }
 
-  function ResourceCard({ title, desc, url, type = 'book', author, spotifyUrl, onResourceClick }) {
+  function ResourceCard({ title, desc, url, type = 'book', author, spotifyUrl, onResourceClick, name, socialLinks, isSaved = false, onSave, onRemove }) {
     // Determine the appropriate icon based on type
     const getIcon = (type) => {
       switch (type) {
@@ -604,18 +679,43 @@ function ResourcePreviewModal({ resource, isOpen, onClose }) {
     const handleClick = () => {
       if (onResourceClick) {
         onResourceClick({
-          title,
+          title: title || name,
           desc,
           url,
           type,
           author,
-          spotifyUrl
+          spotifyUrl,
+          socialLinks
         });
       }
     };
 
+    const handleSave = (e) => {
+      e.stopPropagation();
+      if (onSave) {
+        const resource = {
+          id: `${type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          title: title || name,
+          desc,
+          url,
+          type,
+          author,
+          spotifyUrl,
+          socialLinks
+        };
+        onSave(resource);
+      }
+    };
+
+    const handleRemove = (e) => {
+      e.stopPropagation();
+      if (onRemove) {
+        onRemove();
+      }
+    };
+
     return (
-      <div className="block rounded-xl border hover:shadow-sm bg-white p-4 cursor-pointer h-24" onClick={handleClick}>
+      <div className="block rounded-xl border hover:shadow-sm bg-white p-4 cursor-pointer h-24 relative" onClick={handleClick}>
         <div className="flex items-start gap-3 h-full">
           {/* Icon */}
           <div className="text-2xl flex-shrink-0 mt-0.5">
@@ -624,11 +724,32 @@ function ResourcePreviewModal({ resource, isOpen, onClose }) {
           
           {/* Content */}
           <div className="flex-1 min-w-0 flex flex-col justify-center">
-            <div className="font-semibold leading-snug text-base line-clamp-1 mb-1">{title}</div>
+            <div className="font-semibold leading-snug text-base line-clamp-1 mb-1">{title || name}</div>
             {type === 'book' && author ? (
               <div className="text-sm text-gray-600 line-clamp-2">by {author}</div>
             ) : (
               <div className="text-sm text-gray-500 line-clamp-2">{desc}</div>
+            )}
+          </div>
+
+          {/* Save/Remove Button */}
+          <div className="flex-shrink-0">
+            {isSaved ? (
+              <button
+                onClick={handleRemove}
+                className="text-red-500 hover:text-red-700 text-sm font-medium"
+                title="Remove from Learning Path"
+              >
+                ✕
+              </button>
+            ) : (
+              <button
+                onClick={handleSave}
+                className="text-[#8CA4AF] hover:text-[#7A939E] text-sm font-medium"
+                title="Save for Later"
+              >
+                + Save
+              </button>
             )}
           </div>
         </div>
@@ -1023,6 +1144,108 @@ function FocusAreaSlideshowPost({
   );
 }
 
+// My Learning Path Tab Component
+function MyLearningPathTab({ savedResources, onRemoveResource, onResourceSelect }) {
+  if (savedResources.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-gray-500 mb-2 text-lg">Your Learning Path is Empty</div>
+        <div className="text-sm text-gray-400 mb-4">
+          Save resources from the Resources tab to build your personal learning journey
+        </div>
+        <div className="text-xs text-gray-400">
+          Look for the "Save for Later" button on books, people, and podcasts
+        </div>
+      </div>
+    );
+  }
+
+  // Group resources by type
+  const books = savedResources.filter(r => r.type === 'book');
+  const people = savedResources.filter(r => r.type === 'person');
+  const podcasts = savedResources.filter(r => r.type === 'podcast');
+
+  return (
+    <div className="space-y-4">
+      <div className="text-center mb-6">
+        <h2 className="text-xl font-bold text-gray-800 mb-2">My Learning Path</h2>
+        <p className="text-sm text-gray-600">
+          Your personal collection of resources to help you grow
+        </p>
+      </div>
+
+      {/* Books Section */}
+      {books.length > 0 && (
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <h3 className="text-lg font-semibold mb-3">Books ({books.length})</h3>
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            {books.map((book, index) => (
+              <div key={book.id || index} className="flex-shrink-0 w-64">
+                <ResourceCard 
+                  title={book.title} 
+                  desc={book.desc} 
+                  url={book.url} 
+                  type="book" 
+                  author={book.author} 
+                  onResourceClick={onResourceSelect}
+                  isSaved={true}
+                  onRemove={() => onRemoveResource(book.id)}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* People Section */}
+      {people.length > 0 && (
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <h3 className="text-lg font-semibold mb-3">People ({people.length})</h3>
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            {people.map((person, index) => (
+              <div key={person.id || index} className="flex-shrink-0 w-64">
+                <ResourceCard 
+                  name={person.name} 
+                  desc={person.desc} 
+                  socialLinks={person.socialLinks} 
+                  type="person" 
+                  onResourceClick={onResourceSelect}
+                  isSaved={true}
+                  onRemove={() => onRemoveResource(person.id)}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Podcasts Section */}
+      {podcasts.length > 0 && (
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <h3 className="text-lg font-semibold mb-3">Podcasts ({podcasts.length})</h3>
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            {podcasts.map((podcast, index) => (
+              <div key={podcast.id || index} className="flex-shrink-0 w-64">
+                <ResourceCard 
+                  title={podcast.title} 
+                  desc={podcast.desc} 
+                  url={podcast.url} 
+                  type="podcast" 
+                  author={podcast.author}
+                  spotifyUrl={podcast.spotifyUrl}
+                  onResourceClick={onResourceSelect}
+                  isSaved={true}
+                  onRemove={() => onRemoveResource(podcast.id)}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ConnectPage() {
   // --- TODO: replace with real "today" values from your store/localStorage ---
   const myToday = useMemo(() => ({ goalMins: 240, spentMins: 36, color: "#7EA2B7", name: "My Progress" }), []);
@@ -1052,6 +1275,34 @@ export default function ConnectPage() {
       setFocusAreas([]);
     }
   }, []);
+
+  // Load saved resources (My Learning Path) on mount
+  const [savedResources, setSavedResources] = useState([]);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("myLearningPath");
+      const parsed = raw ? JSON.parse(raw) : [];
+      const resources = Array.isArray(parsed) ? parsed : [];
+      setSavedResources(resources);
+    } catch (error) {
+      console.warn('Failed to load saved resources:', error);
+      setSavedResources([]);
+    }
+  }, []);
+
+  // Save resources to localStorage
+  const saveResource = (resource) => {
+    const newSavedResources = [...savedResources, { ...resource, savedAt: new Date().toISOString() }];
+    setSavedResources(newSavedResources);
+    localStorage.setItem("myLearningPath", JSON.stringify(newSavedResources));
+  };
+
+  // Remove resource from saved list
+  const removeSavedResource = (resourceId) => {
+    const newSavedResources = savedResources.filter(r => r.id !== resourceId);
+    setSavedResources(newSavedResources);
+    localStorage.setItem("myLearningPath", JSON.stringify(newSavedResources));
+  };
 
   // Set mounted after hydration
   useEffect(() => {
@@ -1107,7 +1358,7 @@ export default function ConnectPage() {
                 role="listbox"
                 className="absolute z-10 mt-2 w-40 rounded-lg border bg-white shadow-md left-1/2 transform -translate-x-1/2"
               >
-                {['Close Friends', 'Challenges', 'Resources', 'Templates'].filter(t => t !== tab).map((name) => (
+                {['Close Friends', 'Challenges', 'Resources', 'My Learning Path', 'Templates'].filter(t => t !== tab).map((name) => (
                   <li key={name}>
                     <button
                       onClick={() => { setTab(name); setOpen(false); }}
@@ -1155,7 +1406,8 @@ export default function ConnectPage() {
       <main className="px-4 mt-4">
         {tab === 'Close Friends' && <FeedTab />}
         {tab === 'Challenges' && <ChallengesTab />}
-        {tab === 'Resources' && <ResourcesTab focusAreas={focusAreas} onPersonSelect={setSelectedPerson} onResourceSelect={setSelectedResource} />}
+        {tab === 'Resources' && <ResourcesTab focusAreas={focusAreas} onPersonSelect={setSelectedPerson} onResourceSelect={setSelectedResource} savedResources={savedResources} onSaveResource={saveResource} onRemoveResource={removeSavedResource} />}
+        {tab === 'My Learning Path' && <MyLearningPathTab savedResources={savedResources} onRemoveResource={removeSavedResource} onResourceSelect={setSelectedResource} />}
         {tab === 'Templates' && <TemplatesTab />}
       </main>
 
