@@ -664,26 +664,6 @@ function PersonSocialModal({ person, isOpen, onClose, onSave, isSaved }) {
 
 
 // My Learning Path Tab Component
-function MyLearningPathTab({ savedResources, onRemoveResource, onResourceSelect }) {
-  if (savedResources.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <div className="text-gray-500 mb-2 text-lg">The Vault is Empty</div>
-        <div className="text-sm text-gray-400 mb-4">
-          Save resources from the Resources tab to build your personal collection
-        </div>
-        <button
-          onClick={() => onResourceSelect && onResourceSelect()}
-          className="px-4 py-2 bg-[#6B7280] text-white rounded-lg hover:bg-[#5B6B73] transition-colors"
-        >
-          Browse Resources
-        </button>
-      </div>
-    );
-  }
-
-  // Weekly bar component (exact match to dashboard styling)
-  const WeeklyBar = ({ ratio = 0, day, isOver = false }) => {
     // Use same bottomFraction calculation as dashboard (14/21)
     const bottomFraction = 14 / 21;
     const pct = Math.min(Math.max(ratio, 0), 1);
@@ -991,6 +971,109 @@ function FocusAreaSlideshowPost({
   );
 }
 
+// My Learning Path Tab Component
+function MyLearningPathTab({ savedResources, onRemoveResource, onResourceSelect }) {
+  if (savedResources.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-gray-500 mb-2 text-lg">The Vault is Empty</div>
+        <div className="text-sm text-gray-400 mb-4">
+          Save resources from the Resources tab to build your personal collection
+        </div>
+        <div className="text-xs text-gray-400">
+          Look for the "+ Add" button on books, people, and podcasts
+        </div>
+      </div>
+    );
+  }
+
+  // Group resources by type
+  const books = savedResources.filter(r => r.type === 'book');
+  const people = savedResources.filter(r => r.type === 'person');
+  const podcasts = savedResources.filter(r => r.type === 'podcast');
+
+  return (
+    <div className="space-y-4">
+      <div className="text-center mb-1">
+        <p className="text-xs text-gray-600">
+          Welcome to your personal collection of resources to help you grow
+        </p>
+      </div>
+
+      {/* Books Section */}
+      {books.length > 0 && (
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <h3 className="text-lg font-semibold mb-3">Books ({books.length})</h3>
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            {books.map((book, index) => (
+              <div key={book.id || index} className="flex-shrink-0 w-64">
+                <ResourceCard 
+                  title={book.title} 
+                  desc={book.desc} 
+                  url={book.url} 
+                  type="book" 
+                  author={book.author} 
+                  onResourceClick={onResourceSelect}
+                  isSaved={true}
+                  showRemoveButton={true}
+                  onRemove={() => onRemoveResource(book.id)}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* People Section */}
+      {people.length > 0 && (
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <h3 className="text-lg font-semibold mb-3">People ({people.length})</h3>
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            {people.map((person, index) => (
+              <div key={person.id || index} className="flex-shrink-0 w-64">
+                <ResourceCard 
+                  name={person.name} 
+                  desc={person.desc} 
+                  socialLinks={person.socialLinks} 
+                  type="person" 
+                  onResourceClick={onResourceSelect}
+                  isSaved={true}
+                  showRemoveButton={true}
+                  onRemove={() => onRemoveResource(person.id)}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Podcasts Section */}
+      {podcasts.length > 0 && (
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <h3 className="text-lg font-semibold mb-3">Podcasts ({podcasts.length})</h3>
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            {podcasts.map((podcast, index) => (
+              <div key={podcast.id || index} className="flex-shrink-0 w-64">
+                <ResourceCard 
+                  title={podcast.title} 
+                  desc={podcast.desc} 
+                  url={podcast.url} 
+                  type="podcast" 
+                  author={podcast.author}
+                  spotifyUrl={podcast.spotifyUrl}
+                  onResourceClick={onResourceSelect}
+                  isSaved={true}
+                  showRemoveButton={true}
+                  onRemove={() => onRemoveResource(podcast.id)}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function ConnectPage() {
   // --- TODO: replace with real "today" values from your store/localStorage ---
