@@ -772,14 +772,10 @@ export default function ConnectPage() {
   const myToday = useMemo(() => ({ goalMins: 240, spentMins: 36, color: "#7EA2B7", name: "My Progress" }), []);
   const percentMine = useMemo(() => (myToday.goalMins ? (myToday.spentMins / myToday.goalMins) * 100 : 0), [myToday]);
   
-  // --- Tab state ---
-  const [tab, setTab] = useState('Resources');
-  const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  // --- State ---
   const [selectedPerson, setSelectedPerson] = useState(null);
   const [selectedResource, setSelectedResource] = useState(null);
   const [showVaultContent, setShowVaultContent] = useState(false);
-  const menuRef = useRef(null);
   const router = useRouter();
 
   // Load user's focus areas from localStorage
@@ -845,20 +841,7 @@ export default function ConnectPage() {
     localStorage.setItem("myLearningPath", JSON.stringify(newSavedResources));
   };
 
-  // Set mounted after hydration
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
-  // close menu when clicking outside
-  useEffect(() => {
-    function onDocClick(e) {
-      if (!menuRef.current) return;
-      if (!menuRef.current.contains(e.target)) setOpen(false);
-    }
-    document.addEventListener('mousedown', onDocClick);
-    return () => document.removeEventListener('mousedown', onDocClick);
-  }, []);
 
   // Fake follows — later, fetch from /api/connect or local cache
   const follows = [
@@ -888,47 +871,14 @@ export default function ConnectPage() {
             <div className="w-10 h-10"></div>
           )}
 
-          {/* Center: Title dropdown or Vault title */}
+          {/* Center: Title */}
           {showVaultContent ? (
             <div className="text-lg font-bold tracking-widest uppercase">
               V A U L T
             </div>
           ) : (
-            <div className="relative" ref={menuRef}>
-              <button
-                type="button"
-                aria-haspopup="listbox"
-                aria-expanded={open}
-                onClick={() => setOpen(v => !v)}
-                className="inline-flex items-center gap-2 text-lg font-bold tracking-widest uppercase"
-              >
-                <span>{tab}</span>
-                <svg
-                  width="16" height="16" viewBox="0 0 20 20"
-                  className={`transition-transform ${open ? 'rotate-180' : ''}`}
-                >
-                  <path d="M5 7l5 5 5-5" fill="none" stroke="currentColor" strokeWidth="2"/>
-                </svg>
-              </button>
-              
-              {/* Dropdown menu - only show when not in vault content */}
-              {mounted && open && (
-                <ul
-                  role="listbox"
-                  className="absolute z-10 mt-2 w-56 rounded-lg border bg-white shadow-md left-1/2 transform -translate-x-1/2"
-                >
-                  {['Resources'].filter(t => t !== tab).map((name) => (
-                    <li key={name}>
-                      <button
-                        onClick={() => { setTab(name); setOpen(false); }}
-                        className="w-full text-left px-3 py-2 hover:bg-gray-100 font-bold tracking-widest uppercase"
-                      >
-                        {name}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
+            <div className="text-lg font-bold tracking-widest uppercase">
+              R E S O U R C E S
             </div>
           )}
 
@@ -961,9 +911,20 @@ export default function ConnectPage() {
 
 
 
-      {/* Tab Content */}
+      {/* Content */}
       <main className="px-4 mt-4">
-        {tab === 'Resources' && <ResourcesTab focusAreas={focusAreas} onPersonSelect={setSelectedPerson} onResourceSelect={setSelectedResource} savedResources={savedResources} onSaveResource={saveResource} onRemoveResource={removeSavedResource} onTabChange={setTab} isResourceSaved={isResourceSaved} onShowVault={() => setShowVaultContent(true)} showVaultContent={showVaultContent} onBackToResources={() => setShowVaultContent(false)} />}
+        <ResourcesTab 
+          focusAreas={focusAreas} 
+          onPersonSelect={setSelectedPerson} 
+          onResourceSelect={setSelectedResource} 
+          savedResources={savedResources} 
+          onSaveResource={saveResource} 
+          onRemoveResource={removeSavedResource} 
+          isResourceSaved={isResourceSaved} 
+          onShowVault={() => setShowVaultContent(true)} 
+          showVaultContent={showVaultContent} 
+          onBackToResources={() => setShowVaultContent(false)} 
+        />
       </main>
 
       {/* Bottom nav (matches your style) */}
