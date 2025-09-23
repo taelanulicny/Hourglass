@@ -4,84 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 // --- Tab Components -----------------------------------------------------
-function FeedTab() { 
-  return (
-    <div className="space-y-2">
-      {/* Close Friends section */}
-      <section aria-label="Close friends" className="mb-2">
-        <div className="rounded-xl border border-gray-200 bg-white px-3 py-3">
-          {/* Module title */}
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">
-            Close Friends (coming soon)
-          </h3>
 
-          {/* Rings row */}
-          <div className="flex items-center gap-4 overflow-x-auto no-scrollbar py-1">
-            <StoryRing percent={15} label="My Progress" tint="#7EA2B7" />
-            <StoryRing percent={12} label="Ryan S." tint="#7EA2B7" />
-            <StoryRing percent={15} label="Ava M." tint="#7EA2B7" />
-            <StoryRing percent={12} label="Noah R." tint="#7EA2B7" />
-            <StoryRing percent={34} label="Sam T." tint="#7EA2B7" />
-          </div>
-        </div>
-      </section>
-
-      <FocusAreaPost
-        author="Jordan Lee"
-        handle="@jordan"
-        title="Run"
-        weekLabel="Aug 11–17"
-        color="#7EA2B7"
-        dailyGoalHrs={2}
-        dayRatios={[1, 1, 1, 1, 1, 1, 1]}
-      />
-
-      <FocusAreaPost
-        author="Chris Park"
-        handle="@chris"
-        title="Study"
-        weekLabel="Aug 11–17"
-        color="#B7A27E"
-        dailyGoalHrs={3}
-        dayRatios={[1, 1.3, 1, 0.5, 1, 1, 1]}
-      />
-
-      <FocusAreaSlideshowPost />
-    </div>
-  );
-}
-
-function ChallengesTab() { 
-  return (
-    <div className="space-y-4">
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
-        <h3 className="text-lg font-semibold mb-3">Active Challenges (coming soon)</h3>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-            <div>
-              <div className="font-medium">7-Day Study Streak</div>
-              <div className="text-sm text-gray-600">3 days remaining</div>
-            </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-blue-600">4/7</div>
-              <div className="text-xs text-gray-500">days</div>
-            </div>
-          </div>
-          <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-            <div>
-              <div className="font-medium">Morning Routine</div>
-              <div className="text-sm text-gray-600">21-day challenge</div>
-            </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-green-600">12/21</div>
-              <div className="text-xs text-gray-500">days</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, savedResources = [], onSaveResource, onRemoveResource, onTabChange, isResourceSaved, onShowVault, showVaultContent = false, onBackToResources }) {
   const DEMO = [{ id:'lsat', name:'LSAT Prep' }, { id:'fitness', name:'Fitness' }];
@@ -341,93 +264,7 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, saved
   );
 }
 
-function TemplatesTab() { 
-  return (
-    <div className="space-y-4">
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
-        <h3 className="text-lg font-semibold mb-3">Popular Templates (coming soon)</h3>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="p-3 border border-gray-200 rounded-lg aspect-square bg-gray-50">
-            <div className="font-bold text-sm">Daily 3hr GRE Study</div>
-            <div className="text-xs text-gray-600 mt-1">Optimized study schedule for GRE prep</div>
-          </div>
-          <div className="p-3 border border-gray-200 rounded-lg aspect-square bg-gray-50">
-            <div className="font-bold text-sm">Balanced Work/School Week</div>
-            <div className="text-xs text-gray-600 mt-1">Perfect balance of work, study, and personal time</div>
-          </div>
-          <div className="p-3 border border-gray-200 rounded-lg aspect-square bg-gray-50">
-            <div className="font-bold text-sm">Morning Fitness Routine</div>
-            <div className="text-xs text-gray-600 mt-1">45-minute workout + meditation for productive days</div>
-          </div>
-          <div className="p-3 border border-gray-200 rounded-lg aspect-square bg-gray-50">
-            <div className="font-bold text-sm">Deep Work Focus Blocks</div>
-            <div className="text-xs text-gray-600 mt-1">90-minute concentrated work sessions with breaks</div>
-          </div>
-          <div className="p-3 border border-gray-200 rounded-lg aspect-square bg-gray-50">
-            <div className="font-bold text-sm">Weekly Skill Building</div>
-            <div className="text-xs text-gray-600 mt-1">Daily practice sessions for skill development</div>
-          </div>
-          <div className="p-3 border border-gray-200 rounded-lg aspect-square bg-gray-50">
-            <div className="font-bold text-sm">Language Learning Daily</div>
-            <div className="text-xs text-gray-600 mt-1">30-minute daily practice for consistent progress</div>
-          </div>
-          <div className="p-3 border border-gray-200 rounded-lg aspect-square bg-gray-50">
-            <div className="font-bold text-sm">Creative Project Time</div>
-            <div className="text-xs text-gray-600 mt-1">Dedicated hours for writing, design, or art</div>
-          </div>
-          <div className="p-3 border border-gray-200 rounded-lg aspect-square bg-gray-50">
-            <div className="font-bold text-sm">Social Media Detox</div>
-            <div className="text-xs text-gray-600 mt-1">Reduced screen time for better focus</div>
-          </div>
-        </div>
-      </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
-        <h3 className="text-lg font-semibold mb-3">Create & Share</h3>
-        <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center">
-          <div className="font-bold text-gray-700 mb-2">Publish your own template</div>
-          <div className="text-sm text-gray-600">Share your time management strategies with the community</div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// --- Tiny ring component -----------------------------------------------------
-function StoryRing({ percent = 0, label = "", tint = "#6B7280" }) {
-  // 48px ring
-  const size = 56;
-  const r = 24;
-  const c = 2 * Math.PI * r;
-  const dash = c * (1 - Math.min(Math.max(percent, 0), 100) / 100);
-
-  return (
-    <div className="w-[72px] flex-shrink-0 snap-start flex flex-col items-center">
-      <svg width={size} height={size} viewBox="0 0 56 56" className="block">
-        {/* track */}
-        <circle cx="28" cy="28" r={r} fill="none" stroke="#F3F4F6" strokeWidth="6" />
-        {/* progress */}
-        <circle
-          cx="28"
-          cy="28"
-          r={r}
-          fill="none"
-          stroke={tint}
-          strokeWidth="6"
-          strokeLinecap="round"
-          strokeDasharray={c}
-          strokeDashoffset={dash}
-          style={{ transition: "stroke-dashoffset 300ms" }}
-        />
-        {/* % label */}
-        <text x="28" y="32" textAnchor="middle" fontSize="12" fontWeight="600" fill="#374151">
-          {Math.round(percent)}%
-        </text>
-      </svg>
-      <div className="mt-1 text-[11px] text-[#374151] text-center leading-tight truncate w-full">{label}</div>
-    </div>
-  );
-}
 
 // --- Sample feed card --------------------------------------------------------
 function FeedCard({ title, children, cta }) {
@@ -826,31 +663,24 @@ function PersonSocialModal({ person, isOpen, onClose, onSave, isSaved }) {
 }
 
 
-// --- Focus Area Post (fake share) ------------------------------------------
-function FocusAreaPost({
-  author = "Alex Kim",
-  handle = "@alex",
-  title = "Run",
-  weekLabel = "Aug 11–17",
-  color = "#7EA2B7",
-  dailyGoalHrs = 2,
-  dayRatios = [1, 1, 1, 1, 1, 1, 1], // 0..1 for M..Su
-}) {
-  // Calculate weekly percentage (same logic as dashboard)
-  const percent = Math.round((dayRatios.reduce((a, b) => a + (b >= 1 ? 1 : 0), 0) / 7) * 100);
-  
-  // Helper function to convert hex to rgba (matching dashboard)
-  const hexToRGBA = (hex, alpha = 0.4) => {
-    if (!hex) return `rgba(140, 164, 175, ${alpha})`;
-    let h = hex.trim();
-    if (h[0] === '#') h = h.slice(1);
-    if (h.length === 3) h = h.split('').map(ch => ch + ch).join('');
-    const num = parseInt(h, 16);
-    const r = (num >> 16) & 255;
-    const g = (num >> 8) & 255;
-    const b = num & 255;
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-  };
+// My Learning Path Tab Component
+function MyLearningPathTab({ savedResources, onRemoveResource, onResourceSelect }) {
+  if (savedResources.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-gray-500 mb-2 text-lg">The Vault is Empty</div>
+        <div className="text-sm text-gray-400 mb-4">
+          Save resources from the Resources tab to build your personal collection
+        </div>
+        <button
+          onClick={() => onResourceSelect && onResourceSelect()}
+          className="px-4 py-2 bg-[#6B7280] text-white rounded-lg hover:bg-[#5B6B73] transition-colors"
+        >
+          Browse Resources
+        </button>
+      </div>
+    );
+  }
 
   // Weekly bar component (exact match to dashboard styling)
   const WeeklyBar = ({ ratio = 0, day, isOver = false }) => {
@@ -1415,7 +1245,7 @@ export default function ConnectPage() {
                   role="listbox"
                   className="absolute z-10 mt-2 w-56 rounded-lg border bg-white shadow-md left-1/2 transform -translate-x-1/2"
                 >
-                  {['Close Friends', 'Challenges', 'Resources', 'Templates'].filter(t => t !== tab).map((name) => (
+                  {['Resources'].filter(t => t !== tab).map((name) => (
                     <li key={name}>
                       <button
                         onClick={() => { setTab(name); setOpen(false); }}
@@ -1461,10 +1291,7 @@ export default function ConnectPage() {
 
       {/* Tab Content */}
       <main className="px-4 mt-4">
-        {tab === 'Close Friends' && <FeedTab />}
-        {tab === 'Challenges' && <ChallengesTab />}
         {tab === 'Resources' && <ResourcesTab focusAreas={focusAreas} onPersonSelect={setSelectedPerson} onResourceSelect={setSelectedResource} savedResources={savedResources} onSaveResource={saveResource} onRemoveResource={removeSavedResource} onTabChange={setTab} isResourceSaved={isResourceSaved} onShowVault={() => setShowVaultContent(true)} showVaultContent={showVaultContent} onBackToResources={() => setShowVaultContent(false)} />}
-        {tab === 'Templates' && <TemplatesTab />}
       </main>
 
       {/* Bottom nav (matches your style) */}
