@@ -964,7 +964,7 @@ function NotesContent() {
                     </select>
                     
                     {/* Apple Notes Style Buttons */}
-                    <div className="flex items-center gap-2 ml-4">
+                    <div className="flex flex-wrap items-center gap-2 ml-4">
                       <button className="w-8 h-8 bg-gray-100 text-gray-800 rounded flex items-center justify-center text-sm line-through">
                         S
                       </button>
