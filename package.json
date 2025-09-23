@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "cookie": "^1.0.2",
     "next": "14.2.32",
     "next-pwa": "^5.6.0",
     "openai": "^5.12.2",
