@@ -496,6 +496,7 @@ function NotesContent() {
     return text
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
       .replace(/\*(.*?)\*/g, '<em>$1</em>') // Italic
+      .replace(/__(.*?)__/g, '<u>$1</u>') // Underline
       .replace(/^- (.*$)/gm, '<li class="list-disc ml-4">$1</li>') // Bullet points
       .replace(/^\d+\. (.*$)/gm, '<li class="list-decimal ml-4">$1</li>') // Numbered lists
       .replace(/\n/g, '<br>'); // Line breaks
@@ -820,6 +821,44 @@ function NotesContent() {
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 4h4M8 20h4M12 4v16" />
+                      </svg>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        if (!isEditing) {
+                          // Add underlined text at the end when not editing
+                          const newText = selectedNote.content + '__underlined text__';
+                          updateNote({ content: newText });
+                          setIsEditing(true);
+                        } else {
+                          // Work with selection when editing
+                          const textarea = textareaRef.current;
+                          if (textarea) {
+                            const start = textarea.selectionStart;
+                            const end = textarea.selectionEnd;
+                            const text = selectedNote.content;
+                            const before = text.substring(0, start);
+                            const selected = text.substring(start, end);
+                            const after = text.substring(end);
+                            
+                            // Wrap selected text in __ for underline
+                            const newText = before + '__' + selected + '__' + after;
+                            updateNote({ content: newText });
+                            
+                            // Set cursor position after the underline markers
+                            setTimeout(() => {
+                              textarea.focus();
+                              textarea.setSelectionRange(start + 2, end + 2);
+                            }, 0);
+                          }
+                        }
+                      }}
+                      className="p-2 text-gray-600 hover:bg-gray-200 rounded"
+                      title="Underline"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m0 0l-3-3m3 3l3-3" />
                       </svg>
                     </button>
                     
