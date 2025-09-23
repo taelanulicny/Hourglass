@@ -703,6 +703,7 @@ function CalendarContent() {
 
   // Track current time (updates every 30s)
   const [nowMs, setNowMs] = useState(0); // Start with 0 to prevent hydration mismatch
+  const [hasInitiallyScrolled, setHasInitiallyScrolled] = useState(false);
   useEffect(() => {
     // Set initial time only on client
     setNowMs(Date.now());
@@ -773,17 +774,27 @@ function CalendarContent() {
     return (minutes / 60) * pxPerHour; // hours -> px
   }, [nowMs, selectedDate, pxPerHour]);
 
-  // When viewing today, scroll the window so the now line is comfortably in view
+  // Reset scroll flag when selected date changes
+  useEffect(() => {
+    setHasInitiallyScrolled(false);
+  }, [selectedDate]);
+
+  // When viewing today, scroll the window so the now line is comfortably in view (only on initial load)
   useEffect(() => {
     if (nowTopPx == null) return;
     if (!dayColRef.current) return;
+    if (hasInitiallyScrolled) return; // Only scroll on initial load
+    
     // Where the day column starts relative to the page
     const rect = dayColRef.current.getBoundingClientRect();
     const pageTop = window.scrollY + rect.top;
     // Aim to put the red line about 2 hours (240px) below the top of the viewport
     const target = Math.max(0, pageTop + nowTopPx - 240);
     window.scrollTo({ top: target, behavior: 'smooth' });
-  }, [nowTopPx, selectedDate]);
+    
+    // Mark that we've done the initial scroll
+    setHasInitiallyScrolled(true);
+  }, [nowTopPx, selectedDate, hasInitiallyScrolled]);
 
   useEffect(() => {
     if (!draggingId) return;
