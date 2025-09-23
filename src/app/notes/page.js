@@ -746,7 +746,7 @@ function NotesContent() {
               {selectedNote && (
                 <div className="flex-1 flex flex-col">
                   {/* Apple Notes Style Formatting Toolbar */}
-                  <div className="border-b border-gray-200 bg-white">
+                  <div className="border-b border-gray-200 bg-[#F7F6F3]">
                     {/* Text Styles Row */}
                     <div className="px-4 py-3 border-b border-gray-100">
                       <div className="flex items-center gap-2">
@@ -816,14 +816,14 @@ function NotesContent() {
                         value={selectedNote.content}
                         onChange={(e) => updateNote({ content: e.target.value })}
                         onBlur={() => setIsEditing(false)}
-                        className="w-full h-full resize-none border-none outline-none text-gray-800"
+                        className="w-full h-full resize-none border-none outline-none text-[#4E4034] bg-transparent"
                         placeholder="Start writing your note..."
                         autoFocus
                       />
                     ) : (
                       <div
                         onClick={() => setIsEditing(true)}
-                        className="w-full h-full cursor-text"
+                        className="w-full h-full cursor-text text-[#4E4034]"
                         dangerouslySetInnerHTML={{ __html: formatText(selectedNote.content) }}
                       />
                     )}
