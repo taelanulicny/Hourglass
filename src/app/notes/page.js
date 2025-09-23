@@ -848,3 +848,21 @@ function NotesContent() {
     </div>
   );
 }
+
+// Main notes page - client-side only
+export default function NotesPage() {
+  const isClient = useClientOnly();
+  
+  if (!isClient) {
+    return (
+      <div className="min-h-screen bg-[#F7F6F3] flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-lg font-semibold mb-2 text-[#4E4034]">Loading Notes...</div>
+          <div className="text-sm text-gray-500">Please wait while we prepare your notes.</div>
+        </div>
+      </div>
+    );
+  }
+  
+  return <NotesContent />;
+}
