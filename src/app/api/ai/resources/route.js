@@ -44,22 +44,32 @@ export async function POST(request) {
       apiKey: process.env.OPENAI_API_KEY,
     });
 
-    // Create a system message for resource recommendations
+    // Create a system message for intelligent resource recommendations
   const systemMessage = {
     role: 'system',
-    content: `You are a resource-finding AI. Find REAL, EXISTING books, people, and podcasts about any topic.
+    content: `You are an intelligent resource-finding AI that finds REAL, EXISTING books, people, and podcasts. Your goal is to provide the BEST recommendations that are similar, related, or complementary to what the user is looking for.
 
-TOPIC EXTRACTION: Convert any query into "I want to know books, people, and podcasts about [TOPIC]"
+INTELLIGENT MATCHING STRATEGY:
+1. If user searches for a specific book → find similar books by same author, related topics, or complementary approaches
+2. If user searches for a specific person → find similar experts, collaborators, or people in related fields
+3. If user searches for a specific podcast → find similar podcasts, hosts, or related topics
+4. If user searches for a topic → find the most relevant and high-quality resources in that field
+5. Always consider: skill level, complementary perspectives, different approaches, and related subfields
 
-EXAMPLES:
-- "hair" → real books about hair styling/care, real people in hair industry, real podcasts about hair
-- "I want to learn about cooking" → real cookbooks, real chefs, real cooking podcasts
-- "How do I become a better photographer?" → real photography books, real photographers, real photography podcasts
-- "What should I study to become a lawyer?" → real law books, real lawyers, real legal podcasts
-- "I'm interested in starting my own business" → real business books, real entrepreneurs, real business podcasts
-- "Can you help me learn woodworking?" → real woodworking books, real woodworkers, real woodworking podcasts
-- "I need resources for learning Spanish" → real Spanish language books, real Spanish teachers/linguists, real language podcasts
-- "What books should I read about investing?" → real investment books, real investors, real finance podcasts
+EXAMPLES OF INTELLIGENT MATCHING:
+- "Atomic Habits" → similar habit books, James Clear's other works, productivity experts, habit-building podcasts
+- "Tim Ferriss" → similar productivity experts, his podcast guests, related entrepreneurs, self-improvement books
+- "The Tim Ferriss Show" → similar interview podcasts, productivity podcasts, business podcasts, related hosts
+- "photography" → beginner to advanced photography books, famous photographers, photography podcasts, technique-specific resources
+- "entrepreneurship" → startup books, successful entrepreneurs, business podcasts, different business models
+- "meditation" → mindfulness books, meditation teachers, wellness podcasts, different meditation traditions
+
+QUALITY REQUIREMENTS:
+- Prioritize WELL-KNOWN, HIGHLY-RATED resources
+- Include a mix of beginner-friendly and advanced content
+- Find resources that complement each other (different perspectives, skill levels, approaches)
+- Include both classic/established and modern/current resources
+- Consider cultural diversity and different viewpoints when relevant
 
 CRITICAL REQUIREMENTS:
 - ALWAYS find REAL, EXISTING books with REAL titles and REAL authors
@@ -70,6 +80,7 @@ CRITICAL REQUIREMENTS:
 - ALWAYS use x.com URLs (never twitter.com)
 - Use real Amazon URLs when possible for books
 - Use real Apple Podcasts and Spotify URLs when possible for podcasts
+- Focus on QUALITY over quantity - choose the best, most relevant resources
 
 RESPONSE FORMAT (return ONLY this JSON, no other text):
 {
@@ -86,11 +97,15 @@ RESPONSE FORMAT (return ONLY this JSON, no other text):
           systemMessage,
           {
             role: 'user',
-            content: `Find REAL, EXISTING books, people, and podcasts about: ${query}. I want actual books with real titles and authors, real people with real social media accounts, and real podcasts with real titles.`
+            content: `Find the BEST similar and related resources for: "${query}". 
+
+I want intelligent recommendations that are similar, complementary, or related to what I'm looking for. If I searched for a specific book, find similar books by the same author or on related topics. If I searched for a person, find similar experts or collaborators. If I searched for a podcast, find similar podcasts or related hosts.
+
+Focus on high-quality, well-known resources that would be good matches. Include a mix of beginner and advanced content, different perspectives, and complementary approaches.`
           }
         ],
         max_tokens: 3000,
-        temperature: 0.1,
+        temperature: 0.3,
       });
 
       const response = completion.choices[0]?.message?.content || '';
