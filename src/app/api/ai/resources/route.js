@@ -50,19 +50,20 @@ export async function POST(request) {
     content: `You are an intelligent resource-finding AI that finds REAL, EXISTING books, people, and podcasts. Your goal is to provide the BEST recommendations that are similar, related, or complementary to what the user is looking for.
 
 INTELLIGENT MATCHING STRATEGY:
-1. If user searches for a specific book → find similar books by same author, related topics, or complementary approaches
-2. If user searches for a specific person → find similar experts, collaborators, or people in related fields
-3. If user searches for a specific podcast → find similar podcasts, hosts, or related topics
+1. If user searches for a specific book → ALWAYS put that exact book FIRST, then find 4 similar books by same author, related topics, or complementary approaches
+2. If user searches for a specific person → ALWAYS put that exact person FIRST, then find 4 similar experts, collaborators, or people in related fields
+3. If user searches for a specific podcast → ALWAYS put that exact podcast FIRST, then find 4 similar podcasts, hosts, or related topics
 4. If user searches for a topic → find the most relevant and high-quality resources in that field
 5. Always consider: skill level, complementary perspectives, different approaches, and related subfields
+6. CRITICAL: The searched resource must be the FIRST item in its category, followed by 4 similar recommendations
 
 EXAMPLES OF INTELLIGENT MATCHING:
-- "Atomic Habits" → similar habit books, James Clear's other works, productivity experts, habit-building podcasts
-- "Tim Ferriss" → similar productivity experts, his podcast guests, related entrepreneurs, self-improvement books
-- "The Tim Ferriss Show" → similar interview podcasts, productivity podcasts, business podcasts, related hosts
-- "photography" → beginner to advanced photography books, famous photographers, photography podcasts, technique-specific resources
-- "entrepreneurship" → startup books, successful entrepreneurs, business podcasts, different business models
-- "meditation" → mindfulness books, meditation teachers, wellness podcasts, different meditation traditions
+- "Atomic Habits" → 1) Atomic Habits (exact book), 2-5) similar habit books, then related people and podcasts
+- "Tim Ferriss" → 1) Tim Ferriss (exact person), 2-5) similar productivity experts, then related books and podcasts
+- "The Tim Ferriss Show" → 1) The Tim Ferriss Show (exact podcast), 2-5) similar interview podcasts, then related books and people
+- "48 Laws of Power" → 1) 48 Laws of Power (exact book), 2-5) similar books by Robert Greene and related topics, then related people and podcasts
+- "photography" → find the most relevant photography books, people, and podcasts (no specific item to put first)
+- "entrepreneurship" → find the most relevant entrepreneurship resources (no specific item to put first)
 
 QUALITY REQUIREMENTS:
 - Prioritize WELL-KNOWN, HIGHLY-RATED resources
@@ -98,6 +99,11 @@ RESPONSE FORMAT (return ONLY this JSON, no other text):
           {
             role: 'user',
             content: `Find the BEST similar and related resources for: "${query}". 
+
+IMPORTANT ORDERING REQUIREMENTS:
+- If I searched for a specific book, person, or podcast, ALWAYS put that exact resource FIRST in its category
+- Then provide 4 additional similar recommendations in that same category
+- For other categories (books/people/podcasts), provide 5 related resources
 
 I want intelligent recommendations that are similar, complementary, or related to what I'm looking for. If I searched for a specific book, find similar books by the same author or on related topics. If I searched for a person, find similar experts or collaborators. If I searched for a podcast, find similar podcasts or related hosts.
 
