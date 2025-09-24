@@ -1567,8 +1567,8 @@ function CalendarContent() {
         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-6 h-6 bg-gradient-to-r from-white to-transparent pointer-events-none z-10" />
         <div className="absolute right-0 top-1/2 -translate-y-1/2 w-6 h-6 bg-gradient-to-l from-white to-transparent pointer-events-none z-10" />
         
-        <div ref={focusRingsRef} className="flex flex-row gap-2 px-4 pointer-events-none select-none mt-8 mb-6 overflow-x-auto scroll-smooth scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300">
-          <div className="flex flex-row gap-2 min-w-max px-2 justify-center" style={{ margin: '0 auto' }}>
+        <div ref={focusRingsRef} className="flex flex-row gap-2 px-4 select-none mt-8 mb-6 overflow-x-auto scroll-smooth scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300">
+          <div className="flex flex-row gap-2 min-w-max px-2">
         {[...focusAreas].reverse().map(({ label, timeSpent, goal, days, color }, index) => {
           // Day-aware calculations using TODAY's logged time from `days`
           const todayAbbrev = DAYS[new Date().getDay()];
