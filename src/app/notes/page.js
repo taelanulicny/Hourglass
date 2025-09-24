@@ -831,18 +831,14 @@ function NotesContent() {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation(); // Prevent opening the note
-                                console.log('Three dots clicked for note:', note.id);
                                 const menu = document.getElementById(`menu-${note.id}`);
-                                console.log('Menu element found:', menu);
                                 if (menu) {
                                   const isVisible = menu.style.display === 'block';
-                                  console.log('Menu currently visible:', isVisible);
                                   menu.style.display = isVisible ? 'none' : 'block';
                                   menu.style.position = 'absolute';
                                   menu.style.top = '100%';
                                   menu.style.right = '0';
                                   menu.style.zIndex = '50';
-                                  console.log('Menu display set to:', menu.style.display);
                                 }
                               }}
                               className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
