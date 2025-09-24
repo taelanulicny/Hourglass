@@ -2273,7 +2273,7 @@ function HomeContent() {
                   setRenameGoal("");
                   setRenameColor("#6B7280");
                 }}
-                className="px-4 py-2 bg-[#BCA88F] text-white rounded"
+                className="px-4 py-2 bg-gray-700 text-white rounded"
               >
                 Save
               </button>
