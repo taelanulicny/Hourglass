@@ -317,7 +317,7 @@ function NotesContent() {
       // Close all dropdown menus
       const menus = document.querySelectorAll('[id^="menu-"]');
       menus.forEach(menu => {
-        if (menu.style.display === 'block' || !menu.classList.contains('hidden')) {
+        if (menu.style.display === 'block') {
           menu.style.display = 'none';
         }
       });
@@ -781,15 +781,18 @@ function NotesContent() {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation(); // Prevent opening the note
-                                // Toggle dropdown or show context menu
-                                const rect = e.currentTarget.getBoundingClientRect();
+                                console.log('Three dots clicked for note:', note.id);
                                 const menu = document.getElementById(`menu-${note.id}`);
+                                console.log('Menu element found:', menu);
                                 if (menu) {
-                                  menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+                                  const isVisible = menu.style.display === 'block';
+                                  console.log('Menu currently visible:', isVisible);
+                                  menu.style.display = isVisible ? 'none' : 'block';
                                   menu.style.position = 'absolute';
                                   menu.style.top = '100%';
                                   menu.style.right = '0';
                                   menu.style.zIndex = '50';
+                                  console.log('Menu display set to:', menu.style.display);
                                 }
                               }}
                               className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
@@ -803,7 +806,7 @@ function NotesContent() {
                             {/* Dropdown menu */}
                             <div
                               id={`menu-${note.id}`}
-                              className="hidden bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[120px]"
+                              className="bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[120px]"
                               style={{ display: 'none' }}
                             >
                               <button
@@ -846,6 +849,13 @@ function NotesContent() {
               {/* Note Editor */}
               {selectedNote && (
                 <div className="flex-1 flex flex-col">
+                  {/* Note Title */}
+                  <div className="border-b border-gray-200 p-4">
+                    <h2 className="text-xl font-semibold text-[#4E4034]">
+                      {selectedNote.title}
+                    </h2>
+                  </div>
+                  
                   {/* Note Content Area */}
                   <div className="flex-1 p-4">
                     {isEditing ? (
