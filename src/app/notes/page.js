@@ -745,69 +745,6 @@ function NotesContent() {
               {/* Note Editor */}
               {selectedNote && (
                 <div className="flex-1 flex flex-col">
-                  {/* Apple Notes Style Formatting Toolbar */}
-                  <div className="border-b border-gray-200 bg-[#F7F6F3]">
-                    {/* Text Styles Row */}
-                    <div className="px-4 py-3 border-b border-gray-100">
-                      <div className="flex items-center gap-2">
-                        <button className="px-3 py-1.5 bg-yellow-100 text-yellow-800 rounded text-sm font-medium">
-                          Title
-                        </button>
-                        <button className="px-3 py-1.5 bg-gray-100 text-gray-800 rounded text-sm font-medium">
-                          Heading
-                        </button>
-                        <button className="px-3 py-1.5 bg-gray-100 text-gray-800 rounded text-sm font-medium">
-                          Subheading
-                        </button>
-                        <button className="px-3 py-1.5 bg-gray-100 text-gray-800 rounded text-sm font-medium">
-                          Body
-                        </button>
-                        <button className="px-3 py-1.5 bg-gray-100 text-gray-800 rounded text-sm font-medium">
-                          Monostyled
-                        </button>
-                      </div>
-                    </div>
-                    
-                    {/* Formatting Controls Row */}
-                    <div className="flex items-center gap-2 px-4 py-3">
-                      {/* Basic Text Formatting */}
-                      <button className="w-8 h-8 bg-yellow-100 text-yellow-800 rounded flex items-center justify-center text-sm font-bold">
-                        B
-                      </button>
-                      <button className="w-8 h-8 bg-gray-100 text-gray-800 rounded flex items-center justify-center text-sm italic">
-                        I
-                      </button>
-                      <button className="w-8 h-8 bg-gray-100 text-gray-800 rounded flex items-center justify-center text-sm underline">
-                        U
-                      </button>
-                      <button className="w-8 h-8 bg-gray-100 text-gray-800 rounded flex items-center justify-center text-sm line-through">
-                        S
-                      </button>
-                      
-                      {/* Lists */}
-                      <button className="w-8 h-8 bg-gray-100 text-gray-800 rounded flex items-center justify-center">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                        </svg>
-                      </button>
-                      <button className="w-8 h-8 bg-gray-100 text-gray-800 rounded flex items-center justify-center">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
-                        </svg>
-                      </button>
-                      
-                      {/* Text Style Dropdown */}
-                      <select className="text-sm border border-gray-300 rounded px-2 py-1 bg-white">
-                        <option>Normal</option>
-                        <option>Title</option>
-                        <option>Heading</option>
-                        <option>Subheading</option>
-                        <option>Body</option>
-                        <option>Monostyled</option>
-                      </select>
-                    </div>
-                  </div>
-                  
                   {/* Note Content Area */}
                   <div className="flex-1 p-4">
                     {isEditing ? (
