@@ -314,8 +314,8 @@ function NotesContent() {
     if (!isClient) return;
     
     const handleClickOutside = (event) => {
-      // Close all dropdown menus
-      const menus = document.querySelectorAll('[id^="menu-"]');
+      // Close all dropdown menus (both main view and note editor)
+      const menus = document.querySelectorAll('[id^="menu-"], [id^="note-menu-"]');
       menus.forEach(menu => {
         if (menu.style.display === 'block') {
           menu.style.display = 'none';
@@ -850,10 +850,74 @@ function NotesContent() {
               {selectedNote && (
                 <div className="flex-1 flex flex-col">
                   {/* Note Title */}
-                  <div className="border-b border-gray-200 p-4">
-                    <h2 className="text-xl font-semibold text-[#4E4034]">
+                  <div className="border-b border-gray-200 p-4 flex items-center justify-between">
+                    <h2 className="text-xl font-semibold text-[#4E4034] flex-1 mr-4">
                       {selectedNote.title}
                     </h2>
+                    
+                    {/* Three-dot menu button */}
+                    <div className="relative">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          console.log('Three dots clicked in note editor for note:', selectedNote.id);
+                          const menu = document.getElementById(`note-menu-${selectedNote.id}`);
+                          console.log('Note menu element found:', menu);
+                          if (menu) {
+                            const isVisible = menu.style.display === 'block';
+                            console.log('Note menu currently visible:', isVisible);
+                            menu.style.display = isVisible ? 'none' : 'block';
+                            menu.style.position = 'absolute';
+                            menu.style.top = '100%';
+                            menu.style.right = '0';
+                            menu.style.zIndex = '50';
+                            console.log('Note menu display set to:', menu.style.display);
+                          }
+                        }}
+                        className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                        title="Note options"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                        </svg>
+                      </button>
+                      
+                      {/* Dropdown menu */}
+                      <div
+                        id={`note-menu-${selectedNote.id}`}
+                        className="bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[120px]"
+                        style={{ display: 'none' }}
+                      >
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setNoteToRename(selectedNote);
+                            setRenameTitle(selectedNote.title);
+                            setShowRenameModal(true);
+                            document.getElementById(`note-menu-${selectedNote.id}`).style.display = 'none';
+                          }}
+                          className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                          Rename
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowDeleteConfirm(selectedNote.id);
+                            document.getElementById(`note-menu-${selectedNote.id}`).style.display = 'none';
+                          }}
+                          className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                          Delete
+                        </button>
+                      </div>
+                    </div>
                   </div>
                   
                   {/* Note Content Area */}
