@@ -139,12 +139,15 @@ function NotesContent() {
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [renameTitle, setRenameTitle] = useState("");
   const [noteToRename, setNoteToRename] = useState(null);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editingTitle, setEditingTitle] = useState("");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
   const textareaRef = useRef(null);
   const newFolderInputRef = useRef(null);
   const newNoteInputRef = useRef(null);
   const renameInputRef = useRef(null);
+  const titleInputRef = useRef(null);
 
   // Get focus area from URL params
   const focusArea = searchParams?.get('focus') || '';
@@ -309,6 +312,13 @@ function NotesContent() {
     renameInputRef.current.focus();
   }, [showRenameModal, isClient]);
 
+  // Focus title input when editing starts
+  useEffect(() => {
+    if (!isClient || !isEditingTitle || !titleInputRef.current) return; // Don't run on server
+    titleInputRef.current.focus();
+    titleInputRef.current.select(); // Select all text for easy editing
+  }, [isEditingTitle, isClient]);
+
   // Close dropdown menus when clicking outside
   useEffect(() => {
     if (!isClient) return;
@@ -437,13 +447,16 @@ function NotesContent() {
 
   // Rename note
   const renameNote = () => {
-    if (!noteToRename || !renameTitle.trim()) return;
+    const noteToRenameId = noteToRename?.id || selectedNote?.id;
+    const newTitle = renameTitle.trim() || editingTitle.trim();
+    
+    if (!noteToRenameId || !newTitle) return;
     
     const updatedData = {
       ...notesData,
       notes: notesData.notes.map(note => 
-        note.id === noteToRename.id 
-          ? { ...note, title: renameTitle.trim(), updatedAt: Date.now() }
+        note.id === noteToRenameId 
+          ? { ...note, title: newTitle, updatedAt: Date.now() }
           : note
       )
     };
@@ -452,13 +465,16 @@ function NotesContent() {
     saveNotes(updatedData);
     
     // Update selectedNote if it's the one being renamed
-    if (selectedNote && selectedNote.id === noteToRename.id) {
-      setSelectedNote({ ...selectedNote, title: renameTitle.trim(), updatedAt: Date.now() });
+    if (selectedNote && selectedNote.id === noteToRenameId) {
+      setSelectedNote({ ...selectedNote, title: newTitle, updatedAt: Date.now() });
     }
     
+    // Reset all editing states
     setShowRenameModal(false);
     setRenameTitle("");
     setNoteToRename(null);
+    setIsEditingTitle(false);
+    setEditingTitle("");
   };
 
   // Delete note
@@ -851,9 +867,45 @@ function NotesContent() {
                 <div className="flex-1 flex flex-col">
                   {/* Note Title */}
                   <div className="border-b border-gray-200 p-4 flex items-center justify-between">
-                    <h2 className="text-xl font-semibold text-[#4E4034] flex-1 mr-4">
-                      {selectedNote.title}
-                    </h2>
+                    {isEditingTitle ? (
+                      <input
+                        ref={titleInputRef}
+                        type="text"
+                        value={editingTitle}
+                        onChange={(e) => setEditingTitle(e.target.value)}
+                        onBlur={() => {
+                          if (editingTitle.trim()) {
+                            renameNote();
+                          } else {
+                            setEditingTitle(selectedNote.title);
+                            setIsEditingTitle(false);
+                          }
+                        }}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            if (editingTitle.trim()) {
+                              renameNote();
+                            } else {
+                              setEditingTitle(selectedNote.title);
+                              setIsEditingTitle(false);
+                            }
+                          }
+                        }}
+                        className="text-xl font-semibold text-[#4E4034] flex-1 mr-4 bg-transparent border-none outline-none"
+                        autoFocus
+                      />
+                    ) : (
+                      <h2 
+                        className="text-xl font-semibold text-[#4E4034] flex-1 mr-4 cursor-text hover:bg-gray-50 p-1 rounded"
+                        onClick={() => {
+                          setEditingTitle(selectedNote.title);
+                          setIsEditingTitle(true);
+                        }}
+                        title="Tap to edit title"
+                      >
+                        {selectedNote.title}
+                      </h2>
+                    )}
                     
                     {/* Three-dot menu button */}
                     <div className="relative">
@@ -891,9 +943,8 @@ function NotesContent() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            setNoteToRename(selectedNote);
-                            setRenameTitle(selectedNote.title);
-                            setShowRenameModal(true);
+                            setEditingTitle(selectedNote.title);
+                            setIsEditingTitle(true);
                             document.getElementById(`note-menu-${selectedNote.id}`).style.display = 'none';
                           }}
                           className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
