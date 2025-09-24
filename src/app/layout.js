@@ -15,13 +15,13 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "Time Macros - Focus Area Tracker",
+  title: "HRGLSS - Focus Area Tracker",
   description: "Track your daily focus areas and productivity goals with AI-powered insights",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Time Macros",
+    title: "HRGLSS",
   },
   formatDetection: {
     telephone: false,
