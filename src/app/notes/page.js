@@ -782,6 +782,81 @@ function NotesContent() {
           )}
         </div>
       </div>
+
+      {/* New Note Modal */}
+      {showNewNoteModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-80">
+            <h3 className="text-lg font-semibold mb-4">New Note</h3>
+            <input
+              ref={newNoteInputRef}
+              type="text"
+              placeholder="Note title"
+              value={newNoteTitle}
+              onChange={(e) => setNewNoteTitle(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && createNote()}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-[#8CA4AF]"
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  setShowNewNoteModal(false);
+                  setNewNoteTitle("");
+                }}
+                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={createNote}
+                className="px-4 py-2 bg-[#8CA4AF] text-white rounded-lg hover:bg-[#7A939F] transition-colors"
+              >
+                Create
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-80">
+            <h3 className="text-lg font-semibold mb-4">
+              {notesData.folders.find(f => f.id === showDeleteConfirm) ? 'Delete Folder' : 'Delete Note'}
+            </h3>
+            <p className="text-gray-600 mb-6">
+              {notesData.folders.find(f => f.id === showDeleteConfirm) 
+                ? 'This will delete the folder and all notes inside it. This action cannot be undone.'
+                : 'This note will be permanently deleted. This action cannot be undone.'
+              }
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowDeleteConfirm(null)}
+                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  // Close modal immediately
+                  setShowDeleteConfirm(null);
+                  
+                  if (notesData.folders.find(f => f.id === showDeleteConfirm)) {
+                    deleteFolder(showDeleteConfirm);
+                  } else {
+                    deleteNote(showDeleteConfirm);
+                  }
+                }}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
