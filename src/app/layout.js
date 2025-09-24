@@ -41,11 +41,13 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
+        <title>HRGLSS</title>
+        <meta name="apple-mobile-web-app-title" content="HRGLSS" />
+        <meta name="application-name" content="HRGLSS" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.svg" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="Time Macros" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="theme-color" content="#F9FAFB" />
         <script
