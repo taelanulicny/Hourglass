@@ -1,6 +1,6 @@
 {
-  "name": "Time Macros - Focus Area Tracker",
-  "short_name": "TimeMacros",
+  "name": "HRGLSS - Focus Area Tracker",
+  "short_name": "HRGLSS",
   "description": "Track your daily focus areas and productivity goals",
   "start_url": "/",
   "display": "standalone",
