@@ -445,6 +445,40 @@ function NotesContent() {
     setSelectedNote({ ...selectedNote, ...updates, updatedAt: Date.now() });
   };
 
+  // Handle auto-list functionality
+  const handleTextareaInput = (e) => {
+    const value = e.target.value;
+    const cursorPosition = e.target.selectionStart;
+    
+    // Find the start of the current line
+    const textBeforeCursor = value.substring(0, cursorPosition);
+    const lastNewlineIndex = textBeforeCursor.lastIndexOf('\n');
+    const currentLineStart = lastNewlineIndex === -1 ? 0 : lastNewlineIndex + 1;
+    const currentLine = value.substring(currentLineStart, cursorPosition);
+    
+    // Check if the current line starts with "- " (hyphen + space)
+    if (currentLine.match(/^- $/)) {
+      // Replace "- " with "• " (bullet point)
+      const newValue = value.substring(0, currentLineStart) +
+                       currentLine.replace(/^- $/, '• ') +
+                       value.substring(cursorPosition);
+      
+      // Update the note content
+      updateNote({ content: newValue });
+      
+      // Set cursor position after the bullet point
+      setTimeout(() => {
+        if (textareaRef.current) {
+          const newCursorPos = currentLineStart + 2; // After "• "
+          textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
+        }
+      }, 0);
+    } else {
+      // Normal update
+      updateNote({ content: value });
+    }
+  };
+
   // Rename note
   const renameNote = () => {
     const noteToRenameId = noteToRename?.id || selectedNote?.id;
@@ -914,7 +948,7 @@ function NotesContent() {
                       <textarea
                         ref={textareaRef}
                         value={selectedNote.content}
-                        onChange={(e) => updateNote({ content: e.target.value })}
+                        onChange={handleTextareaInput}
                         onBlur={() => setIsEditing(false)}
                         className="w-full h-full resize-none border-none outline-none text-[#4E4034] bg-transparent"
                         placeholder="Start writing your note..."
