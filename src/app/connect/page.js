@@ -456,8 +456,8 @@ function ResourcePreviewModal({ resource, isOpen, onClose, onSave, isSaved }) {
               }}
               className={`px-4 py-2 rounded-lg font-medium text-sm ${
                 isSaved 
-                  ? 'bg-green-100 text-green-700 cursor-default' 
-                  : 'bg-green-600 text-white hover:bg-green-700'
+                  ? 'bg-gray-100 text-gray-600 cursor-default' 
+                  : 'bg-gray-200 text-black hover:bg-gray-300'
               }`}
               disabled={isSaved}
             >
@@ -619,8 +619,8 @@ function PersonSocialModal({ person, isOpen, onClose, onSave, isSaved }) {
               }}
               className={`px-4 py-2 rounded-lg font-medium text-sm ${
                 isSaved 
-                  ? 'bg-green-100 text-green-700 cursor-default' 
-                  : 'bg-green-600 text-white hover:bg-green-700'
+                  ? 'bg-gray-100 text-gray-600 cursor-default' 
+                  : 'bg-gray-200 text-black hover:bg-gray-300'
               }`}
               disabled={isSaved}
             >
