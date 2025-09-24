@@ -136,11 +136,15 @@ function NotesContent() {
   const [showNewNoteModal, setShowNewNoteModal] = useState(false);
   const [newNoteTitle, setNewNoteTitle] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+  const [showRenameModal, setShowRenameModal] = useState(false);
+  const [renameTitle, setRenameTitle] = useState("");
+  const [noteToRename, setNoteToRename] = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
   const textareaRef = useRef(null);
   const newFolderInputRef = useRef(null);
   const newNoteInputRef = useRef(null);
+  const renameInputRef = useRef(null);
 
   // Get focus area from URL params
   const focusArea = searchParams?.get('focus') || '';
@@ -299,6 +303,30 @@ function NotesContent() {
     newNoteInputRef.current.focus();
   }, [showNewNoteModal, isClient]);
 
+  // Focus rename input when modal opens
+  useEffect(() => {
+    if (!isClient || !showRenameModal || !renameInputRef.current) return; // Don't run on server
+    renameInputRef.current.focus();
+  }, [showRenameModal, isClient]);
+
+  // Close dropdown menus when clicking outside
+  useEffect(() => {
+    if (!isClient) return;
+    
+    const handleClickOutside = (event) => {
+      // Close all dropdown menus
+      const menus = document.querySelectorAll('[id^="menu-"]');
+      menus.forEach(menu => {
+        if (menu.style.display === 'block') {
+          menu.style.display = 'none';
+        }
+      });
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [isClient]);
+
   // Get current folder
   const currentFolder = notesData.folders.find(f => f.id === selectedFolder);
 
@@ -405,6 +433,32 @@ function NotesContent() {
   const updateNote = (updates) => {
     if (!selectedNote) return;
     setSelectedNote({ ...selectedNote, ...updates, updatedAt: Date.now() });
+  };
+
+  // Rename note
+  const renameNote = () => {
+    if (!noteToRename || !renameTitle.trim()) return;
+    
+    const updatedData = {
+      ...notesData,
+      notes: notesData.notes.map(note => 
+        note.id === noteToRename.id 
+          ? { ...note, title: renameTitle.trim(), updatedAt: Date.now() }
+          : note
+      )
+    };
+    
+    setNotesData(updatedData);
+    saveNotes(updatedData);
+    
+    // Update selectedNote if it's the one being renamed
+    if (selectedNote && selectedNote.id === noteToRename.id) {
+      setSelectedNote({ ...selectedNote, title: renameTitle.trim(), updatedAt: Date.now() });
+    }
+    
+    setShowRenameModal(false);
+    setRenameTitle("");
+    setNoteToRename(null);
   };
 
   // Delete note
@@ -723,18 +777,64 @@ function NotesContent() {
                           </div>
                           
                           {/* Three-dot menu button */}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation(); // Prevent opening the note
-                              setShowDeleteConfirm(note.id);
-                            }}
-                            className="absolute top-3 right-3 p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                            title="Delete note"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                            </svg>
-                          </button>
+                          <div className="absolute top-3 right-3">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation(); // Prevent opening the note
+                                // Toggle dropdown or show context menu
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                const menu = document.getElementById(`menu-${note.id}`);
+                                if (menu) {
+                                  menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+                                  menu.style.position = 'absolute';
+                                  menu.style.top = '100%';
+                                  menu.style.right = '0';
+                                  menu.style.zIndex = '50';
+                                }
+                              }}
+                              className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                              title="Note options"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                              </svg>
+                            </button>
+                            
+                            {/* Dropdown menu */}
+                            <div
+                              id={`menu-${note.id}`}
+                              className="hidden bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[120px]"
+                            >
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setNoteToRename(note);
+                                  setRenameTitle(note.title);
+                                  setShowRenameModal(true);
+                                  document.getElementById(`menu-${note.id}`).style.display = 'none';
+                                }}
+                                className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                                Rename
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setShowDeleteConfirm(note.id);
+                                  document.getElementById(`menu-${note.id}`).style.display = 'none';
+                                }}
+                                className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                Delete
+                              </button>
+                            </div>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -812,6 +912,42 @@ function NotesContent() {
                 className="px-4 py-2 bg-[#8CA4AF] text-white rounded-lg hover:bg-[#7A939F] transition-colors"
               >
                 Create
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Rename Note Modal */}
+      {showRenameModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-80">
+            <h3 className="text-lg font-semibold mb-4">Rename Note</h3>
+            <input
+              ref={renameInputRef}
+              type="text"
+              placeholder="Note title"
+              value={renameTitle}
+              onChange={(e) => setRenameTitle(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && renameNote()}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-[#8CA4AF]"
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  setShowRenameModal(false);
+                  setRenameTitle("");
+                  setNoteToRename(null);
+                }}
+                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={renameNote}
+                className="px-4 py-2 bg-[#8CA4AF] text-white rounded-lg hover:bg-[#7A939F] transition-colors"
+              >
+                Rename
               </button>
             </div>
           </div>
