@@ -317,7 +317,7 @@ function NotesContent() {
       // Close all dropdown menus
       const menus = document.querySelectorAll('[id^="menu-"]');
       menus.forEach(menu => {
-        if (menu.style.display === 'block') {
+        if (menu.style.display === 'block' || !menu.classList.contains('hidden')) {
           menu.style.display = 'none';
         }
       });
@@ -804,6 +804,7 @@ function NotesContent() {
                             <div
                               id={`menu-${note.id}`}
                               className="hidden bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[120px]"
+                              style={{ display: 'none' }}
                             >
                               <button
                                 onClick={(e) => {
@@ -845,6 +846,26 @@ function NotesContent() {
               {/* Note Editor */}
               {selectedNote && (
                 <div className="flex-1 flex flex-col">
+                  {/* Note Header */}
+                  <div className="border-b border-gray-200 p-4 flex items-center justify-between">
+                    <h2 className="text-xl font-semibold text-[#4E4034] truncate flex-1 mr-4">
+                      {selectedNote.title}
+                    </h2>
+                    <button
+                      onClick={() => {
+                        setNoteToRename(selectedNote);
+                        setRenameTitle(selectedNote.title);
+                        setShowRenameModal(true);
+                      }}
+                      className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                      title="Rename note"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
+                  </div>
+                  
                   {/* Note Content Area */}
                   <div className="flex-1 p-4">
                     {isEditing ? (
