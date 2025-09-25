@@ -2088,11 +2088,11 @@ function CalendarContent() {
                 if (currentEvent && currentEvent.isRepeating) {
                   return (
                     <div className="flex gap-2">
-                      <button className="px-3 py-2 bg-red-500 text-white rounded text-sm whitespace-nowrap" onClick={() => deleteEvent(false)}>
-                        Delete This
+                      <button className="px-3 py-2 bg-red-500 text-white rounded text-xs leading-tight" onClick={() => deleteEvent(false)}>
+                        Delete This<br />Event
                       </button>
-                      <button className="px-3 py-2 bg-red-600 text-white rounded text-sm whitespace-nowrap" onClick={() => deleteEvent(true)}>
-                        Delete All
+                      <button className="px-3 py-2 bg-red-600 text-white rounded text-xs leading-tight" onClick={() => deleteEvent(true)}>
+                        Delete Future<br />Events
                       </button>
                     </div>
                   );
