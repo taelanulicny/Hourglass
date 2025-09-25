@@ -990,8 +990,19 @@ function HomeContent() {
 
     // Filter for future planning timeline - events for current week only
     // Use the same week calculation as the dashboard (Monday-Sunday)
-    const currentWeekStart = startOfWeek; // Monday of current week
-    const currentWeekEnd = endOfWeek; // Sunday of current week
+    const currentWeekStart = (() => {
+      const start = new Date(rawDate);
+      start.setDate(rawDate.getDate() - ((rawDate.getDay() + 6) % 7)); // Monday
+      start.setHours(0, 0, 0, 0); // normalize to midnight for safe comparisons
+      return start;
+    })();
+    
+    const currentWeekEnd = (() => {
+      const end = new Date(currentWeekStart);
+      end.setDate(currentWeekStart.getDate() + 6); // Sunday
+      end.setHours(23, 59, 59, 999); // end of day for safe comparisons
+      return end;
+    })();
     
     const futureEvents = allEvents
       .filter(ev => {
