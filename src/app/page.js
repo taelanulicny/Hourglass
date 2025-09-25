@@ -988,9 +988,18 @@ function HomeContent() {
       return matchesArea && matchesMonth;
     });
 
-    // Filter for future planning timeline - events from today forward
+    // Filter for future planning timeline - events for current week only
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
+    
+    // Calculate current week boundaries (Sunday to Saturday)
+    const currentWeekStart = new Date(todayStart);
+    const dayOfWeek = todayStart.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    currentWeekStart.setDate(todayStart.getDate() - dayOfWeek);
+    
+    const currentWeekEnd = new Date(currentWeekStart);
+    currentWeekEnd.setDate(currentWeekStart.getDate() + 6);
+    currentWeekEnd.setHours(23, 59, 59, 999);
     
     const futureEvents = allEvents
       .filter(ev => {
@@ -999,8 +1008,8 @@ function HomeContent() {
         
         const s = getEventStart(ev);
         const e = getEventEnd(ev);
-        // Keep if it starts today/future OR (if no start) ends today/future
-        return (s && s >= todayStart) || (!s && e && e >= todayStart);
+        // Keep if it starts within current week OR (if no start) ends within current week
+        return (s && s >= currentWeekStart && s <= currentWeekEnd) || (!s && e && e >= currentWeekStart && e <= currentWeekEnd);
       })
       .sort((a, b) => {
         const sa = getEventStart(a)?.getTime() ?? Infinity;
