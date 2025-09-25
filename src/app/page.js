@@ -989,20 +989,9 @@ function HomeContent() {
     });
 
     // Filter for future planning timeline - events for current week only
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    
-    // Calculate current week boundaries (Sunday to Saturday)
-    // Find the Sunday of the current week
-    const currentWeekStart = new Date(todayStart);
-    const dayOfWeek = todayStart.getDay(); // 0 = Sunday, 1 = Monday, etc.
-    currentWeekStart.setDate(todayStart.getDate() - dayOfWeek);
-    currentWeekStart.setHours(0, 0, 0, 0); // Start of Sunday
-    
-    // Find the Saturday of the current week
-    const currentWeekEnd = new Date(currentWeekStart);
-    currentWeekEnd.setDate(currentWeekStart.getDate() + 6);
-    currentWeekEnd.setHours(23, 59, 59, 999); // End of Saturday
+    // Use the same week calculation as the dashboard (Monday-Sunday)
+    const currentWeekStart = startOfWeek; // Monday of current week
+    const currentWeekEnd = endOfWeek; // Sunday of current week
     
     const futureEvents = allEvents
       .filter(ev => {
