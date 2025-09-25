@@ -593,6 +593,17 @@ function CalendarContent() {
   // Modal state for new event (showModal/showEditModal/draft declared above)
   const [editingId, setEditingId] = useState(null);
   const [editDurMs, setEditDurMs] = useState(60 * 60 * 1000);
+  
+  // Repeating event state
+  const [isRepeating, setIsRepeating] = useState(false);
+  const [repeatType, setRepeatType] = useState('none'); // 'none', 'daily', 'weekly', 'monthly', 'yearly', 'custom'
+  const [customRepeat, setCustomRepeat] = useState({
+    frequency: 'weekly', // 'daily', 'weekly', 'monthly', 'yearly'
+    interval: 1, // every X days/weeks/months/years
+    daysOfWeek: [], // for weekly: [0,1,2,3,4,5,6] (Sunday=0)
+    endDate: null // when to stop repeating (max 1 year)
+  });
+  const [showCustomRepeat, setShowCustomRepeat] = useState(false);
 
   // Hoisted state for Add Modal date picker
   const [showAddDatePicker, setShowAddDatePicker] = useState(false);
@@ -613,6 +624,87 @@ function CalendarContent() {
     setShowModal(true);
   };
 
+  const generateRepeatingEvents = ({ title, area, start, end, color, notes, repeatType, customRepeat, baseDate }) => {
+    const events = [];
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    const duration = endDate.getTime() - startDate.getTime();
+    
+    // Calculate end date for repeating (max 1 year from start)
+    const maxEndDate = new Date(startDate);
+    maxEndDate.setFullYear(maxEndDate.getFullYear() + 1);
+    
+    let currentDate = new Date(startDate);
+    let eventCount = 0;
+    const maxEvents = 365; // Safety limit
+    
+    while (currentDate <= maxEndDate && eventCount < maxEvents) {
+      const eventStart = new Date(currentDate);
+      const eventEnd = new Date(eventStart.getTime() + duration);
+      
+      events.push({
+        id: makeId(),
+        title,
+        area,
+        start: eventStart.getTime(),
+        end: eventEnd.getTime(),
+        color,
+        notes,
+        isRepeating: true,
+        repeatType,
+        originalDate: startDate.getTime()
+      });
+      
+      // Calculate next occurrence based on repeat type
+      if (repeatType === 'daily') {
+        currentDate.setDate(currentDate.getDate() + 1);
+      } else if (repeatType === 'weekly') {
+        currentDate.setDate(currentDate.getDate() + 7);
+      } else if (repeatType === 'monthly') {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+      } else if (repeatType === 'yearly') {
+        currentDate.setFullYear(currentDate.getFullYear() + 1);
+      } else if (repeatType === 'custom') {
+        if (customRepeat.frequency === 'daily') {
+          currentDate.setDate(currentDate.getDate() + customRepeat.interval);
+        } else if (customRepeat.frequency === 'weekly') {
+          if (customRepeat.daysOfWeek.length > 0) {
+            // Find next occurrence on specified days
+            const currentDay = currentDate.getDay();
+            let nextDay = null;
+            
+            // Find next day in the week
+            for (let i = 1; i <= 7; i++) {
+              const checkDay = (currentDay + i) % 7;
+              if (customRepeat.daysOfWeek.includes(checkDay)) {
+                nextDay = checkDay;
+                break;
+              }
+            }
+            
+            if (nextDay !== null) {
+              const daysToAdd = (nextDay - currentDay + 7) % 7;
+              currentDate.setDate(currentDate.getDate() + daysToAdd);
+            } else {
+              // No more days this week, go to next week
+              currentDate.setDate(currentDate.getDate() + (7 - currentDay) + customRepeat.daysOfWeek[0] + (customRepeat.interval - 1) * 7);
+            }
+          } else {
+            currentDate.setDate(currentDate.getDate() + customRepeat.interval * 7);
+          }
+        } else if (customRepeat.frequency === 'monthly') {
+          currentDate.setMonth(currentDate.getMonth() + customRepeat.interval);
+        } else if (customRepeat.frequency === 'yearly') {
+          currentDate.setFullYear(currentDate.getFullYear() + customRepeat.interval);
+        }
+      }
+      
+      eventCount++;
+    }
+    
+    return events;
+  };
+
   const addEvent = () => {
     if (!draft.title && !draft.area || !selectedDate) return;
     const base = parseYMD(draft.dateYMD || ymd(selectedDate));
@@ -626,20 +718,48 @@ function CalendarContent() {
     let endMs = mk(draft.end);
     if (endMs <= startMs) endMs += 24 * 60 * 60 * 1000; // crosses midnight
     const areaColor = getAreaColor(draft.area);
-    const newEvent = {
-      id: makeId(),
-      title: draft.title || draft.area,
-      area: draft.area || "",
-      start: startMs,
-      end: endMs,
-      color: areaColor,
-      notes: draft.notes || "",
-    };
-    const next = [...events, newEvent];
-    setEvents(next); // persistence handled by effect (writes to primary + legacy)
+    
+    if (isRepeating && repeatType !== 'none') {
+      // Create repeating events
+      const newEvents = generateRepeatingEvents({
+        title: draft.title || draft.area,
+        area: draft.area || "",
+        start: startMs,
+        end: endMs,
+        color: areaColor,
+        notes: draft.notes || "",
+        repeatType,
+        customRepeat,
+        baseDate: base
+      });
+      const next = [...events, ...newEvents];
+      setEvents(next);
+    } else {
+      // Single event
+      const newEvent = {
+        id: makeId(),
+        title: draft.title || draft.area,
+        area: draft.area || "",
+        start: startMs,
+        end: endMs,
+        color: areaColor,
+        notes: draft.notes || "",
+      };
+      const next = [...events, newEvent];
+      setEvents(next);
+    }
+    
     setSelectedDate(new Date(base));
     setShowModal(false);
     setDraft(DEFAULT_DRAFT);
+    setIsRepeating(false);
+    setRepeatType('none');
+    setCustomRepeat({
+      frequency: 'weekly',
+      interval: 1,
+      daysOfWeek: [],
+      endDate: null
+    });
   };
 
   const openEdit = (ev) => {
@@ -686,9 +806,28 @@ function CalendarContent() {
     setEditingId(null);
   };
 
-  const deleteEvent = () => {
+  const deleteEvent = (deleteAllFuture = false) => {
     if (!editingId) return;
-    const next = events.filter((ev) => ev.id !== editingId);
+    
+    const currentEvent = events.find(e => e.id === editingId);
+    if (!currentEvent) return;
+    
+    let next;
+    if (deleteAllFuture && currentEvent.isRepeating) {
+      // Delete all future occurrences of this repeating event
+      const currentDate = new Date(currentEvent.start);
+      next = events.filter((ev) => {
+        if (ev.isRepeating && ev.originalDate === currentEvent.originalDate && ev.title === currentEvent.title) {
+          const evDate = new Date(ev.start);
+          return evDate < currentDate; // Keep only past events
+        }
+        return ev.id !== editingId; // Keep all non-repeating events
+      });
+    } else {
+      // Delete only this specific event
+      next = events.filter((ev) => ev.id !== editingId);
+    }
+    
     setEvents(next);
     setShowEditModal(false);
     setEditingId(null);
@@ -1745,6 +1884,121 @@ function CalendarContent() {
               placeholder="What will you accomplish during this timeframe?"
             />
 
+            {/* Repeating Event Section */}
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-3">
+                <input
+                  type="checkbox"
+                  id="isRepeating"
+                  checked={isRepeating}
+                  onChange={(e) => {
+                    setIsRepeating(e.target.checked);
+                    if (!e.target.checked) {
+                      setRepeatType('none');
+                      setShowCustomRepeat(false);
+                    }
+                  }}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="isRepeating" className="text-sm font-medium">Do you want this to be a repeating event?</label>
+              </div>
+
+              {isRepeating && (
+                <div className="ml-6 space-y-3">
+                  <div>
+                    <label className="text-sm">Repeat</label>
+                    <select
+                      value={repeatType}
+                      onChange={(e) => {
+                        setRepeatType(e.target.value);
+                        if (e.target.value === 'custom') {
+                          setShowCustomRepeat(true);
+                        } else {
+                          setShowCustomRepeat(false);
+                        }
+                      }}
+                      className="w-full border rounded px-3 py-2 mt-1"
+                    >
+                      <option value="none">None</option>
+                      <option value="daily">Daily</option>
+                      <option value="weekly">Weekly</option>
+                      <option value="monthly">Monthly</option>
+                      <option value="yearly">Yearly</option>
+                      <option value="custom">Custom...</option>
+                    </select>
+                  </div>
+
+                  {showCustomRepeat && (
+                    <div className="bg-gray-50 p-3 rounded border">
+                      <div className="mb-3">
+                        <label className="text-sm">Frequency</label>
+                        <select
+                          value={customRepeat.frequency}
+                          onChange={(e) => setCustomRepeat({ ...customRepeat, frequency: e.target.value })}
+                          className="w-full border rounded px-3 py-2 mt-1"
+                        >
+                          <option value="daily">Daily</option>
+                          <option value="weekly">Weekly</option>
+                          <option value="monthly">Monthly</option>
+                          <option value="yearly">Yearly</option>
+                        </select>
+                      </div>
+
+                      <div className="mb-3">
+                        <label className="text-sm">Every</label>
+                        <div className="flex items-center gap-2 mt-1">
+                          <input
+                            type="number"
+                            min="1"
+                            max="99"
+                            value={customRepeat.interval}
+                            onChange={(e) => setCustomRepeat({ ...customRepeat, interval: parseInt(e.target.value) || 1 })}
+                            className="w-16 border rounded px-2 py-1 text-center"
+                          />
+                          <span className="text-sm text-gray-600">
+                            {customRepeat.frequency === 'daily' ? 'day(s)' :
+                             customRepeat.frequency === 'weekly' ? 'week(s)' :
+                             customRepeat.frequency === 'monthly' ? 'month(s)' : 'year(s)'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {customRepeat.frequency === 'weekly' && (
+                        <div className="mb-3">
+                          <label className="text-sm">Repeat on:</label>
+                          <div className="flex gap-1 mt-2">
+                            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
+                              <button
+                                key={index}
+                                type="button"
+                                onClick={() => {
+                                  const newDays = customRepeat.daysOfWeek.includes(index)
+                                    ? customRepeat.daysOfWeek.filter(d => d !== index)
+                                    : [...customRepeat.daysOfWeek, index];
+                                  setCustomRepeat({ ...customRepeat, daysOfWeek: newDays });
+                                }}
+                                className={`w-8 h-8 rounded text-xs font-medium ${
+                                  customRepeat.daysOfWeek.includes(index)
+                                    ? 'bg-blue-500 text-white'
+                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                }`}
+                              >
+                                {day}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="text-xs text-gray-500">
+                        Events will repeat for up to 1 year from the start date.
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             <div className="flex justify-end gap-2">
               <button className="px-4 py-2 bg-gray-200 rounded" onClick={() => { setShowModal(false); setDraft(DEFAULT_DRAFT); }}>Close</button>
               <button className="px-4 py-2 bg-[#6B7280] text-white rounded" onClick={addEvent}>Add</button>
@@ -1836,7 +2090,25 @@ function CalendarContent() {
             <textarea value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} className="w-full border rounded px-3 py-2 mb-4" rows={3} />
 
             <div className="flex justify-between items-center">
-              <button className="px-4 py-2 bg-red-500 text-white rounded" onClick={deleteEvent}>Delete</button>
+              {(() => {
+                const currentEvent = events.find(e => e.id === editingId);
+                if (currentEvent && currentEvent.isRepeating) {
+                  return (
+                    <div className="flex gap-2">
+                      <button className="px-3 py-2 bg-red-500 text-white rounded text-sm" onClick={() => deleteEvent(false)}>
+                        Delete This Event
+                      </button>
+                      <button className="px-3 py-2 bg-red-600 text-white rounded text-sm" onClick={() => deleteEvent(true)}>
+                        Delete All Future
+                      </button>
+                    </div>
+                  );
+                } else {
+                  return (
+                    <button className="px-4 py-2 bg-red-500 text-white rounded" onClick={deleteEvent}>Delete</button>
+                  );
+                }
+              })()}
               <div className="flex gap-2">
                 <button className="px-4 py-2 bg-gray-200 rounded" onClick={() => { setShowEditModal(false); setEditingId(null); }}>Cancel</button>
                 <button className="px-4 py-2 bg-[#6B7280] text-white rounded" onClick={updateEvent}>Save</button>
