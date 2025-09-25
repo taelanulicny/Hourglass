@@ -1793,7 +1793,7 @@ function CalendarContent() {
 
       {/* Add Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center z-50 pb-20">
           <div className={`bg-white rounded-lg shadow-lg p-4 w-[92%] max-w-md ${showCustomRepeat ? 'max-h-[90vh] flex flex-col' : ''}`}>
             <div className="flex justify-between items-center mb-2">
               <h3 className="font-semibold">New Event</h3>
