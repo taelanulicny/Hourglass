@@ -1803,13 +1803,14 @@ function CalendarContent() {
       {/* Add Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-4 w-[92%] max-w-md">
+          <div className={`bg-white rounded-lg shadow-lg p-4 w-[92%] max-w-md ${showCustomRepeat ? 'max-h-[90vh] flex flex-col' : ''}`}>
             <div className="flex justify-between items-center mb-2">
               <h3 className="font-semibold">New Event</h3>
               <button className="text-sm" onClick={() => { setShowModal(false); setDraft(DEFAULT_DRAFT); }}>Cancel</button>
             </div>
 
-            <label className="text-sm">Title</label>
+            <div className={showCustomRepeat ? 'flex-1 overflow-y-auto' : ''}>
+              <label className="text-sm">Title</label>
             <input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} className="w-full border rounded px-3 py-2 mb-3" placeholder="e.g., Product Development" />
 
             <label className="text-sm">Focus Area</label>
@@ -1998,8 +1999,9 @@ function CalendarContent() {
                 </div>
               )}
             </div>
+            </div>
 
-            <div className="flex justify-end gap-2">
+            <div className={`flex justify-end gap-2 ${showCustomRepeat ? 'mt-4 flex-shrink-0' : ''}`}>
               <button className="px-4 py-2 bg-gray-200 rounded" onClick={() => { setShowModal(false); setDraft(DEFAULT_DRAFT); }}>Close</button>
               <button className="px-4 py-2 bg-[#6B7280] text-white rounded" onClick={addEvent}>Add</button>
             </div>
