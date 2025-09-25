@@ -1405,7 +1405,7 @@ function HomeContent() {
                   <span>Timeline - Future Planning</span>
                 </div>
                 <div className="text-[12px] text-gray-600 mb-3">
-                  Showing events from <strong>{todayStart.toLocaleDateString()}</strong> onward.
+                  Showing events from <strong>{currentWeekStart.toLocaleDateString()}</strong> to <strong>{currentWeekEnd.toLocaleDateString()}</strong>.
                 </div>
               {/* Add Event Modal */}
               {showNewEventForm && (
