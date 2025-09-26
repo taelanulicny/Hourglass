@@ -532,9 +532,11 @@ function ResourcePreviewModal({ resource, isOpen, onClose, onSave, isSaved }) {
 
     const handleClick = () => {
       if (onResourceClick) {
-        // For podcasts, if no spotifyUrl is provided, generate a Spotify search URL like the fallbacks
+        // For podcasts, always use search URL format for AI results to ensure mobile compatibility
         let finalSpotifyUrl = spotifyUrl;
-        if (type === 'podcast' && !spotifyUrl) {
+        if (type === 'podcast') {
+          // For AI search results, always use search format instead of show URLs
+          // This ensures mobile compatibility and works like the fallback podcasts
           const searchTitle = encodeURIComponent((title || name) + ' podcast');
           finalSpotifyUrl = `https://open.spotify.com/search/${searchTitle}`;
         }
