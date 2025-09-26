@@ -51,17 +51,7 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, saved
     }
   };
 
-  // If no focus areas exist, show message to add them
-  if (focusAreas.length === 0) {
-    return (
-      <div className="text-center py-8">
-        <div className="text-gray-500 mb-2">No focus areas found</div>
-        <div className="text-sm text-gray-400">
-          Go to your dashboard and add a focus area to see personalized resources
-        </div>
-      </div>
-    );
-  }
+  // Note: We now always show the discover page with default resources, even without focus areas
 
   // If showing vault content, render the vault page
   if (showVaultContent) {
