@@ -611,6 +611,48 @@ function HomeContent() {
     try { window.dispatchEvent(new Event("calendarEventsUpdated")); } catch {}
   }
 
+  // Copy focus areas from current week to next week
+  const handleCopyFocusAreasFromCurrentWeek = () => {
+    try {
+      // Get current week's focus areas
+      const currentWeekData = localStorage.getItem(STORAGE_PREFIX + currentWeekKey);
+      if (!currentWeekData) {
+        console.log("No focus areas found in current week");
+        return;
+      }
+
+      const currentWeekFocusAreas = JSON.parse(currentWeekData);
+      if (!Array.isArray(currentWeekFocusAreas) || currentWeekFocusAreas.length === 0) {
+        console.log("No focus areas to copy from current week");
+        return;
+      }
+
+      // Create clean copies of focus areas (reset time data but keep definitions)
+      const cleanFocusAreas = currentWeekFocusAreas.map(area => ({
+        ...area,
+        days: {}, // Reset days to empty object
+        timeSpent: 0, // Reset time spent
+        goal: area.goal || 0 // Keep the goal but reset to 0 if not set
+      }));
+
+      // Save to next week's storage
+      const nextWeekKey = weekKey(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
+      localStorage.setItem(STORAGE_PREFIX + nextWeekKey, JSON.stringify(cleanFocusAreas));
+
+      // If we're currently viewing the next week, update the display
+      if (viewWeekKey === nextWeekKey) {
+        setCategories(cleanFocusAreas);
+      }
+
+      console.log("Successfully copied focus areas from current week to next week");
+      
+      // Trigger a refresh of the current view
+      window.dispatchEvent(new Event("focusCategoriesUpdated"));
+    } catch (error) {
+      console.error("Failed to copy focus areas:", error);
+    }
+  };
+
   const daysOfWeek = ["M", "Tu", "W", "Th", "F", "Sa", "Su"];
   // Abbrev of today's weekday in the same format as daysOfWeek
   const todayAbbrev = ["Su","M","Tu","W","Th","F","Sa"][new Date().getDay()];
@@ -1964,9 +2006,12 @@ function HomeContent() {
               {/* Show planning message for next week */}
               {isNextWeek && (
                 <div className="mb-2" aria-hidden="true" role="presentation">
-                  <div className="w-full rounded-xl bg-[#6B7280] text-white py-3 text-center font-medium shadow-sm select-none">
+                  <button 
+                    onClick={handleCopyFocusAreasFromCurrentWeek}
+                    className="w-full rounded-xl bg-[#6B7280] text-white py-3 text-center font-medium shadow-sm hover:bg-[#5B6B73] transition-colors duration-200"
+                  >
                     Continue working on last week&apos;s focus areas
-                  </div>
+                  </button>
                 </div>
               )}
               {/* Show the example card when there are no focus areas yet (CURRENT or FUTURE weeks) */}
