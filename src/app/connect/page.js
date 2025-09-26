@@ -532,13 +532,20 @@ function ResourcePreviewModal({ resource, isOpen, onClose, onSave, isSaved }) {
 
     const handleClick = () => {
       if (onResourceClick) {
+        // For podcasts, if no spotifyUrl is provided, generate a Spotify search URL like the fallbacks
+        let finalSpotifyUrl = spotifyUrl;
+        if (type === 'podcast' && !spotifyUrl) {
+          const searchTitle = encodeURIComponent((title || name) + ' podcast');
+          finalSpotifyUrl = `https://open.spotify.com/search/${searchTitle}`;
+        }
+
         onResourceClick({
           title: title || name,
           desc,
           url,
           type,
           author,
-          spotifyUrl,
+          spotifyUrl: finalSpotifyUrl,
           socialLinks
         });
       }
