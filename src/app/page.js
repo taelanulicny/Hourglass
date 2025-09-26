@@ -1377,6 +1377,14 @@ function HomeContent() {
                 </div>
 
 
+              {/* Tasks Module */}
+              <div className="rounded-2xl border-2 border-gray-200 bg-white p-3 mt-3">
+                <div className="text-sm text-gray-500 mb-2">Tasks</div>
+                <div className="text-sm text-gray-600">
+                  Tasks module will be implemented here
+                </div>
+              </div>
+
               {/* AI Helper - Chat Style UI */}
               {/* AI Helper Component */}
               <AiHelper
