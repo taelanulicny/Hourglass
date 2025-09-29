@@ -34,9 +34,15 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, saved
 
   // Handle AI search for resources
   const handleSearch = async (query = null) => {
+    console.log('handleSearch called with query:', query, 'searchQuery:', searchQuery);
     const searchTerm = query || searchQuery;
-    if (!searchTerm.trim()) return;
+    console.log('searchTerm:', searchTerm);
+    if (!searchTerm.trim()) {
+      console.log('No search term, returning');
+      return;
+    }
     
+    console.log('Starting search for:', searchTerm);
     setIsSearching(true);
     setSearchError(null);
     
@@ -94,7 +100,11 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, saved
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
           />
           <button
-            onClick={handleSearch}
+            type="button"
+            onClick={() => {
+              console.log('Find button clicked, searchQuery:', searchQuery);
+              handleSearch();
+            }}
             disabled={isSearching}
             className="px-4 py-2 bg-[#6B7280] text-white rounded-lg text-sm font-medium hover:bg-[#5B6B73] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -102,10 +112,7 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, saved
           </button>
       </div>
         {searchQuery && (
-          <div className="mt-2 flex items-center justify-between">
-            <div className="text-xs text-gray-600">
-              Showing resources for: <span className="font-medium">"{searchQuery}"</span>
-            </div>
+          <div className="mt-2 flex items-center justify-end">
             <button
               onClick={() => {
                 setSearchQuery('');
