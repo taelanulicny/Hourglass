@@ -95,7 +95,7 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, saved
           />
           <button
             type="button"
-            onClick={handleSearch}
+            onClick={() => handleSearch()}
             disabled={isSearching}
             className="px-6 py-2 bg-gray-900 text-white rounded-lg text-sm font-semibold shadow-lg hover:bg-gray-800 active:bg-gray-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95"
           >
