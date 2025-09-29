@@ -72,13 +72,13 @@ RESPONSE REQUIREMENTS:
 - Return EXACTLY 5 items in each category (or fewer if you don't know enough real ones)
 - Use real Amazon URLs for books (https://amazon.com/dp/REAL_ISBN)
 - Use real Apple Podcasts URLs (https://podcasts.apple.com/podcast/REAL_ID)  
-- Use Spotify search URLs for podcasts (https://open.spotify.com/search/PODCAST_TITLE)
+- Use actual Spotify podcast URLs when available (https://open.spotify.com/show/REAL_PODCAST_ID)
 - Use real social media URLs (https://x.com/realhandle, https://youtube.com/@realchannel)
 
 RESPONSE FORMAT (return ONLY this JSON with REAL resources):
 {
   "books": [{"title": "ACTUAL REAL BOOK TITLE", "desc": "Real description", "url": "https://amazon.com/dp/REAL_ISBN", "author": "REAL AUTHOR NAME"}],
-  "podcasts": [{"title": "ACTUAL REAL PODCAST TITLE", "desc": "Real description", "url": "https://podcasts.apple.com/podcast/REAL_ID", "spotifyUrl": "https://open.spotify.com/search/REAL_PODCAST_TITLE"}],
+  "podcasts": [{"title": "ACTUAL REAL PODCAST TITLE", "desc": "Real description", "url": "https://podcasts.apple.com/podcast/REAL_ID", "spotifyUrl": "https://open.spotify.com/show/REAL_PODCAST_ID"}],
   "social": [{"name": "REAL PERSON NAME", "desc": "What they actually do", "socialLinks": [{"platform": "X", "handle": "@realhandle", "url": "https://x.com/realhandle", "icon": "X"}]}]
 }`
   };
@@ -113,9 +113,11 @@ SEARCH STRATEGY:
 RESPONSE FORMAT - Return ONLY this JSON with EXACTLY 5 REAL resources in each category:
 {
   "books": [{"title": "ACTUAL REAL BOOK TITLE", "desc": "Real description", "url": "https://amazon.com/dp/REAL_ISBN", "author": "REAL AUTHOR NAME"}],
-  "podcasts": [{"title": "ACTUAL REAL PODCAST TITLE", "desc": "Real description", "url": "https://podcasts.apple.com/podcast/REAL_ID", "spotifyUrl": "https://open.spotify.com/search/REAL_PODCAST_TITLE"}],
+  "podcasts": [{"title": "ACTUAL REAL PODCAST TITLE", "desc": "Real description", "url": "https://podcasts.apple.com/podcast/REAL_ID", "spotifyUrl": "https://open.spotify.com/show/REAL_PODCAST_ID"}],
   "social": [{"name": "REAL PERSON NAME", "desc": "What they actually do", "socialLinks": [{"platform": "X", "handle": "@realhandle", "url": "https://x.com/realhandle", "icon": "X"}]}]
-}`
+}
+
+IMPORTANT: For podcasts, try to find actual Spotify show URLs (https://open.spotify.com/show/...) when possible. If you don't know the exact Spotify URL, you can use a search URL as fallback (https://open.spotify.com/search/...), but prioritize real show URLs.`
           }
         ],
         max_tokens: 3000,
