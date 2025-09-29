@@ -4,7 +4,7 @@ import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import rehypeSanitize from "rehype-sanitize";
 
-function AiHelper({ focusAreaId, focusContext }) {
+function AiHelper({ focusAreaId, focusContext, onResourceClick, onPersonClick, onSearchResources }) {
   // unique storage key per focus area
   const STORAGE_KEY = `aiHistory:${focusAreaId}`;
   const messagesRef = useRef(null);
@@ -13,6 +13,8 @@ function AiHelper({ focusAreaId, focusContext }) {
   const [history, setHistory] = useState([]);   // per-area chat history (already keyed per area)
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [lastResourceData, setLastResourceData] = useState(null); // Store resource data for vault integration
+  const [showResources, setShowResources] = useState(false); // Show resources in AI helper
 
   // --- NEW: ephemeral greeting shown on each open, NOT saved in history ---
   const [showGreeting, setShowGreeting] = useState(true);
@@ -36,6 +38,8 @@ function AiHelper({ focusAreaId, focusContext }) {
   useEffect(() => {
     setShowGreeting(true);       // show greeting every time you open a focus area
     setShowHistory(false);       // hide history initially
+    setShowResources(false);     // hide resources when switching areas
+    setLastResourceData(null);   // clear resource data
     // defer scroll until content paints, then scroll smoothly
     const id = setTimeout(() => scrollToBottom(true), 100);
     return () => clearTimeout(id);
@@ -101,6 +105,32 @@ function AiHelper({ focusAreaId, focusContext }) {
   }, [STORAGE_KEY, history, focusAreaId]);
 
 
+  // Check if the input is a topic/subject that should get resources
+  const isResourceRequest = (input) => {
+    const lowerInput = input.toLowerCase().trim();
+    
+    // Exclude obvious non-topic requests (advice, questions, commands)
+    const excludeKeywords = /\b(how to|what is|when|where|why|help me with|advice|tips|guidance|time|schedule|plan|goal|focus|productivity|show me|tell me|explain|can you|please|thanks|thank you|hi|hello|hey)\b/.test(lowerInput);
+    
+    // Exclude very short non-words (1-2 characters)
+    if (lowerInput.length <= 2) return false;
+    
+    // Exclude common non-topic words
+    const nonTopics = /\b(ok|yes|no|maybe|sure|fine|good|bad|great|awesome|cool|nice|wow|oh|ah|um|hmm|well|so|but|and|or|the|a|an|is|are|was|were|be|been|being|have|has|had|do|does|did|will|would|could|should|may|might|can|must|shall|here|there|this|that|these|those|me|you|him|her|us|them|my|your|his|her|our|their|mine|yours|ours|theirs)\b/.test(lowerInput);
+    
+    // If it's a clear non-topic request, don't treat as resource request
+    if (excludeKeywords || nonTopics) return false;
+    
+    // If it's a single word or short phrase (1-3 words), likely a topic
+    const wordCount = lowerInput.split(/\s+/).length;
+    if (wordCount <= 3) return true;
+    
+    // For longer phrases, check if it contains topic-like words
+    const topicIndicators = /\b(about|on|regarding|concerning|related to|in the field of|for|learn|study|research|explore|discover|understand|master|improve|get into|dive into)\b/.test(lowerInput);
+    
+    return topicIndicators;
+  };
+
   async function send() {
     if (!input.trim() || loading) return;
     
@@ -121,63 +151,108 @@ function AiHelper({ focusAreaId, focusContext }) {
     setShowGreeting(false);
     setShowHistory(true); // Show history when user starts conversation
     
-    try {
-      const response = await fetch('/api/ai/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messages: nextHistory,
-          focusContext: focusContext
-        }),
-      });
+    // Check if this is a structured resource request
+    if (isResourceRequest(trimmedInput)) {
+      // Fetch resources directly and display them
+      try {
+        const response = await fetch('/api/ai/resources/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ query: trimmedInput }),
+        });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
-      const data = await response.json();
-      
-      if (data.error) {
-        throw new Error(data.error);
-      }
+        const data = await response.json();
+        
+        if (data.error) {
+          throw new Error(data.error);
+        }
 
-      setHistory(prev => [...prev, { 
-        role: "assistant", 
-        content: data.message 
-      }]);
-    } catch (error) {
-      console.error('AI request failed:', error);
-      
-      // Provide user-friendly error messages based on error type
-      let errorMessage = "I'm having trouble connecting right now. ";
-      
-      if (error.message.includes('quota') || error.message.includes('429')) {
-        errorMessage += "It looks like I've reached my usage limit for today. I can still help you with some general advice though! ";
-      } else if (error.message.includes('network') || error.message.includes('fetch')) {
-        errorMessage += "There seems to be a network issue. Please check your connection and try again. ";
-      } else {
-        errorMessage += "Please try again in a moment. ";
+        // Store resource data and show resources
+        setLastResourceData(data);
+        setShowResources(true);
+        
+        // Show confirmation message
+        setHistory(prev => [...prev, { 
+          role: "assistant", 
+          content: `I've found resources for **${trimmedInput}**! Here are 5 books, 5 people, and 5 podcasts to help you dive deep into this topic.`
+        }]);
+      } catch (error) {
+        console.error('Resource request failed:', error);
+        
+        // Fallback message
+        setHistory(prev => [...prev, { 
+          role: "assistant", 
+          content: `I'd love to help you find resources about **${trimmedInput}**! Please go to the Discover page and search for "${trimmedInput}" to see books, people, and podcasts on this topic.`
+        }]);
+      } finally {
+        setLoading(false);
       }
-      
-      // Add helpful fallback advice
-      const focusArea = focusContext?.name || 'your focus area';
-      const dailyGoal = focusContext?.goal || 'your daily goal';
-      
-      errorMessage += `\n\nHere's some quick advice for "${focusArea}":\n\n`;
-      errorMessage += `• Focus on progress over perfection\n`;
-      errorMessage += `• Break your ${dailyGoal}-hour goal into smaller chunks\n`;
-      errorMessage += `• Take breaks to maintain energy\n`;
-      errorMessage += `• Track what works and what doesn't\n\n`;
-      errorMessage += `Try asking me again in a few minutes, or let me know what specific help you need!`;
-      
-      setHistory(prev => [...prev, { 
-        role: "assistant", 
-        content: errorMessage
-      }]);
-    } finally {
-      setLoading(false);
+    } else {
+      // Regular chat request
+      try {
+        const response = await fetch('/api/ai/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            messages: nextHistory,
+            focusContext: focusContext
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        setHistory(prev => [...prev, { 
+          role: "assistant", 
+          content: data.message 
+        }]);
+      } catch (error) {
+        console.error('AI request failed:', error);
+        
+        // Provide user-friendly error messages based on error type
+        let errorMessage = "I'm having trouble connecting right now. ";
+        
+        if (error.message.includes('quota') || error.message.includes('429')) {
+          errorMessage += "It looks like I've reached my usage limit for today. I can still help you with some general advice though! ";
+        } else if (error.message.includes('network') || error.message.includes('fetch')) {
+          errorMessage += "There seems to be a network issue. Please check your connection and try again. ";
+        } else {
+          errorMessage += "Please try again in a moment. ";
+        }
+        
+        // Add helpful fallback advice
+        const focusArea = focusContext?.name || 'your focus area';
+        const dailyGoal = focusContext?.goal || 'your daily goal';
+        
+        errorMessage += `\n\nHere's some quick advice for "${focusArea}":\n\n`;
+        errorMessage += `• Focus on progress over perfection\n`;
+        errorMessage += `• Break your ${dailyGoal}-hour goal into smaller chunks\n`;
+        errorMessage += `• Take breaks to maintain energy\n`;
+        errorMessage += `• Track what works and what doesn't\n\n`;
+        errorMessage += `Try asking me again in a few minutes, or let me know what specific help you need!`;
+        
+        setHistory(prev => [...prev, { 
+          role: "assistant", 
+          content: errorMessage
+        }]);
+      } finally {
+        setLoading(false);
+      }
     }
   }
 
@@ -248,6 +323,103 @@ function AiHelper({ focusAreaId, focusContext }) {
           <div className="h-32"></div>
         )}
         </div>
+
+        {/* Resource Display */}
+        {showResources && lastResourceData && (
+          <div className="mt-4 space-y-4">
+            {/* Books Section */}
+            {lastResourceData.books && lastResourceData.books.length > 0 && (
+              <div className="bg-white rounded-xl border border-gray-200 p-4">
+                <h3 className="text-lg font-semibold mb-3">📚 Books</h3>
+                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                  {lastResourceData.books.map((book, index) => (
+                    <div key={index} className="flex-shrink-0 w-64">
+                      <div 
+                        className="block rounded-xl border hover:shadow-sm bg-white p-4 cursor-pointer h-24 relative"
+                        onClick={() => onResourceClick && onResourceClick({
+                          title: book.title,
+                          desc: book.desc,
+                          url: book.url,
+                          type: 'book',
+                          author: book.author
+                        })}
+                      >
+                        <div className="flex items-start gap-3 h-full">
+                          <div className="text-2xl flex-shrink-0 mt-0.5">📖</div>
+                          <div className="flex-1 min-w-0 flex flex-col justify-center">
+                            <div className="font-semibold leading-snug text-base line-clamp-1 mb-1">{book.title}</div>
+                            <div className="text-sm text-gray-600 line-clamp-2">by {book.author}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* People Section */}
+            {lastResourceData.social && lastResourceData.social.length > 0 && (
+              <div className="bg-white rounded-xl border border-gray-200 p-4">
+                <h3 className="text-lg font-semibold mb-3">👥 People & Influencers</h3>
+                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                  {lastResourceData.social.map((person, index) => (
+                    <div key={index} className="flex-shrink-0 w-64">
+                      <div 
+                        className="block rounded-xl border hover:shadow-sm bg-white p-4 cursor-pointer h-24 relative"
+                        onClick={() => onPersonClick && onPersonClick({
+                          name: person.name,
+                          desc: person.desc,
+                          socialLinks: person.socialLinks,
+                          type: 'person'
+                        })}
+                      >
+                        <div className="flex items-start gap-3 h-full">
+                          <div className="text-2xl flex-shrink-0 mt-0.5">👤</div>
+                          <div className="flex-1 min-w-0 flex flex-col justify-center">
+                            <div className="font-semibold leading-snug text-base line-clamp-1 mb-1">{person.name}</div>
+                            <div className="text-sm text-gray-500 line-clamp-2">{person.desc}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Podcasts Section */}
+            {lastResourceData.podcasts && lastResourceData.podcasts.length > 0 && (
+              <div className="bg-white rounded-xl border border-gray-200 p-4">
+                <h3 className="text-lg font-semibold mb-3">🎧 Podcasts</h3>
+                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                  {lastResourceData.podcasts.map((podcast, index) => (
+                    <div key={index} className="flex-shrink-0 w-64">
+                      <div 
+                        className="block rounded-xl border hover:shadow-sm bg-white p-4 cursor-pointer h-24 relative"
+                        onClick={() => onResourceClick && onResourceClick({
+                          title: podcast.title,
+                          desc: podcast.desc,
+                          url: podcast.url,
+                          type: 'podcast',
+                          spotifyUrl: podcast.spotifyUrl
+                        })}
+                      >
+                        <div className="flex items-start gap-3 h-full">
+                          <div className="text-2xl flex-shrink-0 mt-0.5">🎧</div>
+                          <div className="flex-1 min-w-0 flex flex-col justify-center">
+                            <div className="font-semibold leading-snug text-base line-clamp-1 mb-1">{podcast.title}</div>
+                            <div className="text-sm text-gray-500 line-clamp-2">{podcast.desc}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
         
         {/* Action buttons - show when there's content */}
         {((showHistory && history.length > 0) || showGreeting) && (

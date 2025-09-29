@@ -20,9 +20,22 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, saved
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState(null);
 
+  // Check for AI search query on mount
+  useEffect(() => {
+    const aiQuery = localStorage.getItem('aiSearchQuery');
+    if (aiQuery) {
+      setSearchQuery(aiQuery);
+      // Clear the stored query
+      localStorage.removeItem('aiSearchQuery');
+      // Trigger the search
+      handleSearch(aiQuery);
+    }
+  }, []);
+
   // Handle AI search for resources
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) return;
+  const handleSearch = async (query = null) => {
+    const searchTerm = query || searchQuery;
+    if (!searchTerm.trim()) return;
     
     setIsSearching(true);
     setSearchError(null);
@@ -33,7 +46,7 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, saved
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ query: searchQuery }),
+        body: JSON.stringify({ query: searchTerm }),
       });
 
       const data = await response.json();

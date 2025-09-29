@@ -198,6 +198,67 @@ function HomeContent() {
 
 
   const [offset, setOffset] = useState(0);
+  
+  // Vault functionality for AI helper
+  const [savedResources, setSavedResources] = useState([]);
+  const [showResourceModal, setShowResourceModal] = useState(false);
+  const [selectedResource, setSelectedResource] = useState(null);
+  const [showPersonModal, setShowPersonModal] = useState(false);
+  const [selectedPerson, setSelectedPerson] = useState(null);
+
+  // Load saved resources on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("myLearningPath");
+      if (saved) {
+        setSavedResources(JSON.parse(saved));
+      }
+    } catch (error) {
+      console.warn('Failed to load saved resources:', error);
+    }
+  }, []);
+
+  // Vault functions
+  const handleResourceClick = (resource) => {
+    setSelectedResource(resource);
+    setShowResourceModal(true);
+  };
+
+  const handlePersonClick = (person) => {
+    setSelectedPerson(person);
+    setShowPersonModal(true);
+  };
+
+  const saveResource = (resource) => {
+    const newSavedResources = [...savedResources, { ...resource, savedAt: new Date().toISOString() }];
+    setSavedResources(newSavedResources);
+    localStorage.setItem("myLearningPath", JSON.stringify(newSavedResources));
+    setShowResourceModal(false);
+    setShowPersonModal(false);
+  };
+
+  const isResourceSaved = (resource) => {
+    return savedResources.some(saved => {
+      const savedName = (saved.title || saved.name || '').toLowerCase();
+      const resourceName = (resource.title || resource.name || '').toLowerCase();
+      
+      if (resource.type === 'person') {
+        return savedName === resourceName && saved.type === resource.type;
+      }
+      
+      return savedName === resourceName && 
+             saved.type === resource.type &&
+             (saved.author === resource.author || saved.author === resource.name);
+    });
+  };
+
+  // Handle AI helper resource search - navigate to Discover page with search query
+  const handleSearchResources = (query) => {
+    // Store the search query in localStorage for the Discover page to pick up
+    localStorage.setItem('aiSearchQuery', query);
+    // Navigate to Discover page
+    router.push('/connect');
+  };
   const [isNextWeek, setIsNextWeek] = useState(false);
   const [selectedFocusArea, setSelectedFocusArea] = useState(null);
   const MAX_WEEKS_BACK = 52;
@@ -1406,6 +1467,9 @@ function HomeContent() {
                     return stats.leftToday;
                   })()
                 }}
+                onResourceClick={handleResourceClick}
+                onPersonClick={handlePersonClick}
+                onSearchResources={handleSearchResources}
               />
               
               {/* Data summary (match old slug) */}
@@ -2433,6 +2497,144 @@ function HomeContent() {
         </button>
       </div>
     </div>
+
+    {/* Resource Preview Modal */}
+    {showResourceModal && selectedResource && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl max-w-md w-full p-6">
+          {/* Header */}
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-2xl">
+              {selectedResource.type === 'book' ? '📖' : selectedResource.type === 'podcast' ? '🎧' : '📚'}
+            </div>
+            <div className="flex-1">
+              <h2 className="text-xl font-bold text-gray-900">{selectedResource.title || selectedResource.name}</h2>
+              <p className="text-sm text-gray-500">{selectedResource.type === 'book' ? 'Book' : selectedResource.type === 'podcast' ? 'Podcast' : 'Resource'}</p>
+            </div>
+            {/* Add to Vault Button */}
+            <button
+              onClick={() => saveResource(selectedResource)}
+              className={`px-4 py-2 rounded-lg font-medium text-sm ${
+                isResourceSaved(selectedResource)
+                  ? 'bg-gray-100 text-gray-600 cursor-default' 
+                  : 'bg-gray-200 text-black hover:bg-gray-300'
+              }`}
+              disabled={isResourceSaved(selectedResource)}
+            >
+              {isResourceSaved(selectedResource) ? 'Added!' : '+ Add to Vault'}
+            </button>
+          </div>
+
+          {/* Resource Info */}
+          <div className="mb-6">
+            {selectedResource.type === 'book' && selectedResource.author && (
+              <div className="mb-3">
+                <p className="text-sm font-medium text-gray-700 mb-1">Author</p>
+                <p className="text-gray-600">{selectedResource.author}</p>
+              </div>
+            )}
+            
+            <div className="mb-3">
+              <p className="text-sm font-medium text-gray-700 mb-1">Description</p>
+              <p className="text-gray-600 leading-relaxed">{selectedResource.desc}</p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  if (selectedResource.type === 'podcast' && selectedResource.spotifyUrl) {
+                    window.open(selectedResource.spotifyUrl, '_blank', 'noopener,noreferrer');
+                  } else if (selectedResource.url) {
+                    window.open(selectedResource.url, '_blank', 'noopener,noreferrer');
+                  }
+                }}
+                className="flex-1 bg-[#6B7280] text-white py-3 rounded-lg font-medium hover:bg-[#5B6B73] transition-colors"
+              >
+                {selectedResource.type === 'podcast' ? 'Listen on Spotify' : 'View Resource'}
+              </button>
+            </div>
+          </div>
+
+          {/* Close Button */}
+          <button
+            onClick={() => setShowResourceModal(false)}
+            className="w-full py-2 text-gray-500 hover:text-gray-700 font-medium"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    )}
+
+    {/* Person Social Media Modal */}
+    {showPersonModal && selectedPerson && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl max-w-md w-full p-6">
+          {/* Header */}
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-2xl">
+              👤
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-xl">{selectedPerson.name}</h3>
+              <p className="text-sm text-gray-600">{selectedPerson.desc}</p>
+            </div>
+            {/* Add to Vault Button */}
+            <button
+              onClick={() => saveResource(selectedPerson)}
+              className={`px-4 py-2 rounded-lg font-medium text-sm ${
+                isResourceSaved(selectedPerson)
+                  ? 'bg-gray-100 text-gray-600 cursor-default' 
+                  : 'bg-gray-200 text-black hover:bg-gray-300'
+              }`}
+              disabled={isResourceSaved(selectedPerson)}
+            >
+              {isResourceSaved(selectedPerson) ? 'Added!' : '+ Add to Vault'}
+            </button>
+          </div>
+
+          {/* Social media links */}
+          {selectedPerson.socialLinks && selectedPerson.socialLinks.length > 0 && (
+            <div className="space-y-3 mb-6">
+              <p className="text-sm text-gray-500 font-medium">Follow on:</p>
+              {selectedPerson.socialLinks.map((link, index) => (
+                <a
+                  key={index}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
+                >
+                  <div className="text-2xl">
+                    {link.platform === 'X' ? '𝕏' : 
+                     link.platform === 'LinkedIn' ? '💼' :
+                     link.platform === 'YouTube' ? '📺' :
+                     link.platform === 'Instagram' ? '📷' :
+                     link.platform === 'Website' ? '🌐' : '🔗'}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900">{link.platform}</p>
+                    <p className="text-sm text-gray-500">{link.handle}</p>
+                  </div>
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+              ))}
+            </div>
+          )}
+
+          {/* Close Button */}
+          <button
+            onClick={() => setShowPersonModal(false)}
+            className="w-full py-2 text-gray-500 hover:text-gray-700 font-medium"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    )}
 
     </>
   );

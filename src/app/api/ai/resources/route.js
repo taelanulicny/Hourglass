@@ -90,12 +90,13 @@ RESPONSE FORMAT (return ONLY this JSON with REAL resources):
           systemMessage,
           {
             role: 'user',
-            content: `I want to find books, influencers/people, and podcasts regarding "${query}".
+            content: `I want to research "${query}" and need a comprehensive learning package. Please find EXACTLY 5 books, 5 people/influencers, and 5 podcasts about this topic. Treat "${query}" as a subject area or field of study.
 
 CRITICAL REQUIREMENTS - ONLY FIND REAL, EXISTING RESOURCES:
 - Find REAL books that actually exist with REAL authors and REAL Amazon links
 - Find REAL people who actually exist with REAL social media accounts
 - Find REAL podcasts that actually exist with REAL titles and descriptions
+- Provide EXACTLY 5 items in each category (books, people, podcasts)
 
 DO NOT CREATE OR INVENT:
 - Fake book titles or authors
@@ -104,12 +105,12 @@ DO NOT CREATE OR INVENT:
 - Fake URLs or links
 
 SEARCH STRATEGY:
-- Think of this like searching Google for real resources about "${query}"
+- Think of this like creating a research package for someone learning about "${query}"
 - Find well-known, established books, people, and podcasts in this field
 - Use your knowledge of actual existing resources, not imagination
-- If you don't know real resources, say so rather than making them up
+- If you don't know enough real resources, return fewer rather than making them up
 
-RESPONSE FORMAT - Return ONLY this JSON with REAL resources:
+RESPONSE FORMAT - Return ONLY this JSON with EXACTLY 5 REAL resources in each category:
 {
   "books": [{"title": "ACTUAL REAL BOOK TITLE", "desc": "Real description", "url": "https://amazon.com/dp/REAL_ISBN", "author": "REAL AUTHOR NAME"}],
   "podcasts": [{"title": "ACTUAL REAL PODCAST TITLE", "desc": "Real description", "url": "https://podcasts.apple.com/podcast/REAL_ID", "spotifyUrl": "https://open.spotify.com/search/REAL_PODCAST_TITLE"}],
@@ -212,16 +213,7 @@ RESPONSE FORMAT - Return ONLY this JSON with REAL resources:
             throw new Error('AI response contains no resources');
           }
           
-          // Fill in empty arrays with at least one item if needed
-          if (resources.books.length === 0) {
-            resources.books = [{"title": `${query} - Essential Guide`, "desc": `Comprehensive resource for ${query}`, "url": `https://amazon.com/dp/123456789`, "author": "Expert Author"}];
-          }
-          if (resources.podcasts.length === 0) {
-            resources.podcasts = [{"title": `${query} Podcast`, "desc": `Learn about ${query}`, "url": `https://podcasts.apple.com/podcast/123456789`, "spotifyUrl": `https://open.spotify.com/show/123456789`}];
-          }
-          if (resources.social.length === 0) {
-            resources.social = [{"name": `${query} Expert`, "desc": `Leading expert in ${query}`, "socialLinks": [{"platform": "X", "handle": `@${query.toLowerCase()}expert`, "url": `https://x.com/${query.toLowerCase()}expert`, "icon": "X"}]}];
-          }
+          // Don't fill in empty arrays with fake resources - return what we have
           
         } else {
           throw new Error('No JSON found in response');
@@ -230,34 +222,16 @@ RESPONSE FORMAT - Return ONLY this JSON with REAL resources:
         console.error('Failed to parse AI response as JSON:', parseError);
         console.log('Raw AI response:', response);
         
-        // If JSON parsing fails, provide fallback resources for the topic
-        console.log('Providing fallback resources for query:', query);
+        // If JSON parsing fails, return an error instead of fake resources
+        console.log('Failed to parse AI response, returning error for query:', query);
         
-        const fallbackResources = {
-          books: [
-            {"title": `The Complete Guide to ${query.charAt(0).toUpperCase() + query.slice(1)}`, "desc": `A comprehensive resource covering all aspects of ${query}`, "url": `https://amazon.com/dp/123456789`, "author": "Expert Author"},
-            {"title": `${query.charAt(0).toUpperCase() + query.slice(1)}: A Beginner's Guide`, "desc": `Essential knowledge and practical tips for ${query}`, "url": `https://amazon.com/dp/123456790`, "author": "Industry Expert"},
-            {"title": `Advanced ${query.charAt(0).toUpperCase() + query.slice(1)} Techniques`, "desc": `Professional strategies and advanced methods for ${query}`, "url": `https://amazon.com/dp/123456791`, "author": "Leading Authority"},
-            {"title": `${query.charAt(0).toUpperCase() + query.slice(1)} Made Simple`, "desc": `Easy-to-understand guide to mastering ${query}`, "url": `https://amazon.com/dp/123456792`, "author": "Practitioner"},
-            {"title": `The ${query.charAt(0).toUpperCase() + query.slice(1)} Handbook`, "desc": `Practical reference guide for ${query}`, "url": `https://amazon.com/dp/123456793`, "author": "Specialist"}
-          ],
-          podcasts: [
-            {"title": `${query} Podcast`, "desc": `Weekly discussions about ${query}`, "url": `https://podcasts.apple.com/podcast/123456789`, "spotifyUrl": `https://open.spotify.com/show/123456789`},
-            {"title": `Learn ${query}`, "desc": `Educational content about ${query}`, "url": `https://podcasts.apple.com/podcast/123456790`, "spotifyUrl": `https://open.spotify.com/show/123456790`},
-            {"title": `${query} Insights`, "desc": `Expert insights on ${query}`, "url": `https://podcasts.apple.com/podcast/123456791`, "spotifyUrl": `https://open.spotify.com/show/123456791`},
-            {"title": `${query} Talk`, "desc": `Conversations about ${query}`, "url": `https://podcasts.apple.com/podcast/123456792`, "spotifyUrl": `https://open.spotify.com/show/123456792`},
-            {"title": `${query} Weekly`, "desc": `Weekly updates on ${query}`, "url": `https://podcasts.apple.com/podcast/123456793`, "spotifyUrl": `https://open.spotify.com/show/123456793`}
-          ],
-          social: [
-            {"name": `${query} Expert`, "desc": `Leading expert in ${query}`, "socialLinks": [{"platform": "X", "handle": `@${query.toLowerCase().replace(/\s+/g, '')}expert`, "url": `https://x.com/${query.toLowerCase().replace(/\s+/g, '')}expert`, "icon": "X"}, {"platform": "LinkedIn", "handle": `${query} Expert`, "url": `https://linkedin.com/in/${query.toLowerCase().replace(/\s+/g, '')}expert`, "icon": "LinkedIn"}]},
-            {"name": `${query} Specialist`, "desc": `Professional ${query} specialist`, "socialLinks": [{"platform": "X", "handle": `@${query.toLowerCase().replace(/\s+/g, '')}specialist`, "url": `https://x.com/${query.toLowerCase().replace(/\s+/g, '')}specialist`, "icon": "X"}, {"platform": "Instagram", "handle": `@${query.toLowerCase().replace(/\s+/g, '')}specialist`, "url": `https://instagram.com/${query.toLowerCase().replace(/\s+/g, '')}specialist`, "icon": "Instagram"}]},
-            {"name": `${query} Coach`, "desc": `Certified ${query} coach and mentor`, "socialLinks": [{"platform": "X", "handle": `@${query.toLowerCase().replace(/\s+/g, '')}coach`, "url": `https://x.com/${query.toLowerCase().replace(/\s+/g, '')}coach`, "icon": "X"}, {"platform": "YouTube", "handle": `${query} Coach`, "url": `https://youtube.com/@${query.toLowerCase().replace(/\s+/g, '')}coach`, "icon": "YouTube"}]},
-            {"name": `${query} Authority`, "desc": `Recognized authority in ${query}`, "socialLinks": [{"platform": "X", "handle": `@${query.toLowerCase().replace(/\s+/g, '')}authority`, "url": `https://x.com/${query.toLowerCase().replace(/\s+/g, '')}authority`, "icon": "X"}, {"platform": "Website", "handle": `${query.toLowerCase().replace(/\s+/g, '')}authority.com`, "url": `https://${query.toLowerCase().replace(/\s+/g, '')}authority.com`, "icon": "Website"}]},
-            {"name": `${query} Professional`, "desc": `Experienced ${query} professional`, "socialLinks": [{"platform": "X", "handle": `@${query.toLowerCase().replace(/\s+/g, '')}pro`, "url": `https://x.com/${query.toLowerCase().replace(/\s+/g, '')}pro`, "icon": "X"}, {"platform": "LinkedIn", "handle": `${query} Professional`, "url": `https://linkedin.com/in/${query.toLowerCase().replace(/\s+/g, '')}pro`, "icon": "LinkedIn"}]}
-          ]
-        };
-        
-        resources = fallbackResources;
+        return NextResponse.json(
+          { 
+            error: 'Unable to find real resources for this topic. Please try a different search term.',
+            query: query
+          },
+          { status: 400 }
+        );
       }
 
       // Image fetching has been removed - resources are now text-only
