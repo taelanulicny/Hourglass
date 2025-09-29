@@ -79,7 +79,7 @@ RESPONSE FORMAT (return ONLY this JSON with REAL resources):
 {
   "books": [{"title": "ACTUAL REAL BOOK TITLE", "desc": "Real description", "url": "https://amazon.com/dp/REAL_ISBN", "author": "REAL AUTHOR NAME"}],
   "podcasts": [{"title": "ACTUAL REAL PODCAST TITLE", "desc": "Real description", "url": "https://podcasts.apple.com/podcast/REAL_ID", "spotifyUrl": "https://open.spotify.com/show/REAL_PODCAST_ID"}],
-  "social": [{"name": "REAL PERSON NAME", "desc": "What they actually do", "socialLinks": [{"platform": "X", "handle": "@realhandle", "url": "https://x.com/realhandle", "icon": "X"}]}]
+  "social": [{"name": "REAL PERSON NAME", "desc": "What they actually do", "socialLinks": [{"platform": "X", "handle": "@realhandle", "url": "https://x.com/realhandle", "icon": "X"}, {"platform": "Facebook", "handle": "@realhandle", "url": "https://facebook.com/realhandle", "icon": "Facebook"}]}]
 }`
   };
 
@@ -114,7 +114,7 @@ RESPONSE FORMAT - Return ONLY this JSON with EXACTLY 5 REAL resources in each ca
 {
   "books": [{"title": "ACTUAL REAL BOOK TITLE", "desc": "Real description", "url": "https://amazon.com/dp/REAL_ISBN", "author": "REAL AUTHOR NAME"}],
   "podcasts": [{"title": "ACTUAL REAL PODCAST TITLE", "desc": "Real description", "url": "https://podcasts.apple.com/podcast/REAL_ID", "spotifyUrl": "https://open.spotify.com/show/REAL_PODCAST_ID"}],
-  "social": [{"name": "REAL PERSON NAME", "desc": "What they actually do", "socialLinks": [{"platform": "X", "handle": "@realhandle", "url": "https://x.com/realhandle", "icon": "X"}]}]
+  "social": [{"name": "REAL PERSON NAME", "desc": "What they actually do", "socialLinks": [{"platform": "X", "handle": "@realhandle", "url": "https://x.com/realhandle", "icon": "X"}, {"platform": "Facebook", "handle": "@realhandle", "url": "https://facebook.com/realhandle", "icon": "Facebook"}]}]
 }
 
 IMPORTANT: For podcasts, try to find actual Spotify show URLs (https://open.spotify.com/show/...) when possible. If you don't know the exact Spotify URL, you can use a search URL as fallback (https://open.spotify.com/search/...), but prioritize real show URLs.`
@@ -204,6 +204,24 @@ IMPORTANT: For podcasts, try to find actual Spotify show URLs (https://open.spot
           }
           
           resources = JSON.parse(jsonString);
+          
+          // Post-process to ensure Twitter is converted to X
+          if (resources.social && Array.isArray(resources.social)) {
+            resources.social.forEach(person => {
+              if (person.socialLinks && Array.isArray(person.socialLinks)) {
+                person.socialLinks.forEach(link => {
+                  if (link.platform === 'Twitter') {
+                    link.platform = 'X';
+                    link.icon = 'X';
+                    // Update URL from twitter.com to x.com
+                    if (link.url && link.url.includes('twitter.com')) {
+                      link.url = link.url.replace('twitter.com', 'x.com');
+                    }
+                  }
+                });
+              }
+            });
+          }
           
           // Validate that we have the required structure
           if (!resources.books || !resources.podcasts || !resources.social) {
