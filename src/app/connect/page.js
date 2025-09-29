@@ -34,15 +34,9 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, saved
 
   // Handle AI search for resources
   const handleSearch = async (query = null) => {
-    console.log('handleSearch called with query:', query, 'searchQuery:', searchQuery);
     const searchTerm = query || searchQuery;
-    console.log('searchTerm:', searchTerm);
-    if (!searchTerm.trim()) {
-      console.log('No search term, returning');
-      return;
-    }
+    if (!searchTerm.trim()) return;
     
-    console.log('Starting search for:', searchTerm);
     setIsSearching(true);
     setSearchError(null);
     
@@ -101,10 +95,7 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, saved
           />
           <button
             type="button"
-            onClick={() => {
-              console.log('Find button clicked, searchQuery:', searchQuery);
-              handleSearch();
-            }}
+            onClick={handleSearch}
             disabled={isSearching}
             className="px-4 py-2 bg-[#6B7280] text-white rounded-lg text-sm font-medium hover:bg-[#5B6B73] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
