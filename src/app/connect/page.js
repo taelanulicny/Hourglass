@@ -97,26 +97,11 @@ function ResourcesTab({ focusAreas = [], onPersonSelect, onResourceSelect, saved
             type="button"
             onClick={handleSearch}
             disabled={isSearching}
-            className="px-4 py-2 bg-[#6B7280] text-white rounded-lg text-sm font-medium hover:bg-[#5B6B73] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2 bg-gray-900 text-white rounded-lg text-sm font-semibold shadow-lg hover:bg-gray-800 active:bg-gray-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95"
           >
             {isSearching ? 'Finding...' : 'Find'}
           </button>
       </div>
-        {searchQuery && (
-          <div className="mt-2 flex items-center justify-end">
-            <button
-              onClick={() => {
-                setSearchQuery('');
-                setSearchResults(null);
-                setIsSearching(false);
-                setSearchError(null);
-              }}
-              className="text-xs text-[#6B7280] hover:text-[#5B6B73] font-medium"
-            >
-              Clear
-            </button>
-          </div>
-        )}
         {searchError && (
           <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg">
             <div className="text-xs text-red-600">
