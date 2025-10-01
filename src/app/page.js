@@ -189,7 +189,7 @@ function ymd(date) {
 
 
 // Task Module Component
-function TaskModule({ focusAreaLabel }) {
+function TaskModule({ focusAreaLabel, focusAreaColor = "#6B7280" }) {
   const [tasks, setTasks] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [editingText, setEditingText] = useState('');
@@ -331,9 +331,13 @@ function TaskModule({ focusAreaLabel }) {
               onClick={() => toggleTask(task.id)}
               className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
                 task.completed 
-                  ? 'bg-gray-600 border-gray-600' 
-                  : 'border-gray-300 hover:border-gray-400'
+                  ? 'text-white' 
+                  : 'hover:opacity-80'
               }`}
+              style={{
+                backgroundColor: task.completed ? focusAreaColor : 'transparent',
+                borderColor: focusAreaColor
+              }}
             >
               {task.completed && (
                 <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -383,7 +387,10 @@ function TaskModule({ focusAreaLabel }) {
         {/* Add New Task */}
         {isAddingNew ? (
           <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded border-2 border-gray-300"></div>
+            <div 
+              className="w-5 h-5 rounded border-2"
+              style={{ borderColor: focusAreaColor }}
+            ></div>
             <input
               type="text"
               value={newTaskText}
@@ -404,7 +411,10 @@ function TaskModule({ focusAreaLabel }) {
           </div>
         ) : (
           <div className="flex items-center gap-2 text-gray-400">
-            <div className="w-5 h-5 rounded border-2 border-gray-300"></div>
+            <div 
+              className="w-5 h-5 rounded border-2"
+              style={{ borderColor: focusAreaColor }}
+            ></div>
             <button
               onClick={() => setIsAddingNew(true)}
               className="text-sm hover:text-gray-600 transition-colors"
@@ -1669,7 +1679,7 @@ function HomeContent() {
 
 
               {/* Tasks Module */}
-              <TaskModule focusAreaLabel={focusArea.label} />
+              <TaskModule focusAreaLabel={focusArea.label} focusAreaColor={areaColor} />
 
               {/* AI Helper - Chat Style UI */}
               {/* AI Helper Component */}
