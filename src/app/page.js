@@ -188,6 +188,257 @@ function ymd(date) {
 
 
 
+// Task Module Component
+function TaskModule({ focusAreaLabel }) {
+  const [tasks, setTasks] = useState([]);
+  const [editingId, setEditingId] = useState(null);
+  const [editingText, setEditingText] = useState('');
+  const [isAddingNew, setIsAddingNew] = useState(false);
+  const [newTaskText, setNewTaskText] = useState('');
+
+  // Task storage key with 1-year expiration
+  const getTaskStorageKey = (focusArea) => `tasks:${focusArea}:${new Date().getFullYear()}`;
+
+  // Load tasks from localStorage
+  useEffect(() => {
+    try {
+      const storageKey = getTaskStorageKey(focusAreaLabel);
+      const stored = localStorage.getItem(storageKey);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          setTasks(parsed);
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to load tasks:', error);
+    }
+  }, [focusAreaLabel]);
+
+  // Save tasks to localStorage
+  useEffect(() => {
+    try {
+      const storageKey = getTaskStorageKey(focusAreaLabel);
+      localStorage.setItem(storageKey, JSON.stringify(tasks));
+    } catch (error) {
+      console.warn('Failed to save tasks:', error);
+    }
+  }, [tasks, focusAreaLabel]);
+
+  // Generate unique ID for tasks
+  const generateTaskId = () => `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+  // Add new task
+  const addTask = (text) => {
+    if (!text.trim()) return;
+    
+    const newTask = {
+      id: generateTaskId(),
+      text: text.trim(),
+      completed: false,
+      completedDate: null,
+      createdAt: Date.now()
+    };
+    
+    setTasks(prev => [...prev, newTask]);
+    setNewTaskText('');
+    setIsAddingNew(false);
+  };
+
+  // Toggle task completion
+  const toggleTask = (taskId) => {
+    setTasks(prev => prev.map(task => {
+      if (task.id === taskId) {
+        const newCompleted = !task.completed;
+        return {
+          ...task,
+          completed: newCompleted,
+          completedDate: newCompleted ? new Date().toISOString().split('T')[0] : null
+        };
+      }
+      return task;
+    }));
+  };
+
+  // Start editing task
+  const startEditing = (taskId, currentText) => {
+    setEditingId(taskId);
+    setEditingText(currentText);
+  };
+
+  // Save edited task
+  const saveEdit = () => {
+    if (!editingText.trim()) return;
+    
+    setTasks(prev => prev.map(task => 
+      task.id === editingId 
+        ? { ...task, text: editingText.trim() }
+        : task
+    ));
+    
+    setEditingId(null);
+    setEditingText('');
+  };
+
+  // Cancel editing
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditingText('');
+  };
+
+  // Delete task
+  const deleteTask = (taskId) => {
+    setTasks(prev => prev.filter(task => task.id !== taskId));
+  };
+
+  // Handle key press for editing
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      if (editingId) {
+        saveEdit();
+      } else if (isAddingNew) {
+        addTask(newTaskText);
+      }
+    } else if (e.key === 'Escape') {
+      if (editingId) {
+        cancelEdit();
+      } else if (isAddingNew) {
+        setIsAddingNew(false);
+        setNewTaskText('');
+      }
+    }
+  };
+
+  // Sort tasks: completed tasks at top (most recent first), then incomplete tasks
+  const sortedTasks = [...tasks].sort((a, b) => {
+    if (a.completed && !b.completed) return -1;
+    if (!a.completed && b.completed) return 1;
+    if (a.completed && b.completed) {
+      return new Date(b.completedDate) - new Date(a.completedDate);
+    }
+    return a.createdAt - b.createdAt;
+  });
+
+  return (
+    <div className="rounded-2xl border-2 border-gray-200 bg-white p-3 mt-3">
+      <div className="text-sm text-gray-500 mb-2">Tasks</div>
+      
+      <div className="space-y-2">
+        {sortedTasks.map((task) => (
+          <div key={task.id} className="flex items-center gap-2 group">
+            {/* Checkbox */}
+            <button
+              onClick={() => toggleTask(task.id)}
+              className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                task.completed 
+                  ? 'bg-gray-600 border-gray-600' 
+                  : 'border-gray-300 hover:border-gray-400'
+              }`}
+            >
+              {task.completed && (
+                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              )}
+            </button>
+
+            {/* Task Text */}
+            <div className="flex-1 min-w-0">
+              {editingId === task.id ? (
+                <input
+                  type="text"
+                  value={editingText}
+                  onChange={(e) => setEditingText(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                  onBlur={saveEdit}
+                  className="w-full text-sm border-none outline-none bg-transparent"
+                  autoFocus
+                />
+              ) : (
+                <button
+                  onClick={() => startEditing(task.id, task.text)}
+                  className={`text-sm text-left w-full ${
+                    task.completed 
+                      ? 'line-through text-gray-500' 
+                      : 'text-gray-900'
+                  }`}
+                >
+                  {task.text}
+                </button>
+              )}
+            </div>
+
+            {/* Delete Button */}
+            {editingId === task.id && (
+              <button
+                onClick={() => deleteTask(task.id)}
+                className="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+        ))}
+
+        {/* Add New Task */}
+        {isAddingNew ? (
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 rounded border-2 border-gray-300"></div>
+            <input
+              type="text"
+              value={newTaskText}
+              onChange={(e) => setNewTaskText(e.target.value)}
+              onKeyDown={handleKeyPress}
+              onBlur={() => {
+                if (newTaskText.trim()) {
+                  addTask(newTaskText);
+                } else {
+                  setIsAddingNew(false);
+                  setNewTaskText('');
+                }
+              }}
+              placeholder="Add option"
+              className="flex-1 text-sm border-none outline-none bg-transparent text-gray-600"
+              autoFocus
+            />
+            <span className="text-sm text-gray-400">or</span>
+            <button
+              onClick={() => {
+                addTask('Other');
+                setIsAddingNew(false);
+              }}
+              className="text-sm text-blue-600 hover:text-blue-800"
+            >
+              add "Other"
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 text-gray-400">
+            <div className="w-5 h-5 rounded border-2 border-gray-300"></div>
+            <button
+              onClick={() => setIsAddingNew(true)}
+              className="text-sm hover:text-gray-600 transition-colors"
+            >
+              Add option
+            </button>
+            <span className="text-sm">or</span>
+            <button
+              onClick={() => {
+                addTask('Other');
+              }}
+              className="text-sm text-blue-600 hover:text-blue-800"
+            >
+              add "Other"
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // Component that uses search params (needs Suspense)
 function HomeContent() {
   const router = useRouter();
@@ -1439,12 +1690,7 @@ function HomeContent() {
 
 
               {/* Tasks Module */}
-              <div className="rounded-2xl border-2 border-gray-200 bg-white p-3 mt-3">
-                <div className="text-sm text-gray-500 mb-2">Tasks</div>
-                <div className="text-sm text-gray-600">
-                  Tasks module will be implemented here
-                </div>
-              </div>
+              <TaskModule focusAreaLabel={focusArea.label} />
 
               {/* AI Helper - Chat Style UI */}
               {/* AI Helper Component */}
