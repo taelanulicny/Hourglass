@@ -70,14 +70,14 @@ SEARCH APPROACH:
 
 RESPONSE REQUIREMENTS:
 - Return EXACTLY 5 items in each category (or fewer if you don't know enough real ones)
-- Use real Amazon URLs for books (https://amazon.com/dp/REAL_ISBN)
+- Use Amazon search URLs for books (https://www.amazon.com/s?k=BOOK_TITLE+AUTHOR_NAME)
 - Use real Apple Podcasts URLs (https://podcasts.apple.com/podcast/REAL_ID)  
 - Use actual Spotify podcast URLs when available (https://open.spotify.com/show/REAL_PODCAST_ID)
 - Use real social media URLs (https://x.com/realhandle, https://youtube.com/@realchannel)
 
 RESPONSE FORMAT (return ONLY this JSON with REAL resources):
 {
-  "books": [{"title": "ACTUAL REAL BOOK TITLE", "desc": "Real description", "url": "https://amazon.com/dp/REAL_ISBN", "author": "REAL AUTHOR NAME"}],
+  "books": [{"title": "ACTUAL REAL BOOK TITLE", "desc": "Real description", "url": "https://www.amazon.com/s?k=BOOK_TITLE+AUTHOR_NAME", "author": "REAL AUTHOR NAME"}],
   "podcasts": [{"title": "ACTUAL REAL PODCAST TITLE", "desc": "Real description", "url": "https://podcasts.apple.com/podcast/REAL_ID", "spotifyUrl": "https://open.spotify.com/show/REAL_PODCAST_ID"}],
   "social": [{"name": "REAL PERSON NAME", "desc": "What they actually do", "socialLinks": [{"platform": "X", "handle": "@realhandle", "url": "https://x.com/realhandle", "icon": "X"}, {"platform": "Facebook", "handle": "@realhandle", "url": "https://facebook.com/realhandle", "icon": "Facebook"}]}]
 }`
@@ -112,7 +112,7 @@ SEARCH STRATEGY:
 
 RESPONSE FORMAT - Return ONLY this JSON with EXACTLY 5 REAL resources in each category:
 {
-  "books": [{"title": "ACTUAL REAL BOOK TITLE", "desc": "Real description", "url": "https://amazon.com/dp/REAL_ISBN", "author": "REAL AUTHOR NAME"}],
+  "books": [{"title": "ACTUAL REAL BOOK TITLE", "desc": "Real description", "url": "https://www.amazon.com/s?k=BOOK_TITLE+AUTHOR_NAME", "author": "REAL AUTHOR NAME"}],
   "podcasts": [{"title": "ACTUAL REAL PODCAST TITLE", "desc": "Real description", "url": "https://podcasts.apple.com/podcast/REAL_ID", "spotifyUrl": "https://open.spotify.com/show/REAL_PODCAST_ID"}],
   "social": [{"name": "REAL PERSON NAME", "desc": "What they actually do", "socialLinks": [{"platform": "X", "handle": "@realhandle", "url": "https://x.com/realhandle", "icon": "X"}, {"platform": "Facebook", "handle": "@realhandle", "url": "https://facebook.com/realhandle", "icon": "Facebook"}]}]
 }
