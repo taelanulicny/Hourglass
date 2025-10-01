@@ -373,6 +373,21 @@ function ResourcePreviewModal({ resource, isOpen, onClose, onSave, isSaved }) {
     if (resource.type === 'podcast' && resource.spotifyUrl) {
       window.open(resource.spotifyUrl, '_blank', 'noopener,noreferrer');
     } else if (resource.url) {
+      // For books, if the URL looks like it might be broken, use Amazon search instead
+      if (resource.type === 'book' && resource.url.includes('amazon.com/dp/')) {
+        // Check if the URL looks suspicious (very short ISBN, contains special chars, etc.)
+        const isbnMatch = resource.url.match(/amazon\.com\/dp\/(.+)/);
+        if (isbnMatch) {
+          const isbn = isbnMatch[1];
+          // If ISBN is too short or contains non-alphanumeric chars, use search instead
+          if (isbn.length < 10 || !/^[A-Za-z0-9]+$/.test(isbn)) {
+            const searchQuery = encodeURIComponent(`${resource.title} ${resource.author || ''}`.trim());
+            window.open(`https://www.amazon.com/s?k=${searchQuery}`, '_blank', 'noopener,noreferrer');
+            onClose();
+            return;
+          }
+        }
+      }
       window.open(resource.url, '_blank', 'noopener,noreferrer');
     }
     onClose();
