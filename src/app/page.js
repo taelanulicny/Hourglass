@@ -1649,7 +1649,7 @@ function HomeContent() {
                         />
                       </div>
                     </div>
-                    <div className="mt-3 flex gap-2">
+                    <div className="mt-3 grid grid-cols-2 gap-3">
                       <button
                         onClick={handleManualRemove}
                         className="h-9 px-3 text-sm rounded border border-red-400 text-red-600 font-medium"
