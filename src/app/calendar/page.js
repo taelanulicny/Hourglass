@@ -833,6 +833,32 @@ function CalendarContent() {
     setEditingId(null);
   };
 
+  const duplicateEvent = () => {
+    if (!editingId) return;
+    
+    const currentEvent = events.find(e => e.id === editingId);
+    if (!currentEvent) return;
+    
+    // Get tomorrow's date
+    const tomorrow = new Date(currentEvent.start);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    // Pre-fill the draft with duplicated data
+    setDraft({
+      title: currentEvent.title || '',
+      area: currentEvent.area || '',
+      dateYMD: ymd(tomorrow),
+      start: msToHHMM(currentEvent.start),
+      end: msToHHMM(currentEvent.end),
+      notes: '', // Don't copy notes as requested
+    });
+    
+    // Close edit modal and open new event modal
+    setShowEditModal(false);
+    setEditingId(null);
+    setShowModal(true);
+  };
+
   // Layout helpers
 
   // ---- Now indicator (red line for current time) ---------------------------
@@ -2083,25 +2109,28 @@ function CalendarContent() {
             <textarea value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} className="w-full border rounded px-3 py-2 mb-4" rows={3} />
 
             <div className="flex justify-between items-center">
-              {(() => {
-                const currentEvent = events.find(e => e.id === editingId);
-                if (currentEvent && currentEvent.isRepeating) {
-                  return (
-                    <div className="flex gap-2">
-                      <button className="px-4 py-2 bg-red-500 text-white rounded text-xs leading-tight" onClick={() => deleteEvent(false)}>
-                        Delete This<br />Event
-                      </button>
-                      <button className="px-4 py-2 bg-red-600 text-white rounded text-xs leading-tight" onClick={() => deleteEvent(true)}>
-                        Delete Future<br />Events
-                      </button>
-                    </div>
-                  );
-                } else {
-                  return (
-                    <button className="px-4 py-2 bg-red-500 text-white rounded" onClick={deleteEvent}>Delete</button>
-                  );
-                }
-              })()}
+              <div className="flex gap-2">
+                {(() => {
+                  const currentEvent = events.find(e => e.id === editingId);
+                  if (currentEvent && currentEvent.isRepeating) {
+                    return (
+                      <>
+                        <button className="px-4 py-2 bg-red-500 text-white rounded text-xs leading-tight" onClick={() => deleteEvent(false)}>
+                          Delete This<br />Event
+                        </button>
+                        <button className="px-4 py-2 bg-red-600 text-white rounded text-xs leading-tight" onClick={() => deleteEvent(true)}>
+                          Delete Future<br />Events
+                        </button>
+                      </>
+                    );
+                  } else {
+                    return (
+                      <button className="px-4 py-2 bg-red-500 text-white rounded" onClick={deleteEvent}>Delete</button>
+                    );
+                  }
+                })()}
+                <button className="px-4 py-2 bg-gray-200 rounded" onClick={duplicateEvent}>Duplicate Event</button>
+              </div>
               <div className="flex gap-2">
                 <button className="px-4 py-2 bg-gray-200 rounded" onClick={() => { setShowEditModal(false); setEditingId(null); }}>Cancel</button>
                 <button className="px-4 py-2 bg-[#6B7280] text-white rounded" onClick={updateEvent}>Save</button>
