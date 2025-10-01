@@ -397,20 +397,10 @@ function TaskModule({ focusAreaLabel }) {
                   setNewTaskText('');
                 }
               }}
-              placeholder="Add option"
+              placeholder="Add task"
               className="flex-1 text-sm border-none outline-none bg-transparent text-gray-600"
               autoFocus
             />
-            <span className="text-sm text-gray-400">or</span>
-            <button
-              onClick={() => {
-                addTask('Other');
-                setIsAddingNew(false);
-              }}
-              className="text-sm text-blue-600 hover:text-blue-800"
-            >
-              add "Other"
-            </button>
           </div>
         ) : (
           <div className="flex items-center gap-2 text-gray-400">
@@ -419,16 +409,7 @@ function TaskModule({ focusAreaLabel }) {
               onClick={() => setIsAddingNew(true)}
               className="text-sm hover:text-gray-600 transition-colors"
             >
-              Add option
-            </button>
-            <span className="text-sm">or</span>
-            <button
-              onClick={() => {
-                addTask('Other');
-              }}
-              className="text-sm text-blue-600 hover:text-blue-800"
-            >
-              add "Other"
+              Add task
             </button>
           </div>
         )}
