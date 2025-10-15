@@ -15,11 +15,15 @@ export default function SettingsPage() {
   useEffect(() => {
     const savedSleepHours = localStorage.getItem('sleepHours');
     const savedMiscHours = localStorage.getItem('miscHours');
+    const savedUserName = localStorage.getItem('userName');
     if (savedSleepHours) {
       setDefaultGoal(savedSleepHours);
     }
     if (savedMiscHours) {
       setMiscHours(savedMiscHours);
+    }
+    if (savedUserName) {
+      setUserName(savedUserName);
     }
   }, []);
 
@@ -114,7 +118,10 @@ export default function SettingsPage() {
               <input
                 type="text"
                 value={userName}
-                onChange={(e) => setUserName(e.target.value)}
+                onChange={(e) => {
+                  setUserName(e.target.value);
+                  localStorage.setItem('userName', e.target.value);
+                }}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#8CA4AF] focus:border-transparent transition-colors"
                 placeholder="Enter your name"
               />
