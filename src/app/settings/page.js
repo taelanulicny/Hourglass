@@ -59,6 +59,21 @@ export default function SettingsPage() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        // Handle email confirmation redirect with tokens in URL
+        if (window.location.hash.includes('access_token')) {
+          // This is a return from email confirmation - let Supabase handle it
+          const { data, error } = await supabase.auth.getSession();
+          if (data.session && !error) {
+            setIsAuthenticated(true);
+            await DataService.migrateUserData(data.session.user.id);
+            await loadUserProfile(data.session.user.id);
+            // Clear the URL hash to clean up the browser
+            window.history.replaceState({}, document.title, window.location.pathname);
+            alert('Email confirmed successfully! You are now logged in.');
+            return; // Exit early since we handled the auth
+          }
+        }
+
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
           setIsAuthenticated(true);
