@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 export default function SettingsPage() {
   const router = useRouter();
   const [userName, setUserName] = useState('Your Name');
+  const [profilePicture, setProfilePicture] = useState(null);
   const [defaultGoal, setDefaultGoal] = useState('8');
   const [miscHours, setMiscHours] = useState('0');
   const [timeFormat, setTimeFormat] = useState('12');
@@ -16,6 +17,7 @@ export default function SettingsPage() {
     const savedSleepHours = localStorage.getItem('sleepHours');
     const savedMiscHours = localStorage.getItem('miscHours');
     const savedUserName = localStorage.getItem('userName');
+    const savedProfilePicture = localStorage.getItem('profilePicture');
     if (savedSleepHours) {
       setDefaultGoal(savedSleepHours);
     }
@@ -24,6 +26,9 @@ export default function SettingsPage() {
     }
     if (savedUserName) {
       setUserName(savedUserName);
+    }
+    if (savedProfilePicture) {
+      setProfilePicture(savedProfilePicture);
     }
   }, []);
 
@@ -84,6 +89,36 @@ export default function SettingsPage() {
     }
   };
 
+  const handleProfilePictureChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // Check if file is an image
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file.');
+        return;
+      }
+      
+      // Check file size (limit to 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        alert('Please select an image smaller than 2MB.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64String = e.target.result;
+        setProfilePicture(base64String);
+        localStorage.setItem('profilePicture', base64String);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeProfilePicture = () => {
+    setProfilePicture(null);
+    localStorage.removeItem('profilePicture');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-900">
       {/* Fixed Header */}
@@ -129,12 +164,43 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
               <div>
                 <div className="font-medium text-gray-900">Profile Picture</div>
-                <div className="text-sm text-gray-600">Add a profile picture</div>
+                <div className="text-sm text-gray-600">
+                  {profilePicture ? 'Tap to change' : 'Tap to add a profile picture'}
+                </div>
               </div>
-              <div className="w-12 h-12 bg-[#8CA4AF] rounded-full flex items-center justify-center text-white font-semibold">
-                {userName.charAt(0).toUpperCase()}
+              <div className="relative">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleProfilePictureChange}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  style={{ zIndex: 1 }}
+                />
+                <div className="w-12 h-12 bg-[#8CA4AF] rounded-full flex items-center justify-center text-white font-semibold overflow-hidden relative">
+                  {profilePicture ? (
+                    <img
+                      src={profilePicture}
+                      alt="Profile"
+                      className="w-full h-full object-cover rounded-full"
+                    />
+                  ) : (
+                    userName.charAt(0).toUpperCase()
+                  )}
+                </div>
               </div>
             </div>
+            
+            {profilePicture && (
+              <button
+                onClick={removeProfilePicture}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm text-red-600 border border-red-200 rounded-xl hover:bg-red-50 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Remove Profile Picture
+              </button>
+            )}
           </div>
         </section>
 
