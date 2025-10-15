@@ -208,8 +208,21 @@ export default function SettingsPage() {
     closeLoginModal();
   };
 
+  const handleLogout = () => {
+    if (confirm('Are you sure you want to logout? This will clear your account information.')) {
+      // Clear account data from state and localStorage
+      setEmail('');
+      setPassword('');
+      setShowPassword(false);
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('userPassword');
+      alert('Logged out successfully!');
+    }
+  };
+
   // Check if neither email nor password are filled to show Create Account button
   const showCreateAccountButton = !email && !password;
+  const showLogoutButton = email && password;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-900">
@@ -285,6 +298,19 @@ export default function SettingsPage() {
                 )}
               </div>
             </div>
+
+            {/* Logout Button */}
+            {showLogoutButton && (
+              <button
+                onClick={handleLogout}
+                className="w-full mt-4 px-4 py-3 bg-red-600 text-white font-medium rounded-xl hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                Logout
+              </button>
+            )}
 
             <div className="border-t border-gray-200 pt-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
