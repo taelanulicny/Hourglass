@@ -272,6 +272,9 @@ export default function SettingsPage() {
       const { data, error } = await supabase.auth.signUp({
         email: tempEmail,
         password: tempPassword,
+        options: {
+          emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/settings` : undefined
+        }
       });
 
       if (error) {
@@ -389,7 +392,7 @@ export default function SettingsPage() {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: typeof window !== 'undefined' ? window.location.origin : undefined
+          redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/settings` : undefined
         }
       });
 
