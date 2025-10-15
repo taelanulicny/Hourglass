@@ -24,7 +24,7 @@
     "zustand": "^5.0.7"
   },
   "devDependencies": {
-    "@netlify/plugin-nextjs": "^5.13.2",
+    "@netlify/plugin-nextjs": "^5.14.0",
     "autoprefixer": "^10.4.21",
     "eslint": "^8",
     "eslint-config-next": "14.2.32",
