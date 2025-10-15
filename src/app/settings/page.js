@@ -9,6 +9,9 @@ export default function SettingsPage() {
   const [profilePicture, setProfilePicture] = useState(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showAccountModal, setShowAccountModal] = useState(false);
+  const [tempEmail, setTempEmail] = useState('');
+  const [tempPassword, setTempPassword] = useState('');
   const [defaultGoal, setDefaultGoal] = useState('8');
   const [miscHours, setMiscHours] = useState('0');
   const [timeFormat, setTimeFormat] = useState('12');
@@ -139,13 +142,37 @@ export default function SettingsPage() {
     localStorage.setItem('userPassword', value);
   };
 
-  const handleCreateAccount = () => {
-    if (!email || !password) {
+  const openAccountModal = () => {
+    setTempEmail('');
+    setTempPassword('');
+    setShowAccountModal(true);
+  };
+
+  const closeAccountModal = () => {
+    setShowAccountModal(false);
+    setTempEmail('');
+    setTempPassword('');
+  };
+
+  const finishCreatingAccount = () => {
+    if (!tempEmail || !tempPassword) {
       alert('Please fill in both email and password.');
       return;
     }
+    
+    // Save the account credentials
+    setEmail(tempEmail);
+    setPassword(tempPassword);
+    localStorage.setItem('userEmail', tempEmail);
+    localStorage.setItem('userPassword', tempPassword);
+    
+    // Close modal and clear temp values
+    setShowAccountModal(false);
+    setTempEmail('');
+    setTempPassword('');
+    
     // TODO: Implement actual account creation logic
-    alert('Account creation functionality will be implemented.');
+    alert('Account created successfully!');
   };
 
   // Check if neither email nor password are filled to show Create Account button
@@ -178,7 +205,7 @@ export default function SettingsPage() {
             <h2 className="text-lg font-semibold text-gray-900">Profile</h2>
           </div>
           <div className="p-6 space-y-4">
-            {/* Account Creation Section */}
+            {/* Account Information Section */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Email
@@ -186,9 +213,9 @@ export default function SettingsPage() {
               <input
                 type="email"
                 value={email}
-                onChange={(e) => handleEmailChange(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#8CA4AF] focus:border-transparent transition-colors"
-                placeholder="Enter your email"
+                readOnly
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-600"
+                placeholder="No email set"
               />
             </div>
             
@@ -199,10 +226,10 @@ export default function SettingsPage() {
               <div className="relative">
                 <input
                   type="password"
-                  value={password}
-                  onChange={(e) => handlePasswordChange(e.target.value)}
-                  className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#8CA4AF] focus:border-transparent transition-colors"
-                  placeholder="Create your password"
+                  value={password ? "••••••••" : ""}
+                  readOnly
+                  className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-xl bg-gray-50 text-gray-600"
+                  placeholder="No password set"
                 />
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                   <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -271,7 +298,7 @@ export default function SettingsPage() {
             {/* Create Account Button */}
             {showCreateAccountButton && (
               <button
-                onClick={handleCreateAccount}
+                onClick={openAccountModal}
                 className="w-full mt-6 px-6 py-4 bg-green-600 text-white font-medium rounded-xl hover:bg-green-700 transition-colors"
               >
                 Create Account
@@ -486,6 +513,68 @@ export default function SettingsPage() {
           </div>
         </section>
       </div>
+
+      {/* Account Creation Modal */}
+      {showAccountModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">Create Account</h3>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={tempEmail}
+                  onChange={(e) => setTempEmail(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#8CA4AF] focus:border-transparent transition-colors"
+                  placeholder="Enter your email"
+                  autoFocus
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    type="password"
+                    value={tempPassword}
+                    onChange={(e) => setTempPassword(e.target.value)}
+                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#8CA4AF] focus:border-transparent transition-colors"
+                    placeholder="Create your password"
+                  />
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="px-6 py-4 border-t border-gray-200 flex gap-3">
+              <button
+                onClick={closeAccountModal}
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={finishCreatingAccount}
+                className="flex-1 px-4 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors"
+              >
+                Finish Making Account
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
