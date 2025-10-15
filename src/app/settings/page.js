@@ -147,8 +147,9 @@ export default function SettingsPage() {
         if (profile.sleep_hours) setDefaultGoal(profile.sleep_hours.toString());
         if (profile.misc_hours) setMiscHours(profile.misc_hours.toString());
         
-        // Keep password field hidden for security (don't store actual password)
-        setPassword('********'); // Show placeholder
+        // Load password from localStorage if available, otherwise show placeholder
+        const savedPassword = localStorage.getItem('userPassword');
+        setPassword(savedPassword || '********');
       }
     } catch (error) {
       console.error('Error loading profile:', error);
@@ -353,7 +354,11 @@ export default function SettingsPage() {
       if (data.user) {
         // Set UI state to show logged in
         setEmail(loginEmail);
-        setPassword('********'); // Hide actual password
+        setPassword(loginPassword); // Show the actual password entered
+        
+        // Save to localStorage as backup
+        localStorage.setItem('userEmail', loginEmail);
+        localStorage.setItem('userPassword', loginPassword);
         
         // Close modal and clear temp values
         closeLoginModal();
