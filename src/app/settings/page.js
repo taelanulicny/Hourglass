@@ -312,6 +312,24 @@ export default function SettingsPage() {
               </button>
             )}
 
+            {/* Create Account and Login Buttons */}
+            {showCreateAccountButton && (
+              <>
+                <button
+                  onClick={openAccountModal}
+                  className="w-full mt-4 px-6 py-4 bg-green-600 text-white font-medium rounded-xl hover:bg-green-700 transition-colors"
+                >
+                  Create Account
+                </button>
+                <button
+                  onClick={openLoginModal}
+                  className="w-full mt-3 px-6 py-4 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors"
+                >
+                  Login
+                </button>
+              </>
+            )}
+
             <div className="border-t border-gray-200 pt-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Display Name
@@ -365,26 +383,6 @@ export default function SettingsPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
                 Remove Profile Picture
-              </button>
-            )}
-
-            {/* Create Account Button */}
-            {showCreateAccountButton && (
-              <button
-                onClick={openAccountModal}
-                className="w-full mt-6 px-6 py-4 bg-green-600 text-white font-medium rounded-xl hover:bg-green-700 transition-colors"
-              >
-                Create Account
-              </button>
-            )}
-
-            {/* Login Button */}
-            {showCreateAccountButton && (
-              <button
-                onClick={openLoginModal}
-                className="w-full mt-3 px-6 py-4 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors"
-              >
-                Login
               </button>
             )}
           </div>
