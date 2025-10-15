@@ -7,6 +7,8 @@ export default function SettingsPage() {
   const router = useRouter();
   const [userName, setUserName] = useState('Your Name');
   const [profilePicture, setProfilePicture] = useState(null);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [defaultGoal, setDefaultGoal] = useState('8');
   const [miscHours, setMiscHours] = useState('0');
   const [timeFormat, setTimeFormat] = useState('12');
@@ -18,6 +20,8 @@ export default function SettingsPage() {
     const savedMiscHours = localStorage.getItem('miscHours');
     const savedUserName = localStorage.getItem('userName');
     const savedProfilePicture = localStorage.getItem('profilePicture');
+    const savedEmail = localStorage.getItem('userEmail');
+    const savedPassword = localStorage.getItem('userPassword');
     if (savedSleepHours) {
       setDefaultGoal(savedSleepHours);
     }
@@ -29,6 +33,12 @@ export default function SettingsPage() {
     }
     if (savedProfilePicture) {
       setProfilePicture(savedProfilePicture);
+    }
+    if (savedEmail) {
+      setEmail(savedEmail);
+    }
+    if (savedPassword) {
+      setPassword(savedPassword);
     }
   }, []);
 
@@ -119,6 +129,28 @@ export default function SettingsPage() {
     localStorage.removeItem('profilePicture');
   };
 
+  const handleEmailChange = (value) => {
+    setEmail(value);
+    localStorage.setItem('userEmail', value);
+  };
+
+  const handlePasswordChange = (value) => {
+    setPassword(value);
+    localStorage.setItem('userPassword', value);
+  };
+
+  const handleCreateAccount = () => {
+    if (!email || !password) {
+      alert('Please fill in both email and password.');
+      return;
+    }
+    // TODO: Implement actual account creation logic
+    alert('Account creation functionality will be implemented.');
+  };
+
+  // Check if neither email nor password are filled to show Create Account button
+  const showCreateAccountButton = !email && !password;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-900">
       {/* Fixed Header */}
@@ -146,7 +178,41 @@ export default function SettingsPage() {
             <h2 className="text-lg font-semibold text-gray-900">Profile</h2>
           </div>
           <div className="p-6 space-y-4">
+            {/* Account Creation Section */}
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => handleEmailChange(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#8CA4AF] focus:border-transparent transition-colors"
+                placeholder="Enter your email"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => handlePasswordChange(e.target.value)}
+                  className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#8CA4AF] focus:border-transparent transition-colors"
+                  placeholder="Create your password"
+                />
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t border-gray-200 pt-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Display Name
               </label>
@@ -199,6 +265,16 @@ export default function SettingsPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
                 Remove Profile Picture
+              </button>
+            )}
+
+            {/* Create Account Button */}
+            {showCreateAccountButton && (
+              <button
+                onClick={handleCreateAccount}
+                className="w-full mt-6 px-6 py-4 bg-green-600 text-white font-medium rounded-xl hover:bg-green-700 transition-colors"
+              >
+                Create Account
               </button>
             )}
           </div>
