@@ -219,6 +219,32 @@ export default function SettingsPage() {
     }
   };
 
+  const handleClearCache = async () => {
+    if (confirm('Clear all cached data and reload the app? This will ensure you have the latest version.')) {
+      try {
+        // Unregister service workers
+        if ('serviceWorker' in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          for (let registration of registrations) {
+            await registration.unregister();
+          }
+        }
+        
+        // Clear all caches
+        if ('caches' in window) {
+          const cacheNames = await caches.keys();
+          await Promise.all(cacheNames.map(name => caches.delete(name)));
+        }
+        
+        alert('Cache cleared! The page will now reload.');
+        window.location.reload(true);
+      } catch (error) {
+        console.error('Error clearing cache:', error);
+        alert('Error clearing cache. Please try manually: Settings > Clear browsing data > Cached images and files');
+      }
+    }
+  };
+
   const handleProfilePictureChange = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -661,9 +687,29 @@ export default function SettingsPage() {
         {/* AI Data Management Section */}
         <section className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-900">AI Data Management</h2>
+            <h2 className="text-lg font-semibold text-gray-900">App Maintenance</h2>
           </div>
           <div className="p-6 space-y-4">
+            <button
+              onClick={handleClearCache}
+              className="w-full flex items-center justify-between p-4 border border-purple-200 rounded-xl hover:bg-purple-50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <div className="font-medium text-purple-900">Clear App Cache</div>
+                  <div className="text-sm text-purple-600">Fix issues by clearing cached data</div>
+                </div>
+              </div>
+              <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+            
             <button
               onClick={handleClearAIHistory}
               className="w-full flex items-center justify-between p-4 border border-orange-200 rounded-xl hover:bg-orange-50 transition-colors"
