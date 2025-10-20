@@ -21,6 +21,14 @@ body {
   -webkit-text-size-adjust: 100%; /* prevent auto zoom on input focus iOS */
 }
 
+/* Ensure inputs are focusable and editable in iOS standalone (PWA) */
+input, textarea, select {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+  pointer-events: auto;
+}
+
 /* Prevent text selection during drag operations */
 .calendar-event {
   -webkit-user-select: none;
