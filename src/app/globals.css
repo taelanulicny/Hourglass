@@ -29,6 +29,20 @@ input, textarea, select {
   pointer-events: auto;
 }
 
+/* iOS PWA (standalone) specific fixes */
+@media all and (display-mode: standalone) {
+  /* Disable backdrop blur which can break input focus in WKWebView */
+  .backdrop-blur, .backdrop-blur-sm, .backdrop-blur-md, .backdrop-blur-lg, .backdrop-blur-xl, .backdrop-blur-2xl {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+  /* Ensure form fields are focusable above any fixed headers/overlays */
+  input, textarea, select {
+    position: relative;
+    z-index: 1;
+  }
+}
+
 /* Prevent text selection during drag operations */
 .calendar-event {
   -webkit-user-select: none;
