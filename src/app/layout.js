@@ -31,8 +31,9 @@ export const metadata = {
 export const viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  // Allow zooming on iOS PWA to avoid focus issues
+  maximumScale: 5,
+  userScalable: true,
   themeColor: "#F9FAFB",
   viewportFit: "cover",
 };
