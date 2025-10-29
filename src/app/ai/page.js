@@ -359,7 +359,7 @@ export default function AiAssistantPage() {
             <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div className={`rounded-2xl p-4 max-w-xs ${
                 message.role === 'user' 
-                  ? 'bg-blue-500 text-white' 
+                  ? 'bg-gray-100 text-gray-900' 
                   : 'bg-gray-700 text-white'
               }`}>
                 {message.content && (
@@ -376,7 +376,7 @@ export default function AiAssistantPage() {
                     {message.attachments.map((attachment, attIndex) => (
                       <div key={attIndex} className={`text-xs p-2 rounded ${
                         message.role === 'user' 
-                          ? 'bg-blue-400 text-white' 
+                          ? 'bg-gray-200 text-gray-700' 
                           : 'bg-gray-600 text-white'
                       }`}>
                         <div className="flex items-center gap-1">
