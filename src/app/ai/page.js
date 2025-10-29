@@ -316,7 +316,7 @@ export default function AiAssistantPage() {
         <div 
           ref={messagesRef}
           onScroll={handleScroll}
-          className="flex-1 overflow-y-auto p-4 space-y-6 no-scrollbar"
+          className="flex-1 overflow-y-auto p-4 pb-56 space-y-6 no-scrollbar"
         >
           {/* Greeting */}
           {showGreeting && selectedFocusArea && (
