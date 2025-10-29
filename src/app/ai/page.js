@@ -449,9 +449,9 @@ export default function AiAssistantPage() {
                 onKeyPress={handleKeyPress}
                 placeholder={selectedFocusArea ? `Ask me anything about ${selectedFocusArea.label}...` : "Select a focus area first..."}
                 disabled={!selectedFocusArea || loading}
-                className="w-full p-3 pr-12 bg-gray-100 border border-gray-200 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400 text-sm"
+                className="w-full p-3 pr-12 bg-gray-100 border border-gray-200 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400 text-base"
                 rows="1"
-                style={{ minHeight: '44px', maxHeight: '120px' }}
+                style={{ minHeight: '44px', maxHeight: '120px', fontSize: '16px' }}
               />
               <button 
                 onClick={send}
