@@ -116,24 +116,9 @@ export default function AiAssistantPage() {
     }
   };
 
-  // Check if input is a resource request
+  // Disable resource requests - focus on conversation about focus area
   const isResourceRequest = (input) => {
-    const lowerInput = input.toLowerCase().trim();
-    
-    const excludeKeywords = /\b(how to|what is|when|where|why|help me with|advice|tips|guidance|time|schedule|plan|goal|focus|productivity|show me|tell me|explain|can you|please|thanks|thank you|hi|hello|hey)\b/.test(lowerInput);
-    
-    if (lowerInput.length <= 2) return false;
-    
-    const nonTopics = /\b(ok|yes|no|maybe|sure|fine|good|bad|great|awesome|cool|nice|wow|oh|ah|um|hmm|well|so|but|and|or|the|a|an|is|are|was|were|be|been|being|have|has|had|do|does|did|will|would|could|should|may|might|can|must|shall|here|there|this|that|these|those|me|you|him|her|us|them|my|your|his|her|our|their|mine|yours|ours|theirs)\b/.test(lowerInput);
-    
-    if (excludeKeywords || nonTopics) return false;
-    
-    const wordCount = lowerInput.split(/\s+/).length;
-    if (wordCount <= 3) return true;
-    
-    const topicIndicators = /\b(about|on|regarding|concerning|related to|in the field of|for|learn|study|research|explore|discover|understand|master|improve|get into|dive into)\b/.test(lowerInput);
-    
-    return topicIndicators;
+    return false; // Always treat as regular conversation
   };
 
   // Send message function
@@ -338,7 +323,7 @@ export default function AiAssistantPage() {
             <div className="flex justify-start">
               <div className="bg-gray-100 rounded-2xl p-4 max-w-xs">
                 <p className="text-gray-700">
-                  How can I help you in <strong>"{selectedFocusArea.label}"</strong> right now?
+                  Hi! I'm here to help you with <strong>"{selectedFocusArea.label}"</strong>. What would you like to work on or discuss today?
                 </p>
               </div>
             </div>
