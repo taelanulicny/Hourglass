@@ -437,7 +437,8 @@ export default function AiAssistantPage() {
           <div className="flex items-end gap-3">
             <button 
               onClick={() => fileInputRef.current?.click()}
-              className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+              className="px-3 py-3 bg-gray-100 rounded-2xl hover:bg-gray-200 transition-colors flex items-center justify-center"
+              style={{ minHeight: '44px' }}
             >
               <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
