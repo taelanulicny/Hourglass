@@ -293,20 +293,8 @@ export default function AiAssistantPage() {
   return (
     <div className="min-h-screen bg-white text-gray-900 font-sans flex flex-col">
       {/* Header */}
-      <header className="w-full pt-16 pb-3 px-4 flex items-center justify-between border-b border-gray-100">
-        <div className="flex items-center gap-2">
-          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-          <div className="flex items-center gap-2">
-            <h1 className="text-gray-900 font-semibold text-lg">AI ASSISTANT</h1>
-            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
-        </div>
+      <header className="w-full pt-16 pb-3 px-4 flex items-center justify-center border-b border-gray-100">
+        <h1 className="text-gray-900 font-bold text-lg tracking-widest">AI ASSISTANT</h1>
       </header>
 
       {/* Focus Area Selector */}
