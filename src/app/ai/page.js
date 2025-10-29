@@ -35,8 +35,22 @@ export default function AiAssistantPage() {
       const areas = Array.isArray(parsed) ? parsed : [];
       setFocusAreas(areas);
       
-      // Set first focus area as default if available
+      // Try to restore last selected focus area
       if (areas.length > 0 && !selectedFocusArea) {
+        try {
+          const lastFocusAreaLabel = localStorage.getItem("aiLastFocusArea");
+          if (lastFocusAreaLabel) {
+            const lastArea = areas.find(area => area.label === lastFocusAreaLabel);
+            if (lastArea) {
+              setSelectedFocusArea(lastArea);
+              return;
+            }
+          }
+        } catch (error) {
+          console.warn('Failed to load last focus area:', error);
+        }
+        
+        // Fallback to first focus area if no last one found
         setSelectedFocusArea(areas[0]);
       }
     } catch (error) {
@@ -44,6 +58,17 @@ export default function AiAssistantPage() {
       setFocusAreas([]);
     }
   }, []);
+
+  // Save selected focus area to localStorage
+  useEffect(() => {
+    if (selectedFocusArea) {
+      try {
+        localStorage.setItem("aiLastFocusArea", selectedFocusArea.label);
+      } catch (error) {
+        console.warn('Failed to save last focus area:', error);
+      }
+    }
+  }, [selectedFocusArea]);
 
   // Load chat history when focus area changes
   useEffect(() => {
