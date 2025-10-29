@@ -23,6 +23,10 @@ export default function AiAssistantPage() {
   const [showHistory, setShowHistory] = useState(false);
   const [isAtBottom, setIsAtBottom] = useState(true);
   
+  // State for file uploads
+  const [attachedFiles, setAttachedFiles] = useState([]);
+  const fileInputRef = useRef(null);
+  
   // Load focus areas on mount
   useEffect(() => {
     try {
@@ -134,7 +138,7 @@ export default function AiAssistantPage() {
 
   // Send message function
   async function send() {
-    if (!input.trim() || loading || !selectedFocusArea) return;
+    if ((!input.trim() && attachedFiles.length === 0) || loading || !selectedFocusArea) return;
     
     const trimmedInput = input.trim();
     if (trimmedInput.length > 500) {
@@ -145,9 +149,21 @@ export default function AiAssistantPage() {
       return;
     }
     
-    const nextHistory = [...history, { role: "user", content: trimmedInput }];
+    // Create user message with file attachments
+    const userMessage = {
+      role: "user", 
+      content: trimmedInput,
+      attachments: attachedFiles.map(f => ({
+        name: f.name,
+        size: f.size,
+        type: f.type
+      }))
+    };
+    
+    const nextHistory = [...history, userMessage];
     setHistory(nextHistory);
     setInput("");
+    setAttachedFiles([]); // Clear attached files after sending
     setLoading(true);
     setShowGreeting(false);
     setShowHistory(true);
@@ -247,11 +263,38 @@ export default function AiAssistantPage() {
     }
   };
 
+  // Handle file upload
+  const handleFileUpload = (e) => {
+    const files = Array.from(e.target.files);
+    const newFiles = files.map(file => ({
+      id: Date.now() + Math.random(),
+      file: file,
+      name: file.name,
+      size: file.size,
+      type: file.type
+    }));
+    setAttachedFiles(prev => [...prev, ...newFiles]);
+  };
+
+  // Remove attached file
+  const removeFile = (fileId) => {
+    setAttachedFiles(prev => prev.filter(f => f.id !== fileId));
+  };
+
+  // Format file size
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
   return (
     <div className="min-h-screen bg-white text-gray-900 font-sans flex flex-col">
       {/* Header */}
       <header className="w-full pt-16 pb-3 px-4 flex items-center justify-between border-b border-gray-100">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
             <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -263,18 +306,6 @@ export default function AiAssistantPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-            </svg>
-          </button>
-          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-          </button>
         </div>
       </header>
 
@@ -333,13 +364,33 @@ export default function AiAssistantPage() {
                   ? 'bg-blue-500 text-white' 
                   : 'bg-gray-100 text-gray-700'
               }`}>
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  rehypePlugins={[rehypeRaw, rehypeSanitize]}
-                  className="prose prose-sm max-w-none"
-                >
-                  {message.content}
-                </ReactMarkdown>
+                {message.content && (
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    rehypePlugins={[rehypeRaw, rehypeSanitize]}
+                    className="prose prose-sm max-w-none"
+                  >
+                    {message.content}
+                  </ReactMarkdown>
+                )}
+                {message.attachments && message.attachments.length > 0 && (
+                  <div className="mt-2 space-y-1">
+                    {message.attachments.map((attachment, attIndex) => (
+                      <div key={attIndex} className={`text-xs p-2 rounded ${
+                        message.role === 'user' 
+                          ? 'bg-blue-400 text-white' 
+                          : 'bg-gray-200 text-gray-600'
+                      }`}>
+                        <div className="flex items-center gap-1">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                          </svg>
+                          <span className="truncate">{attachment.name}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -361,8 +412,33 @@ export default function AiAssistantPage() {
       {/* Input Area - ChatGPT Style */}
       <div className="fixed bottom-20 left-0 right-0 p-4 bg-white border-t border-gray-100">
         <div className="max-w-md mx-auto">
+          {/* Attached Files Display */}
+          {attachedFiles.length > 0 && (
+            <div className="mb-3 space-y-2">
+              {attachedFiles.map((file) => (
+                <div key={file.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{file.name}</p>
+                    <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
+                  </div>
+                  <button
+                    onClick={() => removeFile(file.id)}
+                    className="p-1 hover:bg-gray-200 rounded transition-colors"
+                  >
+                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          
           <div className="flex items-end gap-3">
-            <button className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors">
+            <button 
+              onClick={() => fileInputRef.current?.click()}
+              className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+            >
               <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
@@ -380,7 +456,7 @@ export default function AiAssistantPage() {
               />
               <button 
                 onClick={send}
-                disabled={!input.trim() || !selectedFocusArea || loading}
+                disabled={(!input.trim() && attachedFiles.length === 0) || !selectedFocusArea || loading}
                 className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-200 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -388,12 +464,17 @@ export default function AiAssistantPage() {
                 </svg>
               </button>
             </div>
-            <button className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors">
-              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 0h10m-10 0a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2M9 8h6m-6 4h6m-6 4h4" />
-              </svg>
-            </button>
           </div>
+          
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept="image/*,.pdf,.doc,.docx,.txt,.md"
+            onChange={handleFileUpload}
+            className="hidden"
+          />
         </div>
       </div>
 
