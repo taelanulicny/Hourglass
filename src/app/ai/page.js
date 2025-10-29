@@ -321,8 +321,8 @@ export default function AiAssistantPage() {
           {/* Greeting */}
           {showGreeting && selectedFocusArea && (
             <div className="flex justify-start">
-              <div className="bg-gray-100 rounded-2xl p-4 max-w-xs">
-                <p className="text-gray-700">
+              <div className="bg-gray-700 rounded-2xl p-4 max-w-xs">
+                <p className="text-white">
                   Hi! I'm here to help you with <strong>"{selectedFocusArea.label}"</strong>. What would you like to work on or discuss today?
                 </p>
               </div>
@@ -335,13 +335,13 @@ export default function AiAssistantPage() {
               <div className={`rounded-2xl p-4 max-w-xs ${
                 message.role === 'user' 
                   ? 'bg-blue-500 text-white' 
-                  : 'bg-gray-100 text-gray-700'
+                  : 'bg-gray-700 text-white'
               }`}>
                 {message.content && (
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     rehypePlugins={[rehypeRaw, rehypeSanitize]}
-                    className="prose prose-sm max-w-none"
+                    className={`prose prose-sm max-w-none ${message.role === 'assistant' ? 'prose-invert' : ''}`}
                   >
                     {message.content}
                   </ReactMarkdown>
@@ -352,7 +352,7 @@ export default function AiAssistantPage() {
                       <div key={attIndex} className={`text-xs p-2 rounded ${
                         message.role === 'user' 
                           ? 'bg-blue-400 text-white' 
-                          : 'bg-gray-200 text-gray-600'
+                          : 'bg-gray-600 text-white'
                       }`}>
                         <div className="flex items-center gap-1">
                           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -371,10 +371,10 @@ export default function AiAssistantPage() {
           {/* Loading indicator */}
           {loading && (
             <div className="flex justify-start">
-              <div className="bg-gray-100 rounded-2xl p-4 max-w-xs">
+              <div className="bg-gray-700 rounded-2xl p-4 max-w-xs">
                 <div className="flex items-center space-x-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
-                  <span className="text-gray-600">Thinking...</span>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span className="text-white">Thinking...</span>
                 </div>
               </div>
             </div>
