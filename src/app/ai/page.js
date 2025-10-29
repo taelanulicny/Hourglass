@@ -478,7 +478,7 @@ export default function AiAssistantPage() {
       </div>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 p-3 pb-7 z-[9999]">
+      <nav className="fixed bottom-0 left-0 right-0 p-3 pb-7 bg-white border-t border-gray-100 z-[9999]">
         <div className="max-w-md mx-auto grid grid-cols-3 gap-3">
           <Link
             href="/"
