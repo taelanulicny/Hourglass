@@ -2074,7 +2074,7 @@ function CalendarContent() {
                 const centerY = 130;
                 
                 return (
-                  <div className="flex items-center gap-3 -mt-4 min-h-[260px] px-4">
+                  <div className="flex items-center justify-center gap-4 -mt-4 min-h-[260px] pl-4 pr-6">
                     {/* Pie Chart */}
                     <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '260px', height: '260px' }}>
                       <svg width="260" height="260" viewBox="0 0 260 260">
@@ -2126,7 +2126,7 @@ function CalendarContent() {
                       </div>
 
                     {/* Focus Areas List */}
-                    <div className="flex-1 flex items-center pr-6">
+                    <div className="flex-1 flex items-center">
                       <div className="space-y-2 w-full">
                         {pieData.length > 0 ? (
                           pieData.map((area) => (
@@ -2543,7 +2543,7 @@ function CalendarContent() {
                       const centerY = 130;
                       
                       return (
-                        <div className="flex items-center gap-3 -mt-4 min-h-[260px] px-4">
+                        <div className="flex items-center justify-center gap-4 -mt-4 min-h-[260px] pl-4 pr-6">
                           <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '260px', height: '260px' }}>
                             <svg width="260" height="260" viewBox="0 0 260 260">
                               {pieData.map((area, index) => {
@@ -2591,7 +2591,7 @@ function CalendarContent() {
                             </svg>
                           </div>
 
-                          <div className="flex-1 flex items-center pr-6">
+                          <div className="flex-1 flex items-center">
                             <div className="space-y-2 w-full">
                               {pieData.length > 0 ? (
                                 pieData.map((area) => (
@@ -3011,7 +3011,7 @@ function CalendarContent() {
                       const centerY = 130;
                       
                       return (
-                        <div className="flex items-center gap-3 -mt-4 min-h-[260px] px-4">
+                        <div className="flex items-center justify-center gap-4 -mt-4 min-h-[260px] pl-4 pr-6">
                           <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '260px', height: '260px' }}>
                             <svg width="260" height="260" viewBox="0 0 260 260">
                               {pieData.map((area, index) => {
@@ -3059,7 +3059,7 @@ function CalendarContent() {
                             </svg>
                           </div>
 
-                          <div className="flex-1 flex items-center pr-6">
+                          <div className="flex-1 flex items-center">
                             <div className="space-y-2 w-full">
                               {pieData.length > 0 ? (
                                 pieData.map((area) => (
@@ -3372,7 +3372,7 @@ function CalendarContent() {
              const centerY = 130;
              
           return (
-               <div className="flex items-center gap-3 -mt-4 min-h-[260px] px-4">
+               <div className="flex items-center justify-center gap-4 -mt-4 min-h-[260px] pl-4 pr-6">
                  {/* Pie Chart */}
                  <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '260px', height: '260px' }}>
                    <svg width="260" height="260" viewBox="0 0 260 260">
@@ -3424,7 +3424,7 @@ function CalendarContent() {
                     </div>
 
                  {/* Focus Areas List */}
-                 <div className="flex-1 flex items-center pr-6">
+                 <div className="flex-1 flex items-center">
                    <div className="space-y-2 w-full">
                      {pieData.length > 0 ? (
                        pieData.map((area) => (

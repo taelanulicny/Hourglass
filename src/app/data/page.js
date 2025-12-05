@@ -204,7 +204,7 @@ export default function DataPage() {
 
   // Filter and group events
   const groupedEvents = useMemo(() => {
-    if (!isClient || events.length === 0) return [];
+    if (!isClient) return [];
     
     // Filter events by date range (show all events, but style unchecked ones differently)
     const filtered = events.filter(ev => {
@@ -226,6 +226,12 @@ export default function DataPage() {
       }
       byDate.get(dateKey).push(ev);
     });
+
+    // Always include today's date, even if there are no events
+    const todayKey = today.toDateString();
+    if (!byDate.has(todayKey)) {
+      byDate.set(todayKey, []);
+    }
 
     // Convert to array and group by weeks
     const result = [];
@@ -262,7 +268,7 @@ export default function DataPage() {
     });
 
     return result;
-  }, [events, dateRange, visibleFocusAreas, isClient]);
+  }, [events, dateRange, visibleFocusAreas, isClient, today]);
 
   // Detect month transitions
   const scheduleWithMonths = useMemo(() => {
@@ -322,19 +328,31 @@ export default function DataPage() {
   // Scroll to today when schedule loads
   useEffect(() => {
     if (isClient && scheduleContainerRef.current && todayRef.current && scheduleWithMonths.length > 0) {
-      // Wait for DOM to render
-      setTimeout(() => {
+      // Wait for DOM to fully render
+      const scrollToToday = () => {
         if (scheduleContainerRef.current && todayRef.current) {
-          const containerRect = scheduleContainerRef.current.getBoundingClientRect();
-          const todayRect = todayRef.current.getBoundingClientRect();
-          const scrollTop = scheduleContainerRef.current.scrollTop;
-          const targetScrollTop = scrollTop + todayRect.top - containerRect.top - 20; // 20px offset from top
+          const container = scheduleContainerRef.current;
+          const todayElement = todayRef.current;
           
-          scheduleContainerRef.current.scrollTo({ top: targetScrollTop, behavior: "smooth" });
+          // Get positions
+          const containerTop = container.getBoundingClientRect().top + container.scrollTop;
+          const todayTop = todayElement.getBoundingClientRect().top + container.scrollTop;
+          
+          // Calculate scroll position to put today at the top (accounting for header)
+          const headerHeight = Math.max(insets.top, 44) + 80;
+          const targetScrollTop = todayTop - containerTop - headerHeight;
+          
+          // Scroll to position today at the top
+          container.scrollTo({ top: targetScrollTop, behavior: "smooth" });
         }
-      }, 200);
+      };
+      
+      // Try multiple times to ensure DOM is ready
+      setTimeout(scrollToToday, 100);
+      setTimeout(scrollToToday, 300);
+      setTimeout(scrollToToday, 500);
     }
-  }, [isClient, scheduleWithMonths]);
+  }, [isClient, scheduleWithMonths, insets.top]);
 
   // Track visible month as user scrolls
   useEffect(() => {
@@ -425,11 +443,19 @@ export default function DataPage() {
               <button
                 onClick={() => {
                   if (scheduleContainerRef.current && todayRef.current) {
-                    const containerRect = scheduleContainerRef.current.getBoundingClientRect();
-                    const todayRect = todayRef.current.getBoundingClientRect();
-                    const scrollTop = scheduleContainerRef.current.scrollTop;
-                    const targetScrollTop = scrollTop + todayRect.top - containerRect.top - 20;
-                    scheduleContainerRef.current.scrollTo({ top: targetScrollTop, behavior: "smooth" });
+                    const container = scheduleContainerRef.current;
+                    const todayElement = todayRef.current;
+                    
+                    // Get positions
+                    const containerTop = container.getBoundingClientRect().top + container.scrollTop;
+                    const todayTop = todayElement.getBoundingClientRect().top + container.scrollTop;
+                    
+                    // Calculate scroll position to put today at the top (accounting for header)
+                    const headerHeight = Math.max(insets.top, 44) + 80;
+                    const targetScrollTop = todayTop - containerTop - headerHeight;
+                    
+                    // Scroll to position today at the top
+                    container.scrollTo({ top: targetScrollTop, behavior: "smooth" });
                   }
                 }}
                 title="Go to today"
@@ -616,12 +642,35 @@ export default function DataPage() {
                       return (
                         <div key={`day-${dayIdx}`} className="space-y-2" ref={isToday ? todayRef : null}>
                           {/* Day header */}
-                          <div className="flex items-center gap-2 px-2">
-                            <div className={`text-sm font-semibold ${isToday ? 'text-blue-600' : 'text-gray-900'}`}>
-                              {formatDay(dayData.date)} {dayData.date.getDate()}
-                            </div>
-                            {dayData.events.length === 0 && (
-                              <div className="text-xs text-gray-500">Nothing planned. Tap to create.</div>
+                          <div className="flex items-center gap-3 px-2">
+                            {isToday ? (
+                              <>
+                                {/* Blue circular badge for today */}
+                                <div className="flex flex-col items-center flex-shrink-0">
+                                  <div className="text-xs font-semibold text-blue-600 mb-1">
+                                    {formatDay(dayData.date)}
+                                  </div>
+                                  <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
+                                    <span className="text-white font-semibold text-sm">
+                                      {dayData.date.getDate()}
+                                    </span>
+                                  </div>
+                                </div>
+                                {/* Horizontal line */}
+                                <div className="flex-1 h-px bg-gray-300"></div>
+                                {dayData.events.length === 0 && (
+                                  <div className="text-xs text-gray-500">Nothing planned. Tap to create.</div>
+                                )}
+                              </>
+                            ) : (
+                              <>
+                                <div className="text-sm font-semibold text-gray-900">
+                                  {formatDay(dayData.date)} {dayData.date.getDate()}
+                                </div>
+                                {dayData.events.length === 0 && (
+                                  <div className="text-xs text-gray-500">Nothing planned. Tap to create.</div>
+                                )}
+                              </>
                             )}
                           </div>
                           
