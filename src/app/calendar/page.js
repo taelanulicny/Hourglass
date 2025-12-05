@@ -1390,9 +1390,12 @@ function CalendarContent() {
             className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
             onClick={() => setShowSideMenu(false)}
           />
-          {/* Side menu */}
-          <div className="fixed left-0 top-0 bottom-0 w-64 bg-white/20 backdrop-blur-xl border-r border-white/30 shadow-2xl z-50 overflow-y-auto scroll-smooth">
-            <div className="p-4 pt-20">
+          {/* Side menu - positioned below header */}
+          <div 
+            className="fixed left-0 bottom-0 w-64 bg-white/95 backdrop-blur-xl border-r border-white/30 shadow-2xl z-50 overflow-y-auto scroll-smooth"
+            style={{ top: `${Math.max(insets.top, 44) + 76}px` }}
+          >
+            <div className="p-4">
               {/* Close button */}
             <button
                 onClick={() => setShowSideMenu(false)}
@@ -1818,15 +1821,15 @@ function CalendarContent() {
                   };
                 });
                 
-                // Calculate total planned hours
-                const totalPlanned = focusAreaData.reduce((sum, area) => sum + area.dailyPlanned, 0);
+                // Calculate total actual time logged (for percentages)
+                const totalActual = focusAreaData.reduce((sum, area) => sum + area.actualTimeLogged, 0);
                 
-                // Calculate percentages and build pie chart data
+                // Calculate percentages and build pie chart data based on actual time logged
                 const pieData = focusAreaData
-                  .filter(area => area.dailyPlanned > 0)
+                  .filter(area => area.actualTimeLogged > 0)
                   .map((area) => ({
                     ...area,
-                    percentage: totalPlanned > 0 ? (area.dailyPlanned / totalPlanned) * 100 : 0
+                    percentage: totalActual > 0 ? (area.actualTimeLogged / totalActual) * 100 : 0
                   }))
                   .sort((a, b) => b.percentage - a.percentage);
                 
@@ -1961,18 +1964,14 @@ function CalendarContent() {
                           return (
                             <div
                               key={ev.id}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                openEdit(ev);
-                              }}
-                              className="w-2 h-2 rounded-full cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0"
+                              className="w-2 h-2 rounded-full flex-shrink-0 pointer-events-none"
                               style={{ backgroundColor: evColor }}
                               title={ev.title}
                             />
                           );
                         })}
                         {dayEvents.length > 3 && (
-                          <div className="w-2 h-2 rounded-full bg-gray-400 flex items-center justify-center flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity">
+                          <div className="w-2 h-2 rounded-full bg-gray-400 flex items-center justify-center flex-shrink-0 pointer-events-none">
                             <span className="text-[8px] text-white leading-none">+</span>
                           </div>
                         )}
@@ -2069,15 +2068,15 @@ function CalendarContent() {
                };
              });
              
-             // Calculate total planned hours
-             const totalPlanned = focusAreaData.reduce((sum, area) => sum + area.monthlyPlanned, 0);
+             // Calculate total actual time logged (for percentages)
+             const totalActual = focusAreaData.reduce((sum, area) => sum + area.actualTimeLogged, 0);
              
-             // Calculate percentages and build pie chart data
+             // Calculate percentages and build pie chart data based on actual time logged
              const pieData = focusAreaData
-               .filter(area => area.monthlyPlanned > 0)
+               .filter(area => area.actualTimeLogged > 0)
                .map((area) => ({
                  ...area,
-                 percentage: totalPlanned > 0 ? (area.monthlyPlanned / totalPlanned) * 100 : 0
+                 percentage: totalActual > 0 ? (area.actualTimeLogged / totalActual) * 100 : 0
                }))
                .sort((a, b) => b.percentage - a.percentage);
              
