@@ -323,6 +323,7 @@ export default function DataPage() {
   const todayRef = useRef(null);
   const [visibleMonth, setVisibleMonth] = useState(null);
   const monthRefs = useRef(new Map());
+  const hasScrolledToToday = useRef(false);
 
   // Initialize visible month to current month
   useEffect(() => {
@@ -335,32 +336,57 @@ export default function DataPage() {
     }
   }, [isClient, visibleMonth]);
 
-  // Scroll to today when schedule loads
+  // Scroll to today when schedule loads (only once on initial load)
   useEffect(() => {
-    if (isClient && scheduleContainerRef.current && todayRef.current && scheduleWithMonths.length > 0) {
-      // Wait for DOM to fully render
+    if (isClient && !hasScrolledToToday.current && scheduleContainerRef.current && scheduleWithMonths.length > 0) {
+      // Wait for DOM to fully render using requestAnimationFrame
       const scrollToToday = () => {
-        if (scheduleContainerRef.current && todayRef.current) {
+        if (scheduleContainerRef.current && todayRef.current && !hasScrolledToToday.current) {
           const container = scheduleContainerRef.current;
           const todayElement = todayRef.current;
           
-          // Get positions
-          const containerTop = container.getBoundingClientRect().top + container.scrollTop;
-          const todayTop = todayElement.getBoundingClientRect().top + container.scrollTop;
+          // Verify the element is actually in the DOM and has dimensions
+          if (!container.contains(todayElement) || todayElement.offsetHeight === 0) {
+            return; // Element not ready yet, try again
+          }
           
-          // Calculate scroll position to put today at the top (accounting for header)
+          // Get the container's scroll position
+          const containerRect = container.getBoundingClientRect();
+          const todayRect = todayElement.getBoundingClientRect();
+          
+          // Calculate the scroll position needed to put today at the top
+          // Account for the header height
           const headerHeight = Math.max(insets.top, 44) + 80;
-          const targetScrollTop = todayTop - containerTop - headerHeight;
+          const scrollOffset = todayRect.top - containerRect.top - headerHeight + container.scrollTop;
           
           // Scroll to position today at the top
-          container.scrollTo({ top: targetScrollTop, behavior: "smooth" });
+          if (scrollOffset >= 0) {
+            container.scrollTo({ 
+              top: scrollOffset, 
+              behavior: "smooth" 
+            });
+            hasScrolledToToday.current = true;
+          }
         }
       };
       
-      // Try multiple times to ensure DOM is ready
-      setTimeout(scrollToToday, 100);
-      setTimeout(scrollToToday, 300);
-      setTimeout(scrollToToday, 500);
+      // Use requestAnimationFrame to ensure layout is complete
+      const timeouts = [];
+      const rafId = requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          scrollToToday();
+          // Also try with delays as fallback to handle slow rendering
+          timeouts.push(setTimeout(scrollToToday, 100));
+          timeouts.push(setTimeout(scrollToToday, 300));
+          timeouts.push(setTimeout(scrollToToday, 500));
+          timeouts.push(setTimeout(scrollToToday, 800));
+        });
+      });
+      
+      return () => {
+        cancelAnimationFrame(rafId);
+        timeouts.forEach(timeout => clearTimeout(timeout));
+      };
     }
   }, [isClient, scheduleWithMonths, insets.top]);
 
@@ -456,16 +482,20 @@ export default function DataPage() {
                     const container = scheduleContainerRef.current;
                     const todayElement = todayRef.current;
                     
-                    // Get positions
-                    const containerTop = container.getBoundingClientRect().top + container.scrollTop;
-                    const todayTop = todayElement.getBoundingClientRect().top + container.scrollTop;
+                    // Get the container's scroll position
+                    const containerRect = container.getBoundingClientRect();
+                    const todayRect = todayElement.getBoundingClientRect();
                     
-                    // Calculate scroll position to put today at the top (accounting for header)
+                    // Calculate the scroll position needed to put today at the top
+                    // Account for the header height
                     const headerHeight = Math.max(insets.top, 44) + 80;
-                    const targetScrollTop = todayTop - containerTop - headerHeight;
+                    const scrollOffset = todayRect.top - containerRect.top - headerHeight + container.scrollTop;
                     
                     // Scroll to position today at the top
-                    container.scrollTo({ top: targetScrollTop, behavior: "smooth" });
+                    container.scrollTo({ 
+                      top: Math.max(0, scrollOffset), 
+                      behavior: "smooth" 
+                    });
                   }
                 }}
                 title="Go to today"
