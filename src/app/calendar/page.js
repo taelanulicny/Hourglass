@@ -317,10 +317,22 @@ function CalendarContent() {
     return d;
   }, []);
 
-  // Selected day (daily view)
-  const [selectedDate, setSelectedDate] = useState(null); // Start with null to prevent hydration mismatch
+  // Month view state
+  const [viewMonth, setViewMonth] = useState(null); // Start with null to prevent hydration mismatch
   useEffect(() => {
-    // Set initial date only on client
+    // Set initial month only on client
+    setViewMonth(monthStart(new Date()));
+  }, []);
+
+  // Side menu state
+  const [showSideMenu, setShowSideMenu] = useState(false);
+
+  // View mode state (Day, Week, Month, Year)
+  const [currentView, setCurrentView] = useState('Month');
+
+  // Selected day (for modals/editing)
+  const [selectedDate, setSelectedDate] = useState(null);
+  useEffect(() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
     setSelectedDate(d);
@@ -564,7 +576,7 @@ function CalendarContent() {
 
     // Nudge slightly to the RIGHT so there's a bit less left padding (back to -8).
     const left = targetEl.offsetLeft - 24;
-    stripRef.current.scrollTo({ left, top: 0, behavior: "auto" });
+    stripRef.current.scrollTo({ left, top: 0, behavior: "smooth" });
   }, [selectedDate, stripDays]);
 
   // Center focus rings when focus areas change
@@ -576,7 +588,7 @@ function CalendarContent() {
       const scrollLeft = Math.max(0, (contentWidth - containerWidth) / 2);
       
       // Center the rings
-      focusRingsRef.current.scrollTo({ left: scrollLeft, top: 0, behavior: "auto" });
+      focusRingsRef.current.scrollTo({ left: scrollLeft, top: 0, behavior: "smooth" });
       
       // Also try centering after a short delay to ensure DOM is fully rendered
       setTimeout(() => {
@@ -868,7 +880,6 @@ function CalendarContent() {
 
   // Track current time (updates every 30s)
   const [nowMs, setNowMs] = useState(0); // Start with 0 to prevent hydration mismatch
-  const [hasInitiallyScrolled, setHasInitiallyScrolled] = useState(false);
   useEffect(() => {
     // Set initial time only on client
     setNowMs(Date.now());
@@ -939,27 +950,36 @@ function CalendarContent() {
     return (minutes / 60) * pxPerHour; // hours -> px
   }, [nowMs, selectedDate, pxPerHour]);
 
-  // Reset scroll flag when selected date changes
-  useEffect(() => {
-    setHasInitiallyScrolled(false);
-  }, [selectedDate]);
-
-  // When viewing today, scroll the window so the now line is comfortably in view (only on initial load)
+  // When viewing today, scroll the window so the now line is comfortably in view (only once ever)
   useEffect(() => {
     if (nowTopPx == null) return;
     if (!dayColRef.current) return;
-    if (hasInitiallyScrolled) return; // Only scroll on initial load
     
-    // Where the day column starts relative to the page
-    const rect = dayColRef.current.getBoundingClientRect();
-    const pageTop = window.scrollY + rect.top;
-    // Aim to put the red line about 2 hours (240px) below the top of the viewport
-    const target = Math.max(0, pageTop + nowTopPx - 240);
-    window.scrollTo({ top: target, behavior: 'smooth' });
+    // Check if we've already done the initial scroll (persisted in localStorage)
+    const hasScrolledKey = 'calendar:hasInitiallyScrolled';
+    if (typeof window !== 'undefined' && localStorage.getItem(hasScrolledKey) === 'true') {
+      return; // Already scrolled once, don't do it again
+    }
     
-    // Mark that we've done the initial scroll
-    setHasInitiallyScrolled(true);
-  }, [nowTopPx, selectedDate, hasInitiallyScrolled]);
+    // Delay scroll to current time (wait 2 seconds before scrolling)
+    const scrollTimer = setTimeout(() => {
+      if (!dayColRef.current) return;
+      
+      // Where the day column starts relative to the page
+      const rect = dayColRef.current.getBoundingClientRect();
+      const pageTop = window.scrollY + rect.top;
+      // Aim to put the red line about 2 hours (240px) below the top of the viewport
+      const target = Math.max(0, pageTop + nowTopPx - 240);
+      window.scrollTo({ top: target, behavior: 'smooth' });
+      
+      // Mark that we've done the initial scroll (persist in localStorage)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(hasScrolledKey, 'true');
+      }
+    }, 2000); // 2 second delay
+    
+    return () => clearTimeout(scrollTimer);
+  }, [nowTopPx]);
 
   useEffect(() => {
     if (!draggingId) return;
@@ -1240,8 +1260,8 @@ function CalendarContent() {
   // --- Get selected day abbrev for focus area rings ---
   const selectedDayAbbrev = selectedDate ? DAYS[selectedDate.getDay()] : null;
 
-  // Show loading state if no date is selected yet
-  if (!selectedDate) {
+  // Show loading state if month not loaded yet
+  if (!viewMonth) {
     return (
       <div className="min-h-screen bg-white text-[#374151] flex items-center justify-center">
         <div className="text-center">
@@ -1252,42 +1272,99 @@ function CalendarContent() {
     );
   }
 
+  // Build month grid
+  const monthGrid = buildMonthGrid(viewMonth);
+  
+  // Get events for a specific date
+  const getEventsForDate = (date) => {
+    const dateStr = ymd(date);
+    const dateStart = new Date(date);
+    dateStart.setHours(0, 0, 0, 0);
+    const dateEnd = new Date(date);
+    dateEnd.setHours(23, 59, 59, 999);
+    return events.filter(ev => {
+      const evStart = new Date(ev.start);
+      const evEnd = new Date(ev.end);
+      return evStart <= dateEnd && evEnd >= dateStart;
+    });
+  };
+
   return (
-    <div className="min-h-screen bg-white text-[#374151] pb-24">
-      {/* Fixed header and day selector - LOCKED */}
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-purple-50 to-pink-50 text-white pb-24">
+      {/* Fixed header */}
       <div className="fixed top-0 left-0 right-0 z-50">
         {/* Safe area background filler */}
-        <div className="absolute top-0 left-0 right-0 bg-[#F7F6F3]" style={{ height: `${insets.top}px` }} />
+        <div className="absolute top-0 left-0 right-0 bg-gradient-to-br from-blue-100 via-purple-50 to-pink-50" style={{ height: `${insets.top}px` }} />
         
         {/* Main header content */}
-        <div className="bg-[#F7F6F3]" style={{ marginTop: `${insets.top}px` }}>
+        <div className="bg-white/70 backdrop-blur-xl border-b border-white/30 shadow-lg" style={{ marginTop: `${insets.top}px` }}>
           {/* Top bar */}
-          <header className="px-4 pt-16 pb-3 shadow-sm flex items-center justify-between">
+          <header className="px-4 pt-4 pb-4 flex items-center justify-between relative">
         <div className="flex items-center gap-2">
+          {/* Hamburger menu button */}
           <button 
-            className="text-lg px-2" 
-            aria-label="Previous Day" 
-            onClick={() => selectedDate && setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() - 1))}
-            disabled={!selectedDate}
+            onClick={() => setShowSideMenu(true)}
+            className="text-gray-900 hover:opacity-70 transition-all duration-200 p-2"
+            aria-label="Open menu"
           >
-            ‹
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
           </button>
-          <div className="font-semibold">{headerLabel}</div>
-          <button 
-            className="text-lg px-2" 
-            aria-label="Next Day" 
-            onClick={() => selectedDate && setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() + 1))}
-            disabled={!selectedDate}
-          >
-            ›
-          </button>
+        </div>
+        <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center gap-2">
+          {currentView === 'Day' ? (
+            <>
+              <button 
+                className="text-lg px-2 text-gray-900 hover:text-gray-700" 
+                aria-label="Previous Day" 
+                onClick={() => selectedDate && setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() - 1))}
+                disabled={!selectedDate}
+              >
+                ‹
+              </button>
+              <div className="font-semibold text-base text-gray-900 whitespace-nowrap">
+                {selectedDate ? selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) : ''}
+              </div>
+              <button 
+                className="text-lg px-2 text-gray-900 hover:text-gray-700" 
+                aria-label="Next Day" 
+                onClick={() => selectedDate && setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() + 1))}
+                disabled={!selectedDate}
+              >
+                ›
+              </button>
+            </>
+          ) : (
+            <>
+              <button 
+                className="text-lg px-2 text-gray-900 hover:text-gray-700" 
+                aria-label="Previous Month" 
+                onClick={() => viewMonth && setViewMonth(addMonths(viewMonth, -1))}
+                disabled={!viewMonth}
+              >
+                ‹
+              </button>
+              <div className="font-semibold text-lg text-gray-900">
+                {viewMonth ? viewMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : ''}
+              </div>
+              <button 
+                className="text-lg px-2 text-gray-900 hover:text-gray-700" 
+                aria-label="Next Month" 
+                onClick={() => viewMonth && setViewMonth(addMonths(viewMonth, 1))}
+                disabled={!viewMonth}
+              >
+                ›
+              </button>
+            </>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => router.push('/settings')}
             title="Settings"
             aria-label="Settings"
-            className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors duration-200"
+            className="inline-flex items-center justify-center w-10 h-10 rounded-xl text-gray-900 hover:opacity-70 transition-all duration-200"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -1305,547 +1382,865 @@ function CalendarContent() {
           </button>
         </div>
         </header>
-
-        {/* Horizontal day strip (±14 days from today) - LOCKED */}
-        <div ref={stripRef} className="flex gap-2 overflow-x-hidden px-3 pt-2 pb-1 -mt-1">
-        {stripDays.map((d, i) => {
-          const isSel = selectedDate && d.toDateString() === selectedDate.toDateString();
-          const isToday = d.toDateString() === today.toDateString();
-          return (
-            <button
-              ref={(el) => (stripBtnRefs.current[i] = el)}
-              key={i}
-              onClick={() => setSelectedDate(new Date(d))}
-              className={`relative flex flex-col items-center w-14 flex-shrink-0 py-2 rounded-md border outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 focus-visible:ring-0 ${isSel ? "bg-[#6B7280] text-white border-transparent" : "text-[#374151] bg-transparent border-transparent"}`}
-              title={d.toDateString()}
-            >
-              <div className="text-[11px]">{DAYS[d.getDay()]}</div>
-              <div className="text-sm font-semibold">{d.getDate()}</div>
-              {/* Today dot (does not affect layout height) */}
-              <div className={`absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#6B7280] ${isToday && !isSel ? 'opacity-100' : 'opacity-0'}`} />
-            </button>
-          );
-        })}
-        </div>
         </div>
       </div>
+      
+      {/* Spacer to prevent content from going under fixed header */}
+      <div style={{ height: `${insets.top + 72}px` }} />
 
-      {/* Scrollable calendar area */}
-      <div className="flex-1 overflow-y-auto" style={{ paddingTop: `${220}px` }}>
-        {/* Day view grid (hours gutter + single day column) */}
-        <div ref={gridRootRef} className="relative px-2">
-        <div className="grid grid-cols-[56px_minmax(0,1fr)]">
-          {/* Hours gutter */}
-          <div className="flex flex-col items-end pr-2">
-            {isClient && HOURS.map((h) => (
-              <div
-                key={h}
-                className="text-xs text-gray-500 flex items-start"
-                style={{ height: `${pxPerHour}px` }}
+      {/* Side Menu */}
+      {showSideMenu && (
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+            onClick={() => setShowSideMenu(false)}
+          />
+          {/* Side menu */}
+          <div className="fixed left-0 top-0 bottom-0 w-64 bg-white/20 backdrop-blur-xl border-r border-white/30 shadow-2xl z-50 overflow-y-auto scroll-smooth">
+            <div className="p-4 pt-20">
+              {/* Close button */}
+              <button
+                onClick={() => setShowSideMenu(false)}
+                className="absolute top-4 right-4 text-gray-900 hover:opacity-70"
+                aria-label="Close menu"
               >
-                <div className="-translate-y-1">{formatHour(h)}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* One day column */}
-          <div
-            ref={dayColRef}
-            className="relative border-l border-gray-200 overflow-visible"
-            style={{ touchAction: draggingId ? 'none' : undefined, userSelect: draggingId ? 'none' : undefined }}
-          >
-            {HOURS.map((h) => (
-              <div
-                key={h}
-                className="h-16 border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
-                onClick={() => openForSlot(h)}
-              />
-            ))}
-
-            {isClient && nowTopPx != null && (
-              <div
-                className="pointer-events-none absolute inset-x-0 z-20"
-                style={{ top: Math.max(0, Math.min(nowTopPx, (24 * pxPerHour) - 1)) + 'px' }}
-              >
-                {/* Hourglass marker at the left edge */}
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  className="absolute -left-3 -translate-y-1/2"
-                  style={{ top: 0 }}
-                  aria-hidden="true"
-                >
-                  <rect x="6" y="2.5" width="12" height="3" rx="1.5" stroke="#ef4444" strokeWidth="2" />
-                  <rect x="6" y="18.5" width="12" height="3" rx="1.5" stroke="#ef4444" strokeWidth="2" />
-                  <path d="M8 6c0 3.2 2.2 4.7 4 6-1.8 1.3-4 2.8-4 6" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M16 6c0 3.2-2.2 4.7-4 6 1.8 1.3 4 2.8 4 6" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
-                {/* Time label at the far right, above the line */}
-                <div
-                  className="absolute right-0 -translate-y-full mb-1 px-1.5 py-0.5 text-[10px] rounded bg-red-500 text-white shadow"
-                  style={{ top: 0 }}
-                  aria-hidden="true"
-                >
-                  {formatTime12(nowMs)}
+              </button>
+
+              {/* View Options */}
+              <div className="mb-8">
+                <div className="space-y-1">
+                  <button
+                    className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${currentView === 'Day' ? 'bg-white/30 text-gray-900 font-medium' : 'text-gray-900 hover:bg-white/20'}`}
+                    onClick={() => { setCurrentView('Day'); setShowSideMenu(false); }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span>Day</span>
+                    </div>
+                  </button>
+                  <button
+                    className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${currentView === '3 Day' ? 'bg-white/30 text-gray-900 font-medium' : 'text-gray-900 hover:bg-white/20'}`}
+                    onClick={() => { setCurrentView('3 Day'); setShowSideMenu(false); }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span>3 Day</span>
+                    </div>
+                  </button>
+                  <button
+                    className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${currentView === 'Week' ? 'bg-white/30 text-gray-900 font-medium' : 'text-gray-900 hover:bg-white/20'}`}
+                    onClick={() => { setCurrentView('Week'); setShowSideMenu(false); }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span>Week</span>
+                    </div>
+                  </button>
+                  <button
+                    className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${currentView === 'Month' ? 'bg-white/30 text-gray-900 font-medium' : 'text-gray-900 hover:bg-white/20'}`}
+                    onClick={() => { setCurrentView('Month'); setShowSideMenu(false); }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span>Month</span>
+                    </div>
+                  </button>
+                  <button
+                    className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${currentView === 'Year' ? 'bg-white/30 text-gray-900 font-medium' : 'text-gray-900 hover:bg-white/20'}`}
+                    onClick={() => { setCurrentView('Year'); setShowSideMenu(false); }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span>Year</span>
+                    </div>
+                  </button>
                 </div>
-                {/* The line itself */}
-                <div className="h-[2px] bg-red-500 w-full" />
               </div>
-            )}
 
-            {isClient && eventsForSelected.map(ev => {
-              // Use resize values if currently resizing this event
-              const currentStart = resizingId === ev.id && resizeGhost ? resizeGhost.start : ev.start;
-              const currentEnd = resizingId === ev.id && resizeGhost ? resizeGhost.end : ev.end;
-              
-              const visibleStart = Math.max(currentStart, dayStartMs);
-              const visibleEnd   = Math.min(currentEnd, dayEndMs);
-              const vs = new Date(visibleStart);
-              const topPx = (vs.getHours() + vs.getMinutes() / 60) * pxPerHour;
-              const heightPx = ((visibleEnd - visibleStart) / (1000 * 60 * 60)) * pxPerHour;
-              const renderColor = getAreaColor(ev.area) || ev.color || COLORS[2];
-              return (
-                <div
-                  key={ev.id}
-                  data-event-id={ev.id}
-                  className={`absolute left-1 right-1 rounded-md shadow calendar-event select-none ${draggingId === ev.id ? 'cursor-grabbing' : dragDelayActive && dragDelayEventId === ev.id ? 'cursor-wait' : resizingId === ev.id ? 'cursor-ns-resize' : 'cursor-grab'}`}
-                  style={{
-                    top: (draggingId === ev.id && dragGhostTop != null ? dragGhostTop : Math.max(0, topPx)) + 'px',
-                    height: Math.max(24, heightPx) + 'px',
-                    background: toRGBA(renderColor, dragDelayActive && dragDelayEventId === ev.id ? 0.2 : resizingId === ev.id ? 0.7 : 0.4),
-                    borderLeft: `3px solid ${renderColor}`,
-                    willChange: (draggingId === ev.id || resizingId === ev.id) ? 'top, height' : undefined,
-                    opacity: dragDelayActive && dragDelayEventId === ev.id ? 0.7 : resizingId === ev.id ? 0.9 : 1,
-                    touchAction: (draggingId === ev.id || resizingId === ev.id) ? 'none' : 'pan-y',
-                  }}
-                  title={ev.title}
-                  onMouseDown={(e) => {
-                    // Prevent text selection immediately
-                    e.preventDefault();
-                    e.stopPropagation();
-                    
-                    // Clear any existing drag delay timer
-                    if (dragDelayTimerRef.current) {
-                      clearTimeout(dragDelayTimerRef.current);
-                    }
-                    
-                    // Start drag delay - user must hold for 500ms before dragging starts
-                    setDragDelayActive(true);
-                    setDragDelayEventId(ev.id);
-                    
-                    dragDelayTimerRef.current = setTimeout(() => {
-                      if (unmountedRef.current) return;
-                      // After 500ms, allow dragging to begin
-                      const dur = ev.end - ev.start;
-                      setDraggingId(ev.id);
-                      setDragDelayActive(false);
-                      setDragDelayEventId(null);
-                      dragRef.current = {
-                        startY: e.clientY,
-                        origStart: ev.start,
-                        origEnd: ev.end,
-                        duration: dur,
-                        lastStartMs: null,
-                        moved: false,
-                      };
-                      // seed ghost top from current position
-                      const vs = new Date(Math.max(ev.start, dayStartMs));
-                      const topPxSeed = (vs.getHours() + vs.getMinutes() / 60) * pxPerHour;
-                      setDragGhostTop(Math.max(0, topPxSeed));
-                    }, 500);
-                  }}
-                  onMouseUp={(e) => {
-                    // Cancel drag delay if user releases before 500ms
-                    if (dragDelayActive && dragDelayEventId === ev.id) {
-                      if (dragDelayTimerRef.current) {
-                        clearTimeout(dragDelayTimerRef.current);
-                      }
-                      setDragDelayActive(false);
-                      setDragDelayEventId(null);
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    // Cancel drag delay if mouse leaves the event before 500ms
-                    if (dragDelayActive && dragDelayEventId === ev.id) {
-                      if (dragDelayTimerRef.current) {
-                        clearTimeout(dragDelayTimerRef.current);
-                      }
-                      setDragDelayActive(false);
-                      setDragDelayEventId(null);
-                    }
-                  }}
-                  onClick={(e) => { if (dragRef.current.moved || resizeRef.current.moved) { if (e.cancelable) e.preventDefault(); e.stopPropagation(); } else { openEdit(ev); } }}
-                >
-                  <div className="text-[11px] px-2 py-1 leading-tight">
-                    <div className="font-semibold truncate">{ev.title}</div>
-                    {ev.area && <div className="text-[10px] opacity-70 truncate">{ev.area}</div>}
-                  </div>
-                  
-                  {/* Resize handles - only show when not dragging */}
-                  {!draggingId && (
-                    <>
-                      {/* Top-left resize handle (adjusts start time) */}
-                      <div
-                        className={`absolute top-0 left-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'top-left' ? 'opacity-100' : 'opacity-0'}`}
-                        onMouseDown={(e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                          // Clear any drag delay timer since we're resizing
-                          if (dragDelayTimerRef.current) {
-                            clearTimeout(dragDelayTimerRef.current);
-                            dragDelayTimerRef.current = null;
-                          }
-                          setDragDelayActive(false);
-                          setDragDelayEventId(null);
-                          setResizingId(ev.id);
-                          setResizeHandle('top-left');
-                          resizeRef.current = {
-                            startY: e.clientY,
-                            origStart: ev.start,
-                            origEnd: ev.end,
-                            lastStartMs: ev.start,
-                            lastEndMs: ev.end,
-                            moved: false,
-                          };
-                        }}
-                        onTouchStart={(e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                          // Clear any drag delay timer since we're resizing
-                          if (dragDelayTimerRef.current) {
-                            clearTimeout(dragDelayTimerRef.current);
-                            dragDelayTimerRef.current = null;
-                          }
-                          setDragDelayActive(false);
-                          setDragDelayEventId(null);
-                          setResizingId(ev.id);
-                          setResizeHandle('top-left');
-                          resizeRef.current = {
-                            startY: e.touches[0].clientY,
-                            origStart: ev.start,
-                            origEnd: ev.end,
-                            lastStartMs: ev.start,
-                            lastEndMs: ev.end,
-                            moved: false,
-                          };
-                        }}
-                      >
-                        {/* Invisible resize handle - no visual circle */}
-                      </div>
-
-                      {/* Top-right resize handle (adjusts start time) */}
-                      <div
-                        className={`absolute top-0 right-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'top-right' ? 'opacity-100' : 'opacity-0'}`}
-                        onMouseDown={(e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                          // Clear any drag delay timer since we're resizing
-                          if (dragDelayTimerRef.current) {
-                            clearTimeout(dragDelayTimerRef.current);
-                            dragDelayTimerRef.current = null;
-                          }
-                          setDragDelayActive(false);
-                          setDragDelayEventId(null);
-                          setResizingId(ev.id);
-                          setResizeHandle('top-right');
-                          resizeRef.current = {
-                            startY: e.clientY,
-                            origStart: ev.start,
-                            origEnd: ev.end,
-                            lastStartMs: ev.start,
-                            lastEndMs: ev.end,
-                            moved: false,
-                          };
-                        }}
-                        onTouchStart={(e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                          // Clear any drag delay timer since we're resizing
-                          if (dragDelayTimerRef.current) {
-                            clearTimeout(dragDelayTimerRef.current);
-                            dragDelayTimerRef.current = null;
-                          }
-                          setDragDelayActive(false);
-                          setDragDelayEventId(null);
-                          setResizingId(ev.id);
-                          setResizeHandle('top-right');
-                          resizeRef.current = {
-                            startY: e.touches[0].clientY,
-                            origStart: ev.start,
-                            origEnd: ev.end,
-                            lastStartMs: ev.start,
-                            lastEndMs: ev.end,
-                            moved: false,
-                          };
-                        }}
-                      >
-                        {/* Invisible resize handle - no visual circle */}
-                      </div>
-                      
-                      {/* Bottom resize handle */}
-                      <div
-                        className={`absolute bottom-0 left-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'bottom' ? 'opacity-100' : 'opacity-0'}`}
-                        onMouseDown={(e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                          // Clear any drag delay timer since we're resizing
-                          if (dragDelayTimerRef.current) {
-                            clearTimeout(dragDelayTimerRef.current);
-                            dragDelayTimerRef.current = null;
-                          }
-                          setDragDelayActive(false);
-                          setDragDelayEventId(null);
-                          setResizingId(ev.id);
-                          setResizeHandle('bottom-left');
-                          resizeRef.current = {
-                            startY: e.clientY,
-                            origStart: ev.start,
-                            origEnd: ev.end,
-                            lastStartMs: ev.start,
-                            lastEndMs: ev.end,
-                            moved: false,
-                          };
-                        }}
-                        onTouchStart={(e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                          // Clear any drag delay timer since we're resizing
-                          if (dragDelayTimerRef.current) {
-                            clearTimeout(dragDelayTimerRef.current);
-                            dragDelayTimerRef.current = null;
-                          }
-                          setDragDelayActive(false);
-                          setDragDelayEventId(null);
-                          setResizingId(ev.id);
-                          setResizeHandle('bottom-left');
-                          resizeRef.current = {
-                            startY: e.touches[0].clientY,
-                            origStart: ev.start,
-                            origEnd: ev.end,
-                            lastStartMs: ev.start,
-                            lastEndMs: ev.end,
-                            moved: false,
-                          };
-                        }}
-                      >
-                        {/* Invisible resize handle - no visual circle */}
-                      </div>
-
-                      {/* Bottom-right resize handle (adjusts end time) */}
-                      <div
-                        className={`absolute bottom-0 right-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'bottom-right' ? 'opacity-100' : 'opacity-0'}`}
-                        onMouseDown={(e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                          // Clear any drag delay timer since we're resizing
-                          if (dragDelayTimerRef.current) {
-                            clearTimeout(dragDelayTimerRef.current);
-                            dragDelayTimerRef.current = null;
-                          }
-                          setDragDelayActive(false);
-                          setDragDelayEventId(null);
-                          setResizingId(ev.id);
-                          setResizeHandle('bottom-right');
-                          resizeRef.current = {
-                            startY: e.clientY,
-                            origStart: ev.start,
-                            origEnd: ev.end,
-                            lastStartMs: ev.start,
-                            lastEndMs: ev.end,
-                            moved: false,
-                          };
-                        }}
-                        onTouchStart={(e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                          // Clear any drag delay timer since we're resizing
-                          if (dragDelayTimerRef.current) {
-                            clearTimeout(dragDelayTimerRef.current);
-                            dragDelayTimerRef.current = null;
-                          }
-                          setDragDelayActive(false);
-                          setDragDelayEventId(null);
-                          setResizingId(ev.id);
-                          setResizeHandle('bottom-right');
-                          resizeRef.current = {
-                            startY: e.touches[0].clientY,
-                            origStart: ev.start,
-                            origEnd: ev.end,
-                            lastStartMs: ev.start,
-                            lastEndMs: ev.end,
-                            moved: false,
-                          };
-                        }}
-                      >
-                        {/* Invisible resize handle - no visual circle */}
-                      </div>
-                    </>
+              {/* Focus Areas Section */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 mb-3 px-4">Focus Areas</h3>
+                <div className="space-y-2">
+                  {focusAreas.length > 0 ? (
+                    focusAreas.map((area) => {
+                      const areaColor = area.color || COLORS[0];
+                      return (
+                        <div
+                          key={area.label}
+                          className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-white/20 transition-colors cursor-pointer"
+                          onClick={() => {
+                            router.push(`/?focus=${encodeURIComponent(area.label)}`);
+                            setShowSideMenu(false);
+                          }}
+                        >
+                          <div 
+                            className="w-3 h-3 rounded-full flex-shrink-0" 
+                            style={{ backgroundColor: areaColor }}
+                          />
+                          <span className="text-sm text-gray-900 truncate">{area.label}</span>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="px-4 py-2 text-sm text-gray-600">No focus areas yet</div>
                   )}
                 </div>
-              );
-            })}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Calendar view area */}
+      {currentView === 'Day' ? (
+        /* Day view */
+        <div className="flex-1 overflow-y-auto px-4 pt-4 scroll-smooth">
+          {/* Day info header */}
+          {selectedDate && (
+            <div className="mb-4 flex items-center gap-4">
+              <div className="text-blue-600 font-semibold text-sm">{DAYS[selectedDate.getDay()]}</div>
+              {eventsForSelected.length === 0 && (
+                <div className="text-gray-600 text-sm">Nothing planned</div>
+              )}
+            </div>
+          )}
+          
+          <div ref={gridRootRef} className="relative">
+            <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl p-4">
+              <div className="grid grid-cols-[56px_minmax(0,1fr)]">
+                {/* Hours gutter */}
+                <div className="flex flex-col items-end pr-2">
+                  {isClient && HOURS.map((h) => (
+                    <div
+                      key={h}
+                      className="text-xs text-gray-700 flex items-start"
+                      style={{ height: `${pxPerHour}px` }}
+                    >
+                      <div className="-translate-y-1">{formatHour(h)}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Day column */}
+                <div
+                  ref={dayColRef}
+                  className="relative border-l border-gray-300/60 overflow-visible"
+                  style={{ touchAction: draggingId ? 'none' : undefined, userSelect: draggingId ? 'none' : undefined }}
+                >
+                  {HOURS.map((h) => (
+                    <div
+                      key={h}
+                      className="h-16 border-b border-gray-200/50 hover:bg-white/10 cursor-pointer transition-colors"
+                      onClick={() => openForSlot(h)}
+                    />
+                  ))}
+
+                  {/* Current time indicator */}
+                  {isClient && nowTopPx != null && (
+                    <div
+                      className="pointer-events-none absolute inset-x-0 z-20"
+                      style={{ top: Math.max(0, Math.min(nowTopPx, (24 * pxPerHour) - 1)) + 'px' }}
+                    >
+                      {/* Hourglass marker */}
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        className="absolute -left-3 -translate-y-1/2"
+                        style={{ top: 0 }}
+                        aria-hidden="true"
+                      >
+                        <rect x="6" y="2.5" width="12" height="3" rx="1.5" stroke="#ef4444" strokeWidth="2" />
+                        <rect x="6" y="18.5" width="12" height="3" rx="1.5" stroke="#ef4444" strokeWidth="2" />
+                        <path d="M8 6c0 3.2 2.2 4.7 4 6-1.8 1.3-4 2.8-4 6" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M16 6c0 3.2-2.2 4.7-4 6 1.8 1.3 4 2.8 4 6" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      {/* Time label */}
+                      <div
+                        className="absolute right-0 -translate-y-full mb-1 px-1.5 py-0.5 text-[10px] rounded bg-red-500 text-white shadow"
+                        style={{ top: 0 }}
+                        aria-hidden="true"
+                      >
+                        {formatTime12(nowMs)}
+                      </div>
+                      {/* The line itself */}
+                      <div className="h-[2px] bg-red-500 w-full" />
+                    </div>
+                  )}
+
+                  {/* Events */}
+                  {isClient && eventsForSelected.map(ev => {
+                    const currentStart = resizingId === ev.id && resizeGhost ? resizeGhost.start : ev.start;
+                    const currentEnd = resizingId === ev.id && resizeGhost ? resizeGhost.end : ev.end;
+                    
+                    const visibleStart = Math.max(currentStart, dayStartMs);
+                    const visibleEnd = Math.min(currentEnd, dayEndMs);
+                    const vs = new Date(visibleStart);
+                    const topPx = (vs.getHours() + vs.getMinutes() / 60) * pxPerHour;
+                    const heightPx = ((visibleEnd - visibleStart) / (1000 * 60 * 60)) * pxPerHour;
+                    const renderColor = getAreaColor(ev.area) || ev.color || COLORS[2];
+                    
+                    return (
+                      <div
+                        key={ev.id}
+                        data-event-id={ev.id}
+                        className={`absolute left-1 right-1 rounded-md shadow calendar-event select-none ${draggingId === ev.id ? 'cursor-grabbing' : dragDelayActive && dragDelayEventId === ev.id ? 'cursor-wait' : resizingId === ev.id ? 'cursor-ns-resize' : 'cursor-grab'}`}
+                        style={{
+                          top: (draggingId === ev.id && dragGhostTop != null ? dragGhostTop : Math.max(0, topPx)) + 'px',
+                          height: Math.max(24, heightPx) + 'px',
+                          background: toRGBA(renderColor, dragDelayActive && dragDelayEventId === ev.id ? 0.2 : resizingId === ev.id ? 0.7 : 0.4),
+                          borderLeft: `3px solid ${renderColor}`,
+                          willChange: (draggingId === ev.id || resizingId === ev.id) ? 'top, height' : undefined,
+                          opacity: dragDelayActive && dragDelayEventId === ev.id ? 0.7 : resizingId === ev.id ? 0.9 : 1,
+                          touchAction: (draggingId === ev.id || resizingId === ev.id) ? 'none' : 'pan-y',
+                        }}
+                        title={ev.title}
+                        onMouseDown={(e) => {
+                          // Don't start drag if clicking on resize handles
+                          if (e.target.closest('[data-resize-handle]')) {
+                            return;
+                          }
+                          
+                          e.preventDefault();
+                          e.stopPropagation();
+                          
+                          if (dragDelayTimerRef.current) {
+                            clearTimeout(dragDelayTimerRef.current);
+                          }
+                          
+                          setDragDelayActive(true);
+                          setDragDelayEventId(ev.id);
+                          
+                          dragDelayTimerRef.current = setTimeout(() => {
+                            if (unmountedRef.current) return;
+                            const dur = ev.end - ev.start;
+                            setDraggingId(ev.id);
+                            setDragDelayActive(false);
+                            setDragDelayEventId(null);
+                            dragRef.current = {
+                              startY: e.clientY,
+                              origStart: ev.start,
+                              origEnd: ev.end,
+                              duration: dur,
+                              lastStartMs: null,
+                              moved: false,
+                            };
+                            const vs = new Date(Math.max(ev.start, dayStartMs));
+                            const topPxSeed = (vs.getHours() + vs.getMinutes() / 60) * pxPerHour;
+                            setDragGhostTop(Math.max(0, topPxSeed));
+                          }, 500);
+                        }}
+                        onMouseUp={(e) => {
+                          if (dragDelayActive && dragDelayEventId === ev.id) {
+                            if (dragDelayTimerRef.current) {
+                              clearTimeout(dragDelayTimerRef.current);
+                            }
+                            setDragDelayActive(false);
+                            setDragDelayEventId(null);
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (dragDelayActive && dragDelayEventId === ev.id) {
+                            if (dragDelayTimerRef.current) {
+                              clearTimeout(dragDelayTimerRef.current);
+                            }
+                            setDragDelayActive(false);
+                            setDragDelayEventId(null);
+                          }
+                        }}
+                        onClick={(e) => { if (dragRef.current.moved || resizeRef.current.moved) { if (e.cancelable) e.preventDefault(); e.stopPropagation(); } else { openEdit(ev); } }}
+                      >
+                        <div className="text-[11px] px-2 py-1 leading-tight">
+                          <div className="font-semibold truncate">{ev.title}</div>
+                          {ev.area && <div className="text-[10px] opacity-70 truncate">{ev.area}</div>}
+                        </div>
+                        
+                        {/* Resize handles - all four corners */}
+                        {!draggingId && (
+                          <>
+                            {/* Top-left */}
+                            <div
+                              data-resize-handle
+                              className={`absolute top-0 left-0 w-6 h-6 cursor-ns-resize select-none hover:opacity-100 ${resizingId === ev.id && resizeHandle === 'top-left' ? 'opacity-100' : 'opacity-0'}`}
+                              onMouseDown={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                if (dragDelayTimerRef.current) {
+                                  clearTimeout(dragDelayTimerRef.current);
+                                  dragDelayTimerRef.current = null;
+                                }
+                                setDragDelayActive(false);
+                                setDragDelayEventId(null);
+                                setResizingId(ev.id);
+                                setResizeHandle('top-left');
+                                resizeRef.current = {
+                                  startY: e.clientY,
+                                  origStart: ev.start,
+                                  origEnd: ev.end,
+                                  lastStartMs: ev.start,
+                                  lastEndMs: ev.end,
+                                  moved: false,
+                                };
+                              }}
+                            />
+                            {/* Top-right */}
+                            <div
+                              data-resize-handle
+                              className={`absolute top-0 right-0 w-6 h-6 cursor-ns-resize select-none hover:opacity-100 ${resizingId === ev.id && resizeHandle === 'top-right' ? 'opacity-100' : 'opacity-0'}`}
+                              onMouseDown={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                if (dragDelayTimerRef.current) {
+                                  clearTimeout(dragDelayTimerRef.current);
+                                  dragDelayTimerRef.current = null;
+                                }
+                                setDragDelayActive(false);
+                                setDragDelayEventId(null);
+                                setResizingId(ev.id);
+                                setResizeHandle('top-right');
+                                resizeRef.current = {
+                                  startY: e.clientY,
+                                  origStart: ev.start,
+                                  origEnd: ev.end,
+                                  lastStartMs: ev.start,
+                                  lastEndMs: ev.end,
+                                  moved: false,
+                                };
+                              }}
+                            />
+                            {/* Bottom-left */}
+                            <div
+                              data-resize-handle
+                              className={`absolute bottom-0 left-0 w-6 h-6 cursor-ns-resize select-none hover:opacity-100 ${resizingId === ev.id && resizeHandle === 'bottom-left' ? 'opacity-100' : 'opacity-0'}`}
+                              onMouseDown={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                if (dragDelayTimerRef.current) {
+                                  clearTimeout(dragDelayTimerRef.current);
+                                  dragDelayTimerRef.current = null;
+                                }
+                                setDragDelayActive(false);
+                                setDragDelayEventId(null);
+                                setResizingId(ev.id);
+                                setResizeHandle('bottom-left');
+                                resizeRef.current = {
+                                  startY: e.clientY,
+                                  origStart: ev.start,
+                                  origEnd: ev.end,
+                                  lastStartMs: ev.start,
+                                  lastEndMs: ev.end,
+                                  moved: false,
+                                };
+                              }}
+                            />
+                            {/* Bottom-right */}
+                            <div
+                              data-resize-handle
+                              className={`absolute bottom-0 right-0 w-6 h-6 cursor-ns-resize select-none hover:opacity-100 ${resizingId === ev.id && resizeHandle === 'bottom-right' ? 'opacity-100' : 'opacity-0'}`}
+                              onMouseDown={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                if (dragDelayTimerRef.current) {
+                                  clearTimeout(dragDelayTimerRef.current);
+                                  dragDelayTimerRef.current = null;
+                                }
+                                setDragDelayActive(false);
+                                setDragDelayEventId(null);
+                                setResizingId(ev.id);
+                                setResizeHandle('bottom-right');
+                                resizeRef.current = {
+                                  startY: e.clientY,
+                                  origStart: ev.start,
+                                  origEnd: ev.end,
+                                  lastStartMs: ev.start,
+                                  lastEndMs: ev.end,
+                                  moved: false,
+                                };
+                              }}
+                            />
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Focus Areas Data Block for Day view */}
+          <div className="mt-6 pb-6">
+            <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl p-4">
+              {(() => {
+                // Calculate daily planned hours for each focus area
+                const dailyGoal = 1; // For day view, we use daily goals
+                
+                // Calculate day start and end timestamps
+                const dayStart = selectedDate ? new Date(selectedDate) : new Date();
+                dayStart.setHours(0, 0, 0, 0);
+                const dayEnd = selectedDate ? new Date(selectedDate) : new Date();
+                dayEnd.setHours(23, 59, 59, 999);
+                const dayStartMs = dayStart.getTime();
+                const dayEndMs = dayEnd.getTime();
+                
+                // Helper function to normalize labels for comparison
+                const normalizeLabel = (label) => (label || '').trim().toLowerCase();
+                
+                const focusAreaData = focusAreas.map((area, index) => {
+                  const dailyGoalHours = Number(area.goal || 0);
+                  
+                  // Get actual time logged from dashboard (stored in days object)
+                  let actualTimeLogged = 0;
+                  if (selectedDate && area.days) {
+                    // Get day abbreviation (Su, M, Tu, W, Th, F, Sa)
+                    const dayAbbrev = DAYS[selectedDate.getDay()];
+                    // Get logged time for this specific day from the dashboard
+                    if (typeof area.days === 'object' && area.days[dayAbbrev] !== undefined) {
+                      actualTimeLogged = Number(area.days[dayAbbrev]) || 0;
+                    }
+                  }
+                  
+                  return {
+                    label: area.label,
+                    color: area.color || COLORS[index % COLORS.length],
+                    dailyGoal: dailyGoalHours,
+                    dailyPlanned: dailyGoalHours,
+                    actualTimeLogged
+                  };
+                });
+                
+                // Calculate total planned hours
+                const totalPlanned = focusAreaData.reduce((sum, area) => sum + area.dailyPlanned, 0);
+                
+                // Calculate percentages and build pie chart data
+                const pieData = focusAreaData
+                  .filter(area => area.dailyPlanned > 0)
+                  .map((area) => ({
+                    ...area,
+                    percentage: totalPlanned > 0 ? (area.dailyPlanned / totalPlanned) * 100 : 0
+                  }))
+                  .sort((a, b) => b.percentage - a.percentage);
+                
+                // Build pie chart path data
+                let currentOffset = 0;
+                const radius = 50;
+                const circumference = 2 * Math.PI * radius;
+                const centerX = 70;
+                const centerY = 70;
+                
+                return (
+                  <div className="flex items-center justify-center gap-4 -mt-4 min-h-[180px]">
+                    {/* Pie Chart */}
+                    <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '180px', height: '180px' }}>
+                      <svg width="180" height="180" viewBox="0 0 180 180" className="transform -rotate-90">
+                        {pieData.map((area, index) => {
+                          const dashLength = (area.percentage / 100) * circumference;
+                          const dashOffset = -currentOffset;
+                          const startAngle = (currentOffset / circumference) * 360;
+                          const endAngle = ((currentOffset + dashLength) / circumference) * 360;
+                          const midAngle = (startAngle + endAngle) / 2;
+                          
+                          // Calculate label position - outside the ring
+                          const labelRadius = radius + 15; // Position outside the ring
+                          const labelAngleRad = (midAngle * Math.PI) / 180;
+                          const labelX = centerX + Math.cos(labelAngleRad) * labelRadius;
+                          const labelY = centerY + Math.sin(labelAngleRad) * labelRadius;
+                          
+                          currentOffset += dashLength;
+                          
+                          return (
+                            <g key={area.label}>
+                              <circle
+                                cx={centerX}
+                                cy={centerY}
+                                r={radius}
+                                fill="none"
+                                stroke={area.color}
+                                strokeWidth="20"
+                                strokeDasharray={`${dashLength} ${circumference}`}
+                                strokeDashoffset={dashOffset}
+                                strokeLinecap="round"
+                              />
+                              {/* Percentage label - outside the ring */}
+                              <text
+                                x={labelX}
+                                y={labelY}
+                                textAnchor="middle"
+                                dominantBaseline="middle"
+                                className="text-xs font-semibold fill-gray-900"
+                                transform={`rotate(${midAngle + 90} ${labelX} ${labelY})`}
+                              >
+                                {area.percentage.toFixed(1)}%
+                              </text>
+                            </g>
+                          );
+                        })}
+                      </svg>
+                    </div>
+
+                    {/* Focus Areas List */}
+                    <div className="flex-1 flex items-center">
+                      <div className="space-y-2 w-full">
+                        {pieData.length > 0 ? (
+                          pieData.map((area) => (
+                            <div key={area.label} className="flex items-center gap-2">
+                              <div 
+                                className="w-3 h-3 rounded-full flex-shrink-0" 
+                                style={{ backgroundColor: area.color }}
+                              />
+                              <span className="text-xs text-gray-900">{area.label}</span>
+                              <span className="text-xs text-gray-600 ml-auto">
+                                {Math.round(area.actualTimeLogged * 10) / 10}/{Math.round(area.dailyPlanned)}
+                              </span>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-xs text-gray-600">No focus areas yet. Add them from the dashboard.</div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
           </div>
         </div>
+      ) : (
+        /* Month view */
+        <div className="flex-1 overflow-y-auto px-4 pt-4 scroll-smooth">
+          {/* Month grid */}
+          <div className="w-full">
+            {/* Calendar grid container with glassmorphic styling */}
+            <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl p-4">
+              {/* Days of week header */}
+              <div className="grid grid-cols-7 gap-1 mb-2">
+                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                  <div key={i} className="text-center text-xs font-semibold text-gray-900 py-2">
+                    {day}
+                  </div>
+                ))}
+              </div>
+              
+              {/* Calendar grid */}
+              <div className="grid grid-cols-7 gap-1">
+                {monthGrid.map((date, idx) => {
+                  const inMonth = date.getMonth() === viewMonth.getMonth();
+                  const isToday = sameDay(date, today);
+                  const dayEvents = getEventsForDate(date);
+                  
+                  return (
+                    <div
+                      key={idx}
+                      className={`h-[80px] p-1 rounded-md border flex flex-col ${inMonth ? 'bg-white/40 backdrop-blur-sm hover:bg-white/50 border-gray-300/60' : 'bg-white/20 border-gray-200/40'} ${isToday ? 'ring-2 ring-blue-500 border-blue-400' : ''} transition-all cursor-pointer`}
+                      onClick={() => {
+                        setSelectedDate(new Date(date));
+                        setCurrentView('Day');
+                      }}
+                    >
+                      <div className={`text-sm font-medium mb-1 text-center flex-shrink-0 ${inMonth ? 'text-gray-900' : 'text-gray-500'} ${isToday ? 'text-blue-600' : ''}`}>
+                        {isToday ? (
+                          <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center mx-auto">
+                            {date.getDate()}
+                          </div>
+                        ) : (
+                          date.getDate()
+                        )}
+                      </div>
+                      <div className="flex flex-wrap items-center justify-center gap-1 px-1 flex-1 min-h-0 overflow-hidden">
+                        {dayEvents.slice(0, 3).map((ev) => {
+                          const evColor = getAreaColor(ev.area) || ev.color || COLORS[2];
+                          return (
+                            <div
+                              key={ev.id}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openEdit(ev);
+                              }}
+                              className="w-2 h-2 rounded-full cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0"
+                              style={{ backgroundColor: evColor }}
+                              title={ev.title}
+                            />
+                          );
+                        })}
+                        {dayEvents.length > 3 && (
+                          <div className="w-2 h-2 rounded-full bg-gray-400 flex items-center justify-center flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity">
+                            <span className="text-[8px] text-white leading-none">+</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
+
+       {/* Focus Areas Data Block - Only show in Month view */}
+       {currentView === 'Month' && (
+       <div className="px-4 mt-6 pb-6">
+         <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl p-4">
+           {(() => {
+             // Calculate monthly planned hours for each focus area
+             const daysInMonth = viewMonth ? new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1, 0).getDate() : 30;
+             
+             // Calculate month start and end timestamps
+             const monthStart = viewMonth ? new Date(viewMonth.getFullYear(), viewMonth.getMonth(), 1) : new Date();
+             monthStart.setHours(0, 0, 0, 0);
+             const monthEnd = viewMonth ? new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1, 0) : new Date();
+             monthEnd.setHours(23, 59, 59, 999);
+             const monthStartMs = monthStart.getTime();
+             const monthEndMs = monthEnd.getTime();
+             
+             // Helper function to normalize labels for comparison
+             const normalizeLabel = (label) => (label || '').trim().toLowerCase();
+             
+             const focusAreaData = focusAreas.map((area, index) => {
+               const dailyGoal = Number(area.goal || 0);
+               const monthlyPlanned = dailyGoal * daysInMonth;
+               
+               // Calculate actual time logged from dashboard for this focus area in this month
+               // Sum up logged time from all days in the month by loading each week's data
+               let actualTimeLogged = 0;
+               const monthStartDate = new Date(monthStartMs);
+               const monthEndDate = new Date(monthEndMs);
+               
+               // Track which weeks we've already processed to avoid duplicate loading
+               const processedWeeks = new Map();
+               
+               // Iterate through each day in the month
+               for (let d = new Date(monthStartDate); d <= monthEndDate; d.setDate(d.getDate() + 1)) {
+                 // Get the Monday of the week this day belongs to
+                 const weekMonday = startOfWeekMon(d);
+                 const weekKey = ymd(weekMonday);
+                 
+                 // Get or load week data
+                 let weekArea = processedWeeks.get(weekKey);
+                 if (!weekArea) {
+                   // Load focus areas for this week
+                   const storageKey = `focusCategories:week:${weekKey}`;
+                   try {
+                     const weekRaw = localStorage.getItem(storageKey);
+                     if (weekRaw) {
+                       const weekAreas = JSON.parse(weekRaw);
+                       weekArea = weekAreas.find(a => normalizeLabel(a.label) === normalizeLabel(area.label));
+                       if (weekArea) {
+                         processedWeeks.set(weekKey, weekArea);
+                       }
+                     }
+                   } catch {}
+                 }
+                 
+                 // Add logged time for this day from the week's data
+                 if (weekArea && weekArea.days && typeof weekArea.days === 'object') {
+                   const dayAbbrev = DAYS[d.getDay()];
+                   if (weekArea.days[dayAbbrev] !== undefined) {
+                     actualTimeLogged += Number(weekArea.days[dayAbbrev]) || 0;
+                   }
+                 }
+               }
+               
+               // Fallback: if no weekly data found, use current week's days or timeSpent
+               if (actualTimeLogged === 0) {
+                 if (area.days && typeof area.days === 'object') {
+                   // Sum all days from current week as fallback
+                   actualTimeLogged = Object.values(area.days).reduce((sum, val) => sum + (Number(val) || 0), 0);
+                 } else if (area.timeSpent) {
+                   actualTimeLogged = Number(area.timeSpent) || 0;
+                 }
+               }
+               
+               return {
+                 label: area.label,
+                 color: area.color || COLORS[index % COLORS.length],
+                 dailyGoal,
+                 monthlyPlanned,
+                 actualTimeLogged
+               };
+             });
+             
+             // Calculate total planned hours
+             const totalPlanned = focusAreaData.reduce((sum, area) => sum + area.monthlyPlanned, 0);
+             
+             // Calculate percentages and build pie chart data
+             const pieData = focusAreaData
+               .filter(area => area.monthlyPlanned > 0)
+               .map((area) => ({
+                 ...area,
+                 percentage: totalPlanned > 0 ? (area.monthlyPlanned / totalPlanned) * 100 : 0
+               }))
+               .sort((a, b) => b.percentage - a.percentage);
+             
+             // Build pie chart path data
+             let currentOffset = 0;
+             const radius = 50;
+             const circumference = 2 * Math.PI * radius;
+             const centerX = 70;
+             const centerY = 70;
+             
+             return (
+               <div className="flex items-center justify-center gap-4 -mt-4 min-h-[180px]">
+                 {/* Pie Chart */}
+                 <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '180px', height: '180px' }}>
+                   <svg width="180" height="180" viewBox="0 0 180 180" className="transform -rotate-90">
+                     {pieData.map((area, index) => {
+                       const dashLength = (area.percentage / 100) * circumference;
+                       const dashOffset = -currentOffset;
+                       const startAngle = (currentOffset / circumference) * 360;
+                       const endAngle = ((currentOffset + dashLength) / circumference) * 360;
+                       const midAngle = (startAngle + endAngle) / 2;
+                       
+                       // Calculate label position - outside the ring
+                       const labelRadius = radius + 15; // Position outside the ring
+                       const labelAngleRad = (midAngle * Math.PI) / 180;
+                       const labelX = centerX + Math.cos(labelAngleRad) * labelRadius;
+                       const labelY = centerY + Math.sin(labelAngleRad) * labelRadius;
+                       
+                       currentOffset += dashLength;
+                       
+                       return (
+                         <g key={area.label}>
+                           <circle
+                             cx={centerX}
+                             cy={centerY}
+                             r={radius}
+                             fill="none"
+                             stroke={area.color}
+                             strokeWidth="20"
+                             strokeDasharray={`${dashLength} ${circumference}`}
+                             strokeDashoffset={dashOffset}
+                             strokeLinecap="round"
+                           />
+                           {/* Percentage label - outside the ring */}
+                           <text
+                             x={labelX}
+                             y={labelY}
+                             textAnchor="middle"
+                             dominantBaseline="middle"
+                             className="text-xs font-semibold fill-gray-900"
+                             transform={`rotate(${midAngle + 90} ${labelX} ${labelY})`}
+                           >
+                             {area.percentage.toFixed(1)}%
+                           </text>
+                         </g>
+                       );
+                     })}
+                   </svg>
+                 </div>
+
+                 {/* Focus Areas List */}
+                 <div className="flex-1 flex items-center">
+                   <div className="space-y-2 w-full">
+                     {pieData.length > 0 ? (
+                       pieData.map((area) => (
+                         <div key={area.label} className="flex items-center gap-2">
+                           <div 
+                             className="w-3 h-3 rounded-full flex-shrink-0" 
+                             style={{ backgroundColor: area.color }}
+                           />
+                           <span className="text-xs text-gray-900">{area.label}</span>
+                           <span className="text-xs text-gray-600 ml-auto">
+                             {Math.round(area.actualTimeLogged)}/{Math.round(area.monthlyPlanned)}
+                           </span>
+                         </div>
+                       ))
+                     ) : (
+                       <div className="text-xs text-gray-600">No focus areas yet. Add them from the dashboard.</div>
+                     )}
+                   </div>
+                 </div>
+               </div>
+             );
+           })()}
+         </div>
+       </div>
+       )}
+
+      {/* Floating action button for adding events */}
+      <button
+        onClick={() => {
+          setSelectedDate(new Date());
+          setDraft({
+            ...DEFAULT_DRAFT,
+            ...nextHourDefaults(new Date()),
+            dateYMD: ymd(new Date()),
+          });
+          setShowModal(true);
+        }}
+        className="fixed bottom-24 right-4 w-14 h-14 rounded-full bg-blue-500/80 backdrop-blur-lg text-white flex items-center justify-center shadow-xl border border-white/20 z-50 hover:bg-blue-600/80 transition-all"
+        aria-label="Add Event"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+        </svg>
+      </button>
 
 
-      {/* Bottom buttons: Dashboard | Calendar | AI Assistant */}
+      {/* Bottom buttons: Dashboard | Calendar */}
       <div className="fixed bottom-0 left-0 right-0 p-3 pb-7 z-[9999]">
         <div className="max-w-md mx-auto grid grid-cols-3 gap-3">
           <button
             onClick={() => router.push('/')}
-            className="h-12 w-full rounded-2xl bg-white text-gray-700 font-medium border-2 border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
+            className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-medium border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
           >
             Dashboard
           </button>
           <button
-            className="h-12 w-full rounded-2xl bg-gray-900 text-white font-semibold shadow-lg"
+            className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-semibold border-2 border-white/50 shadow-2xl"
             disabled
             aria-current="page"
           >
             Calendar
           </button>
-          <button
-            onClick={() => router.push('/ai')}
-            className="h-12 w-full rounded-2xl bg-white text-gray-700 font-medium border-2 border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
-          >
-            AI Assistant
-          </button>
         </div>
       </div>
 
-      {/* --- Focus Area Rings (Categories) --- */}
-      <div className="relative z-10">
-        {/* Subtle scroll indicators */}
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-6 h-6 bg-gradient-to-r from-white to-transparent pointer-events-none z-10" />
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-6 h-6 bg-gradient-to-l from-white to-transparent pointer-events-none z-10" />
-        
-        <div ref={focusRingsRef} className="flex flex-row gap-2 px-4 select-none mt-8 mb-6 overflow-x-auto scroll-smooth scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300">
-          <div className="flex flex-row gap-2 min-w-max px-2">
-        {[...focusAreas].reverse().map(({ label, timeSpent, goal, days, color }, index) => {
-          // Day-aware calculations using TODAY's logged time from `days`
-          const todayAbbrev = DAYS[new Date().getDay()];
-          const goalNum = Number(goal || 0);
-          const daySpent = Number((days && days[todayAbbrev]) || 0);
-          
-          // Calculate progress percentages
-          const isOverGoal = daySpent > goalNum;
-          const percentRaw = goalNum > 0 ? (daySpent / goalNum) * 100 : 0;
-          const percent = Math.min(percentRaw, 100).toFixed(0);
-          
-          // For over-amount, calculate how much over as a percentage
-          const overAmountRaw = goalNum > 0 ? ((daySpent - goalNum) / goalNum) * 100 : 0;
-          const overAmount = isOverGoal ? Math.min(overAmountRaw, 100).toFixed(0) : 0;
-
-          const category = { label, timeSpent, goal, days, color };
-          const areaColor = category?.color || "#6B7280";
-          
-          // Center label shows how much LEFT/OVER for today (day-aware)
-          const centerAmount = Math.abs((goalNum || 0) - (daySpent || 0));
-          return (
-            <div 
-              key={label} 
-              className="flex flex-col items-center pointer-events-auto cursor-pointer hover:opacity-80 transition-opacity"
-              onClick={() => {
-                // Navigate to main page with focus area selected and scroll to top
-                router.push(`/?focus=${encodeURIComponent(label)}&scroll=top`);
-              }}
-              title={`Click to view ${label} details`}
-            >
-              {/* SVG ring progress */}
-              <svg width={54} height={54} viewBox="0 0 36 36" className="block mb-1">
-                {/* Track */}
-                <path
-                  className="text-gray-300"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  fill="none"
-                  d="M18 2.0845
-                     a 15.9155 15.9155 0 0 1 0 31.831
-                     a 15.9155 15.9155 0 0 1 0 -31.831"
-                />
-                {/* Progress ring (up to goal) */}
-                <path
-                  stroke={areaColor}
-                  strokeOpacity={isOverGoal ? "0.3" : "0.55"}
-                  strokeWidth="3"
-                  strokeDasharray={`${percent}, 100`}
-                  strokeLinecap="round"
-                  fill="none"
-                  transform="rotate(-90 18 18)"
-                  d="M18 2.0845
-                     a 15.9155 15.9155 0 0 1 0 31.831
-                     a 15.9155 15.9155 0 0 1 0 -31.831"
-                />
-                {/* Over ring (scaled inside) - more prominent when over goal */}
-                {isOverGoal && overAmount > 0 && (
-                  <g transform="scale(0.88) translate(2.2 2.2)">
-                    <path
-                      stroke={areaColor}
-                      strokeOpacity="0.8"
-                      strokeWidth="2.5"
-                      strokeDasharray={`${overAmount}, 100`}
-                      strokeLinecap="round"
-                      fill="none"
-                      transform="rotate(-90 18 18)"
-                      d="M18 2.0845
-                         a 15.9155 15.9155 0 0 1 0 31.831
-                         a 15.9155 15.9155 0 0 1 0 -31.831"
-                    />
-                  </g>
-                )}
-                {/* Center label */}
-                <foreignObject x="8" y="8" width="20" height="20">
-                  <div xmlns="http://www.w3.org/1999/xhtml" className="w-full h-full flex flex-col items-center justify-center leading-tight">
-                    <div className={`text-[7px] font-bold ${isOverGoal ? 'text-red-600' : 'text-[#374151]'}`}>
-                      {formatCenterAmount(centerAmount)}
-                    </div>
-                    <div className={`text-[5px] uppercase -mt-0.5 ${isOverGoal ? 'text-red-500 font-semibold' : 'text-gray-500'}`}>
-                      {isOverGoal ? 'OVER' : 'LEFT'}
-                    </div>
-                  </div>
-                </foreignObject>
-              </svg>
-              <div className="text-xs font-medium text-[#374151] truncate max-w-[60px]">{label}</div>
-            </div>
-          );
-        })}
-      </div>
-        </div>
-      </div>
 
       {/* Add Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center z-50 pb-20">
-          <div className={`bg-white rounded-lg shadow-lg p-4 w-[92%] max-w-md ${showCustomRepeat ? 'max-h-[90vh] flex flex-col' : ''}`}>
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 pb-20">
+          <div className={`bg-white/90 backdrop-blur-xl rounded-xl shadow-2xl border-2 border-white/60 p-4 w-[92%] max-w-md ${showCustomRepeat ? 'max-h-[90vh] flex flex-col' : ''}`}>
             <div className="flex justify-between items-center mb-2">
-              <h3 className="font-semibold">New Event</h3>
-              <button className="text-sm" onClick={() => { setShowModal(false); setDraft(DEFAULT_DRAFT); }}>Cancel</button>
+              <h3 className="font-semibold text-black">New Event</h3>
+              <button className="text-sm text-black" onClick={() => { setShowModal(false); setDraft(DEFAULT_DRAFT); }}>Cancel</button>
             </div>
 
             <div className={showCustomRepeat ? 'flex-1 overflow-y-auto' : ''}>
-              <label className="text-sm">Title</label>
-            <input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} className="w-full border rounded px-3 py-2 mb-3" placeholder="e.g., Product Development" />
+              <label className="text-sm text-black">Title</label>
+            <input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} className="w-full border rounded px-3 py-2 mb-3 text-black" placeholder="e.g., Product Development" />
 
-            <label className="text-sm">Focus Area</label>
-            <select value={draft.area} onChange={(e) => setDraft({ ...draft, area: e.target.value })} className="w-full border rounded px-3 py-2 mb-3">
+            <label className="text-sm text-black">Focus Area</label>
+            <select value={draft.area} onChange={(e) => setDraft({ ...draft, area: e.target.value })} className="w-full border rounded px-3 py-2 mb-3 text-black">
               <option value="">(none)</option>
               {focusAreas.map(a => (<option key={a.label} value={a.label}>{a.label}</option>))}
             </select>
             <div className="flex items-center gap-2 mb-3">
               <div className="w-4 h-4 rounded-full border" style={{ background: getAreaColor(draft.area) }} />
-              <span className="text-xs text-gray-600">Event color follows the Focus Area</span>
+              <span className="text-xs text-black">Event color follows the Focus Area</span>
             </div>
 
-            <label className="text-sm">Date</label>
+            <label className="text-sm text-black">Date</label>
             <div className="relative mb-3">
               <div
                 role="button"
                 tabIndex={0}
-                className="w-full border rounded px-3 py-2 text-left bg-white cursor-pointer"
+                className="w-full border rounded px-3 py-2 text-left bg-white cursor-pointer text-black"
                 onClick={() => setShowAddDatePicker(prev => !prev)}
                 onKeyPress={e => { if (e.key === 'Enter' || e.key === ' ') setShowAddDatePicker(prev => !prev); }}
               >
@@ -1864,7 +2259,7 @@ function CalendarContent() {
 
             <div className="grid grid-cols-2 gap-2 mb-3 items-start overflow-hidden">
               <div className="pr-1 min-w-0">
-                <label className="text-sm">Start</label>
+                <label className="text-sm text-black">Start</label>
                 <input
                   type="time"
                   value={draft.start}
@@ -1873,19 +2268,19 @@ function CalendarContent() {
                     const newEnd = endFromStartAndDur(newStart, editDurMs);
                     setDraft((prev) => ({ ...prev, start: newStart, end: newEnd }));
                   }}
-                  className="w-full min-w-0 border rounded px-3 py-2 sm:max-w-full max-w-[160px]"
+                  className="w-full min-w-0 border rounded px-3 py-2 sm:max-w-full max-w-[160px] text-black"
                   min="00:00"
                   max="23:59"
                   style={{ width: '100%' }}
                 />
               </div>
               <div className="pl-1 min-w-0">
-                <label className="text-sm">End</label>
+                <label className="text-sm text-black">End</label>
                 <input
                   type="time"
                   value={draft.end}
                   onChange={(e) => setDraft({ ...draft, end: e.target.value })}
-                  className="w-full min-w-0 border rounded px-3 py-2 sm:max-w-full max-w-[160px]"
+                  className="w-full min-w-0 border rounded px-3 py-2 sm:max-w-full max-w-[160px] text-black"
                   min="00:00"
                   max="23:59"
                   style={{ width: '100%' }}
@@ -1893,11 +2288,11 @@ function CalendarContent() {
               </div>
             </div>
 
-            <label className="text-sm">Notes</label>
+            <label className="text-sm text-black">Notes</label>
             <textarea
               value={draft.notes}
               onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
-              className="w-full border rounded px-3 py-2 mb-4"
+              className="w-full border rounded px-3 py-2 mb-4 text-black"
               rows={3}
               placeholder="What will you accomplish during this timeframe?"
             />
@@ -1918,13 +2313,13 @@ function CalendarContent() {
                   }}
                   className="w-4 h-4"
                 />
-                <label htmlFor="isRepeating" className="text-sm font-medium">Do you want this to be a repeating event?</label>
+                <label htmlFor="isRepeating" className="text-sm font-medium text-black">Do you want this to be a repeating event?</label>
               </div>
 
               {isRepeating && (
                 <div className="ml-6 space-y-3">
                   <div>
-                    <label className="text-sm">Repeat</label>
+                    <label className="text-sm text-black">Repeat</label>
                     <select
                       value={repeatType}
                       onChange={(e) => {
@@ -1935,7 +2330,7 @@ function CalendarContent() {
                           setShowCustomRepeat(false);
                         }
                       }}
-                      className="w-full border rounded px-3 py-2 mt-1"
+                      className="w-full border rounded px-3 py-2 mt-1 text-black"
                     >
                       <option value="none">None</option>
                       <option value="daily">Daily</option>
@@ -1949,11 +2344,11 @@ function CalendarContent() {
                   {showCustomRepeat && (
                     <div className="bg-gray-50 p-3 rounded border">
                       <div className="mb-3">
-                        <label className="text-sm">Frequency</label>
+                        <label className="text-sm text-black">Frequency</label>
                         <select
                           value={customRepeat.frequency}
                           onChange={(e) => setCustomRepeat({ ...customRepeat, frequency: e.target.value })}
-                          className="w-full border rounded px-3 py-2 mt-1"
+                          className="w-full border rounded px-3 py-2 mt-1 text-black"
                         >
                           <option value="daily">Daily</option>
                           <option value="weekly">Weekly</option>
@@ -1963,7 +2358,7 @@ function CalendarContent() {
                       </div>
 
                       <div className="mb-3">
-                        <label className="text-sm">Every</label>
+                        <label className="text-sm text-black">Every</label>
                         <div className="flex items-center gap-2 mt-1">
                           <input
                             type="number"
@@ -1971,9 +2366,9 @@ function CalendarContent() {
                             max="99"
                             value={customRepeat.interval}
                             onChange={(e) => setCustomRepeat({ ...customRepeat, interval: parseInt(e.target.value) || 1 })}
-                            className="w-16 border rounded px-2 py-1 text-center"
+                            className="w-16 border rounded px-2 py-1 text-center text-black"
                           />
-                          <span className="text-sm text-gray-600">
+                          <span className="text-sm text-black">
                             {customRepeat.frequency === 'daily' ? 'day(s)' :
                              customRepeat.frequency === 'weekly' ? 'week(s)' :
                              customRepeat.frequency === 'monthly' ? 'month(s)' : 'year(s)'}
@@ -1983,7 +2378,7 @@ function CalendarContent() {
 
                       {customRepeat.frequency === 'weekly' && (
                         <div className="mb-3">
-                          <label className="text-sm">Repeat on:</label>
+                          <label className="text-sm text-black">Repeat on:</label>
                           <div className="flex gap-1 mt-2">
                             {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
                               <button
@@ -2008,7 +2403,7 @@ function CalendarContent() {
                         </div>
                       )}
 
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-black">
                         Events will repeat for up to 1 year from the start date.
                       </div>
                     </div>
@@ -2019,7 +2414,7 @@ function CalendarContent() {
             </div>
 
             <div className={`flex justify-end gap-2 ${showCustomRepeat ? 'mt-4 flex-shrink-0' : ''}`}>
-              <button className="px-4 py-2 bg-gray-200 rounded" onClick={() => { setShowModal(false); setDraft(DEFAULT_DRAFT); }}>Close</button>
+              <button className="px-4 py-2 bg-gray-200 rounded text-black" onClick={() => { setShowModal(false); setDraft(DEFAULT_DRAFT); }}>Close</button>
               <button className="px-4 py-2 bg-[#6B7280] text-white rounded" onClick={addEvent}>Add</button>
             </div>
           </div>
@@ -2027,32 +2422,32 @@ function CalendarContent() {
       )}
 
       {showEditModal && (
-        <div className="fixed inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-4 w-[92%] max-w-md">
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 pb-20">
+          <div className="bg-white/90 backdrop-blur-xl rounded-xl shadow-2xl border-2 border-white/60 p-4 w-[92%] max-w-md">
             <div className="flex justify-between items-center mb-2">
-              <h3 className="font-semibold">Edit Event</h3>
-              <button className="text-sm" onClick={() => { setShowEditModal(false); setEditingId(null); }}>Close</button>
+              <h3 className="font-semibold text-black">Edit Event</h3>
+              <button className="text-sm text-black" onClick={() => { setShowEditModal(false); setEditingId(null); }}>Cancel</button>
             </div>
 
-            <label className="text-sm">Title</label>
-            <input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} className="w-full border rounded px-3 py-2 mb-3" />
+            <label className="text-sm text-black">Title</label>
+            <input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} className="w-full border rounded px-3 py-2 mb-3 text-black" placeholder="e.g., Product Development" />
 
-            <label className="text-sm">Focus Area</label>
-            <select value={draft.area} onChange={(e) => setDraft({ ...draft, area: e.target.value })} className="w-full border rounded px-3 py-2 mb-3">
+            <label className="text-sm text-black">Focus Area</label>
+            <select value={draft.area} onChange={(e) => setDraft({ ...draft, area: e.target.value })} className="w-full border rounded px-3 py-2 mb-3 text-black">
               <option value="">(none)</option>
               {focusAreas.map(a => (<option key={a.label} value={a.label}>{a.label}</option>))}
             </select>
             <div className="flex items-center gap-2 mb-3">
               <div className="w-4 h-4 rounded-full border" style={{ background: getAreaColor(draft.area || '') }} />
-              <span className="text-xs text-gray-600">Color auto-updates from Focus Area</span>
+              <span className="text-xs text-black">Event color follows the Focus Area</span>
             </div>
 
-            <label className="text-sm">Date</label>
+            <label className="text-sm text-black">Date</label>
             <div className="relative mb-3">
               <div
                 role="button"
                 tabIndex={0}
-                className="w-full border rounded px-3 py-2 text-left bg-white cursor-pointer"
+                className="w-full border rounded px-3 py-2 text-left bg-white cursor-pointer text-black"
                 onClick={() => setShowEditDatePicker(prev => !prev)}
                 onKeyPress={e => { if (e.key === 'Enter' || e.key === ' ') setShowEditDatePicker(prev => !prev); }}
               >
@@ -2071,7 +2466,7 @@ function CalendarContent() {
 
             <div className="grid grid-cols-2 gap-2 mb-3 items-start overflow-hidden">
               <div className="pr-1 min-w-0">
-                <label className="text-sm">Start</label>
+                <label className="text-sm text-black">Start</label>
                 <input
                   type="time"
                   value={draft.start}
@@ -2080,14 +2475,14 @@ function CalendarContent() {
                     const newEnd = endFromStartAndDur(newStart, editDurMs);
                     setDraft((prev) => ({ ...prev, start: newStart, end: newEnd }));
                   }}
-                  className="w-full min-w-0 border rounded px-3 py-2 sm:max-w-full max-w-[160px]"
+                  className="w-full min-w-0 border rounded px-3 py-2 sm:max-w-full max-w-[160px] text-black"
                   min="00:00"
                   max="23:59"
                   style={{ width: '100%' }}
                 />
               </div>
               <div className="pl-1 min-w-0">
-                <label className="text-sm">End</label>
+                <label className="text-sm text-black">End</label>
                 <input
                   type="time"
                   value={draft.end}
@@ -2097,7 +2492,7 @@ function CalendarContent() {
                     if (dur > 0) setEditDurMs(dur);
                     setDraft((prev) => ({ ...prev, end: newEnd }));
                   }}
-                  className="w-full min-w-0 border rounded px-3 py-2 sm:max-w-full max-w-[160px]"
+                  className="w-full min-w-0 border rounded px-3 py-2 sm:max-w-full max-w-[160px] text-black"
                   min="00:00"
                   max="23:59"
                   style={{ width: '100%' }}
@@ -2105,8 +2500,8 @@ function CalendarContent() {
               </div>
             </div>
 
-            <label className="text-sm">Notes</label>
-            <textarea value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} className="w-full border rounded px-3 py-2 mb-4" rows={3} />
+            <label className="text-sm text-black">Notes</label>
+            <textarea value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} className="w-full border rounded px-3 py-2 mb-4 text-black" rows={3} placeholder="What will you accomplish during this timeframe?" />
 
             <div className="flex justify-between items-center">
               <div className="flex gap-2">
@@ -2129,10 +2524,10 @@ function CalendarContent() {
                     );
                   }
                 })()}
-                <button className="px-4 py-2 bg-gray-200 rounded" onClick={duplicateEvent}>Duplicate</button>
+                <button className="px-4 py-2 bg-gray-200 rounded text-black" onClick={duplicateEvent}>Duplicate</button>
               </div>
               <div className="flex gap-2">
-                <button className="px-4 py-2 bg-gray-200 rounded" onClick={() => { setShowEditModal(false); setEditingId(null); }}>Cancel</button>
+                <button className="px-4 py-2 bg-gray-200 rounded text-black" onClick={() => { setShowEditModal(false); setEditingId(null); }}>Cancel</button>
                 <button className="px-4 py-2 bg-[#6B7280] text-white rounded" onClick={updateEvent}>Save</button>
               </div>
             </div>

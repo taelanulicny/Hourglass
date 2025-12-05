@@ -1378,7 +1378,7 @@ function HomeContent() {
         <div className="flex flex-col gap-6 w-full max-w-md mx-auto pt-16">
           {/* Focus area module */}
           <div className="w-full flex flex-col gap-4">
-            <div className="bg-white rounded-xl shadow-md p-6">
+            <div className="bg-white/40 backdrop-blur-xl rounded-xl shadow-2xl border border-white/50 p-6">
               {/* Removed header: title/date nav */}
               <div className="flex items-center gap-6 w-full">
                 {/* Left: label + ring + small texts (same proportions as dashboard) */}
@@ -1648,8 +1648,8 @@ function HomeContent() {
                 </div>
               {/* Add Event Modal */}
               {showNewEventForm && (
-                <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-50">
-                  <div className="bg-white rounded-lg shadow-lg p-5 w-[90%] max-w-md">
+                <div className="fixed inset-0 backdrop-blur-sm bg-black/20 flex items-center justify-center z-50">
+                  <div className="bg-white/60 backdrop-blur-xl rounded-lg shadow-2xl border border-white/60 p-5 w-[90%] max-w-md">
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="text-lg font-semibold text-[#374151]">Plan Future Session</h3>
                       <button onClick={() => setShowNewEventForm(false)} className="text-sm text-gray-500">Close</button>
@@ -1911,7 +1911,7 @@ function HomeContent() {
         {/* Floating notes button for focus area view */}
         <button
           onClick={() => router.push('/notes')}
-          className="fixed bottom-20 right-4 bg-[#6B7280] text-white rounded-full w-12 h-12 flex items-center justify-center text-2xl shadow-md z-[10000]"
+          className="fixed bottom-20 right-4 bg-[#6B7280]/30 backdrop-blur-lg text-gray-700 rounded-full w-12 h-12 flex items-center justify-center text-2xl shadow-md border border-white/20 z-[10000]"
           aria-label="Go to Notes"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1919,11 +1919,11 @@ function HomeContent() {
           </svg>
         </button>
 
-        {/* Bottom navigation: Dashboard | Calendar | AI Assistant */}
+        {/* Bottom navigation: Dashboard | Calendar */}
         <div className="fixed bottom-0 left-0 right-0 p-3 pb-7 z-[9999]">
           <div className="max-w-md mx-auto grid grid-cols-3 gap-3">
             <button
-              className="h-12 w-full rounded-2xl bg-white text-gray-700 font-medium border-2 border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
+              className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-semibold border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
               onClick={() => { setShowModal(false); setSelectedFocusArea(null); }}
               aria-current="page"
             >
@@ -1931,13 +1931,13 @@ function HomeContent() {
             </button>
             <button
               onClick={() => router.push('/calendar')}
-              className="h-12 w-full rounded-2xl bg-white text-gray-700 font-medium border-2 border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
+              className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-medium border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
             >
               Calendar
             </button>
             <button
               onClick={() => router.push('/connect')}
-              className="h-12 w-full rounded-2xl bg-white text-gray-700 font-medium border-2 border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
+              className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-medium border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
             >
               Discover
             </button>
@@ -1948,7 +1948,7 @@ function HomeContent() {
         <div className="fixed bottom-0 left-0 right-0 p-3 pb-7 z-[99999]">
           <div className="max-w-md mx-auto grid grid-cols-3 gap-3">
             <button
-              className="h-12 w-full rounded-2xl bg-white text-gray-700 font-medium border-2 border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
+              className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-semibold border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
               onClick={() => { setShowModal(false); setSelectedFocusArea(null); }}
               aria-current="page"
             >
@@ -1956,13 +1956,13 @@ function HomeContent() {
             </button>
             <button
               onClick={() => router.push('/calendar')}
-              className="h-12 w-full rounded-2xl bg-white text-gray-700 font-medium border-2 border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
+              className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-medium border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
             >
               Calendar
             </button>
             <button
               onClick={() => router.push('/connect')}
-              className="h-12 w-full rounded-2xl bg-white text-gray-700 font-medium border-2 border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
+              className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-medium border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
             >
               Discover
             </button>
@@ -1975,7 +1975,7 @@ function HomeContent() {
 
   return (
     <>
-            <div className="min-h-screen bg-white text-gray-900 pb-40 font-sans flex flex-col gap-6">
+            <div className="min-h-screen bg-gradient-to-br from-blue-100 via-purple-50 to-pink-50 text-gray-900 pb-40 font-sans flex flex-col gap-6 px-4">
       <header className="w-full pt-16 pb-3 px-4 flex justify-between items-center">
         <div className="flex items-center gap-2">
           <button
@@ -2010,7 +2010,7 @@ function HomeContent() {
             onClick={() => router.push('/settings')}
             title="Settings"
             aria-label="Settings"
-            className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors duration-200"
+            className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white/40 backdrop-blur-xl border border-white/50 text-gray-700 hover:bg-white/50 hover:text-gray-900 transition-all duration-200"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -2030,7 +2030,7 @@ function HomeContent() {
       </header>
 
 
-      <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+      <div className="bg-white/40 backdrop-blur-xl rounded-2xl p-6 shadow-2xl border border-white/50">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-gray-900">Focus Areas</h2>
           <div className={`text-sm whitespace-nowrap ${plannedToday > availableHours ? 'text-red-600' : 'text-gray-600'}`}>
@@ -2038,7 +2038,7 @@ function HomeContent() {
           </div>
         </div>
         {overByToday > 0 && (
-          <div className="rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm px-4 py-3 mb-4">
+          <div className="rounded-xl border border-red-200/30 bg-red-50/20 backdrop-blur-lg text-red-700 text-sm px-4 py-3 mb-4">
             Your focus area daily goals add up to {fmt1(plannedToday)}hrs (over by {fmt1(overByToday)}hrs). Please reduce one or more daily goals so the total is {availableHours}hrs or less.
           </div>
         )}
@@ -2077,7 +2077,7 @@ function HomeContent() {
                 const inThisWeek = todayLocal >= startOfWeek && todayLocal <= endOfWeek;
                 setSelectedDateFA(ymd(inThisWeek ? todayLocal : startOfWeek));
               }}
-              className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 w-full flex flex-row items-center gap-4 relative cursor-pointer hover:shadow-md transition-shadow duration-200"
+              className="bg-white/40 backdrop-blur-xl p-4 rounded-xl shadow-2xl border border-white/50 w-full flex flex-row items-center gap-4 relative cursor-pointer hover:shadow-2xl hover:bg-white/50 transition-all duration-200"
             >
               {canEditWeek && (
                 <button
@@ -2095,8 +2095,8 @@ function HomeContent() {
                   ⋯
                 </button>
               )}
-              <div className="flex flex-row items-center gap-5 w-full">
-                <div className="flex flex-col items-center w-28">
+              <div className="flex flex-row items-center gap-4 w-full min-w-0">
+                <div className="flex flex-col items-center w-28 flex-shrink-0">
                   <div
                     className={`${label.length > 12 ? 'text-xs' : 'text-sm'} font-bold text-gray-900 text-center`}
                   >
@@ -2154,7 +2154,7 @@ function HomeContent() {
                     Daily Goal = {fmt1(goal ?? 0)}{hrUnit(goal ?? 0)}
                   </div>
                 </div>
-                <div className="flex justify-center items-center gap-4 w-full py-3">
+                <div className="flex justify-center items-center gap-3 sm:gap-4 flex-1 min-w-0 pt-4 pb-3 overflow-hidden">
                   {daysOfWeek.map((day) => {
                     const spent = (days?.[day] ?? 0);
                     const goalHrs = Number(goal ?? 0);
@@ -2162,8 +2162,8 @@ function HomeContent() {
                     const pct = goalHrs > 0 ? Math.min(spent / goalHrs, 1) : 0;
                     const isOver = goalHrs > 0 && spent > goalHrs;
                     return (
-                      <div key={day} className="relative flex flex-col items-center">
-                        <div className="relative w-5 h-20 flex flex-col items-center justify-end">
+                      <div key={day} className="relative flex flex-col items-center flex-shrink-0">
+                        <div className="relative w-4 sm:w-5 h-20 flex flex-col items-center justify-end">
                           {/* static track: top cap (6), gap (1), bottom body (14) */}
                           <div className="absolute bottom-0 w-full h-full flex flex-col justify-end">
                             <div
@@ -2214,7 +2214,7 @@ function HomeContent() {
               {/* Show the example card when there are no focus areas yet (CURRENT or FUTURE weeks) */}
               <div
                 onClick={() => { setFormError(""); setShowModal(true); }}
-                className="relative bg-white p-3 rounded-xl shadow-md w-full flex flex-row items-center gap-3 opacity-50 cursor-pointer"
+                className="relative bg-white/40 backdrop-blur-xl p-3 rounded-xl shadow-2xl border border-white/50 w-full flex flex-row items-center gap-3 opacity-50 cursor-pointer"
               >
                 <div className="flex flex-col items-center w-28">
                   <div className="text-sm font-semibold text-[#374151] text-center">Add a Focus Area</div>
@@ -2301,11 +2301,7 @@ function HomeContent() {
     <div className="fixed bottom-0 left-0 right-0 p-3 pb-7 z-[9999]">
       <div className="max-w-md mx-auto grid grid-cols-3 gap-3">
         <button
-          className={`h-12 w-full rounded-2xl font-medium border-2 transition-colors duration-200 shadow-sm ${
-            selectedFocusArea 
-              ? 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50' 
-              : 'bg-gray-900 text-white font-semibold shadow-lg border-transparent'
-          }`}
+          className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-semibold border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
           onClick={() => { setShowModal(false); setSelectedFocusArea(null); }}
           aria-current="page"
         >
@@ -2313,22 +2309,16 @@ function HomeContent() {
         </button>
         <button
           onClick={() => router.push('/calendar')}
-          className="h-12 w-full rounded-2xl bg-white text-gray-700 font-medium border-2 border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
+          className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-medium border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
         >
           Calendar
-        </button>
-        <button
-          onClick={() => router.push('/ai')}
-          className="h-12 w-full rounded-2xl bg-white text-gray-700 font-medium border-2 border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
-        >
-          AI Assistant
         </button>
       </div>
     </div>
     {/* Modal for adding a new focus area */}
     {showModal && (
       <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg shadow-lg p-6 w-[90%] max-w-md">
+        <div className="bg-white/60 backdrop-blur-xl rounded-lg shadow-2xl border border-white/60 p-6 w-[90%] max-w-md">
           <h2 className="text-lg font-bold mb-4 text-black">Add a New Focus Area</h2>
           <input
             type="text"
@@ -2429,7 +2419,7 @@ function HomeContent() {
     {/* Modal for renaming a focus area */}
     {renameTarget && (
       <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg shadow-lg p-6 w-[90%] max-w-md">
+        <div className="bg-white/60 backdrop-blur-xl rounded-lg shadow-2xl border border-white/60 p-6 w-[90%] max-w-md">
           <h2 className="text-lg font-bold mb-4 text-black">Edit Focus Area</h2>
           <p className="text-sm text-gray-600 mb-3">Changing the name or goal will update it everywhere, including today&apos;s dashboard, your calendar events, and saved notes.</p>
           
@@ -2539,7 +2529,7 @@ function HomeContent() {
     {/* Modal for confirming deletion of a focus area */}
     {deleteTarget && (
       <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg shadow-lg p-6 w-[90%] max-w-md">
+        <div className="bg-white/60 backdrop-blur-xl rounded-lg shadow-2xl border border-white/60 p-6 w-[90%] max-w-md">
           <h2 className="text-lg font-bold mb-4 text-black">Delete Focus Area</h2>
           <p className="mb-6 text-black">Are you sure you want to delete <strong>{deleteTarget}</strong>?</p>
           <div className="flex justify-end gap-3">
@@ -2590,7 +2580,7 @@ function HomeContent() {
     {/* Floating notes button for dashboard view */}
     <button
       onClick={() => router.push('/notes')}
-      className="fixed bottom-20 right-4 bg-[#6B7280] text-white rounded-full w-12 h-12 flex items-center justify-center text-2xl shadow-md z-[10000]"
+      className="fixed bottom-20 right-4 bg-white/40 backdrop-blur-xl text-gray-700 rounded-full w-12 h-12 flex items-center justify-center text-2xl shadow-2xl border-2 border-white/50 hover:bg-white/50 transition-all duration-200 z-[10000]"
       aria-label="Go to Notes"
     >
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2602,7 +2592,7 @@ function HomeContent() {
     <div className="fixed bottom-0 left-0 right-0 p-3 pb-7 z-[99999]">
       <div className="max-w-md mx-auto grid grid-cols-3 gap-3">
         <button
-          className="h-12 w-full rounded-2xl bg-gray-900 text-white font-semibold shadow-lg"
+          className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-semibold border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
           onClick={() => { setShowModal(false); setSelectedFocusArea(null); }}
           aria-current="page"
         >
@@ -2610,15 +2600,9 @@ function HomeContent() {
         </button>
         <button
           onClick={() => router.push('/calendar')}
-          className="h-12 w-full rounded-2xl bg-white text-gray-700 font-medium border-2 border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
+          className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-medium border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
         >
           Calendar
-        </button>
-        <button
-          onClick={() => router.push('/ai')}
-          className="h-12 w-full rounded-2xl bg-white text-gray-700 font-medium border-2 border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
-        >
-          AI Assistant
         </button>
       </div>
     </div>

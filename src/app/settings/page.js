@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabaseClient';
-import { DataService } from '@/lib/dataService';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -24,7 +22,6 @@ export default function SettingsPage() {
   const [miscHours, setMiscHours] = useState('0');
   const [timeFormat, setTimeFormat] = useState('12');
   const [weekStart, setWeekStart] = useState('monday');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   // Load sleep and misc hours from local storage on component mount
@@ -55,113 +52,11 @@ export default function SettingsPage() {
     }
   }, []);
 
-  // Check for existing Supabase session on mount
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        // Handle email confirmation redirect with tokens in URL
-        if (window.location.hash.includes('access_token')) {
-          // This is a return from email confirmation - let Supabase handle it
-          const { data, error } = await supabase.auth.getSession();
-          if (data.session && !error) {
-            setIsAuthenticated(true);
-            await DataService.migrateUserData(data.session.user.id);
-            await loadUserProfile(data.session.user.id);
-            // Clear the URL hash to clean up the browser
-            window.history.replaceState({}, document.title, window.location.pathname);
-            alert('Email confirmed successfully! You are now logged in.');
-            return; // Exit early since we handled the auth
-          }
-        }
-
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          setIsAuthenticated(true);
-          // Load user profile data from Supabase
-          await loadUserProfile(session.user.id);
-        }
-      } catch (error) {
-        console.error('Auth check failed:', error);
-      }
-    };
-    
-    checkAuth();
-
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        setIsAuthenticated(true);
-        // Migrate localStorage data to Supabase
-        await DataService.migrateUserData(session.user.id);
-        await loadUserProfile(session.user.id);
-      } else if (event === 'SIGNED_OUT') {
-        setIsAuthenticated(false);
-        setEmail('');
-        setPassword('');
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  // Update user profile in Supabase
-  const updateUserProfile = async (updates) => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) return;
-
-      const { error } = await supabase
-        .from('user_profiles')
-        .upsert({
-          user_id: session.user.id,
-          ...updates
-        });
-
-      if (error) {
-        console.error('Failed to update profile:', error);
-        // Continue with localStorage fallback
-      }
-    } catch (error) {
-      console.error('Error updating profile:', error);
-    }
-  };
-
-  // Load user profile from Supabase
-  const loadUserProfile = async (userId) => {
-    try {
-      const { data: profile, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-
-      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
-        console.error('Failed to load profile:', error);
-        return;
-      }
-
-      if (profile) {
-        if (profile.username) setUserName(profile.username);
-        if (profile.email) setEmail(profile.email);
-        if (profile.profile_picture) setProfilePicture(profile.profile_picture);
-        if (profile.sleep_hours) setDefaultGoal(profile.sleep_hours.toString());
-        if (profile.misc_hours) setMiscHours(profile.misc_hours.toString());
-        
-        // Load password from localStorage if available, otherwise show placeholder
-        const savedPassword = localStorage.getItem('userPassword');
-        setPassword(savedPassword || '********');
-      }
-    } catch (error) {
-      console.error('Error loading profile:', error);
-    }
-  };
 
   // Save sleep hours to local storage when it changes
   const handleSleepHoursChange = (value) => {
     setDefaultGoal(value);
     localStorage.setItem('sleepHours', value);
-    // Also update Supabase if authenticated
-    updateUserProfile({ sleep_hours: parseInt(value) });
     // Trigger a custom event to notify the main page
     window.dispatchEvent(new CustomEvent('sleepHoursChanged', { detail: value }));
   };
@@ -171,12 +66,8 @@ export default function SettingsPage() {
     setMiscHours(value);
     if (value && parseFloat(value) > 0) {
       localStorage.setItem('miscHours', value);
-      // Also update Supabase if authenticated
-      updateUserProfile({ misc_hours: parseInt(value) });
     } else {
       localStorage.removeItem('miscHours');
-      // Also update Supabase if authenticated
-      updateUserProfile({ misc_hours: null });
     }
     // Trigger a custom event to notify the main page
     window.dispatchEvent(new CustomEvent('miscHoursChanged', { detail: value }));
@@ -265,8 +156,6 @@ export default function SettingsPage() {
         const base64String = e.target.result;
         setProfilePicture(base64String);
         localStorage.setItem('profilePicture', base64String);
-        // Also update Supabase if authenticated
-        updateUserProfile({ profile_picture: base64String });
       };
       reader.readAsDataURL(file);
     }
@@ -275,8 +164,6 @@ export default function SettingsPage() {
   const removeProfilePicture = () => {
     setProfilePicture(null);
     localStorage.removeItem('profilePicture');
-    // Also update Supabase if authenticated
-    updateUserProfile({ profile_picture: null });
   };
 
   const handleEmailChange = (value) => {
@@ -303,46 +190,24 @@ export default function SettingsPage() {
     setShowTempPassword(false);
   };
 
-  const finishCreatingAccount = async () => {
+  const finishCreatingAccount = () => {
     if (!tempEmail || !tempPassword) {
       alert('Please fill in both email and password.');
       return;
     }
     
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email: tempEmail,
-        password: tempPassword,
-        options: {
-          emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/settings` : undefined
-        }
-      });
-
-      if (error) {
-        alert(`Error creating account: ${error.message}`);
-        return;
-      }
-
-      if (data.user) {
-        // Save to localStorage as backup during transition
-        setEmail(tempEmail);
-        setPassword('********');
-        localStorage.setItem('userEmail', tempEmail);
-        
-        // Close modal and clear temp values
-        setShowAccountModal(false);
-        setTempEmail('');
-        setTempPassword('');
-        
-        alert('Account created successfully! Check your email to verify.');
-      }
-    } catch (error) {
-      console.error('Account creation failed:', error);
-      alert('Account creation failed. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
+    // Save to localStorage
+    setEmail(tempEmail);
+    setPassword(tempPassword);
+    localStorage.setItem('userEmail', tempEmail);
+    localStorage.setItem('userPassword', tempPassword);
+    
+    // Close modal and clear temp values
+    setShowAccountModal(false);
+    setTempEmail('');
+    setTempPassword('');
+    
+    alert('Account information saved!');
   };
 
   const openLoginModal = () => {
@@ -359,77 +224,41 @@ export default function SettingsPage() {
     setShowLoginPassword(false);
   };
 
-  const handleLogin = async () => {
+  const handleLogin = () => {
     if (!loginEmail || !loginPassword) {
       alert('Please fill in both email and password.');
       return;
     }
     
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: loginEmail,
-        password: loginPassword,
-      });
-
-      if (error) {
-        alert(`Login failed: ${error.message}`);
-        return;
-      }
-
-      if (data.user) {
-        // Set UI state to show logged in
-        setEmail(loginEmail);
-        setPassword(loginPassword); // Show the actual password entered
-        
-        // Save to localStorage as backup
-        localStorage.setItem('userEmail', loginEmail);
-        localStorage.setItem('userPassword', loginPassword);
-        
-        // Close modal and clear temp values
-        closeLoginModal();
-        
-        alert('Login successful!');
-      }
-    } catch (error) {
-      console.error('Login failed:', error);
-      alert('Login failed. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
+    // Set UI state
+    setEmail(loginEmail);
+    setPassword(loginPassword);
+    
+    // Save to localStorage
+    localStorage.setItem('userEmail', loginEmail);
+    localStorage.setItem('userPassword', loginPassword);
+    
+    // Close modal and clear temp values
+    closeLoginModal();
+    
+    alert('Login successful!');
   };
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
     if (confirm('Are you sure you want to logout? This will clear your account information.')) {
-      setIsLoading(true);
-      try {
-        const { error } = await supabase.auth.signOut();
-        
-        if (error) {
-          alert(`Logout failed: ${error.message}`);
-          return;
-        }
-
-        // Clear account data from state and localStorage
-        setEmail('');
-        setPassword('');
-        setShowPassword(false);
-        setIsAuthenticated(false);
-        localStorage.removeItem('userEmail');
-        localStorage.removeItem('userPassword');
-        alert('Logged out successfully!');
-      } catch (error) {
-        console.error('Logout failed:', error);
-        alert('Logout failed. Please try again.');
-      } finally {
-        setIsLoading(false);
-      }
+      // Clear account data from state and localStorage
+      setEmail('');
+      setPassword('');
+      setShowPassword(false);
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('userPassword');
+      alert('Logged out successfully!');
     }
   };
 
   // Check authentication state for showing buttons
-  const showCreateAccountButton = !isAuthenticated && (!email && !password);
-  const showLogoutButton = isAuthenticated || (email && email.trim() !== '');
+  const showCreateAccountButton = !email && !password;
+  const showLogoutButton = email && email.trim() !== '';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-900">
@@ -550,8 +379,6 @@ export default function SettingsPage() {
                 onChange={(e) => {
                   setUserName(e.target.value);
                   localStorage.setItem('userName', e.target.value);
-                  // Also update Supabase if authenticated
-                  updateUserProfile({ username: e.target.value });
                 }}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#8CA4AF] focus:border-transparent transition-colors"
                 placeholder="Enter your name"

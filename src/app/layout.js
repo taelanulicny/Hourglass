@@ -2,9 +2,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import dynamic from "next/dynamic";
 
-// Dynamically import PWA components with SSR disabled
+// Dynamically import PWA components (client-side only)
 const PWAInstallPrompt = dynamic(() => import("../components/PWAInstallPrompt"), {
-  ssr: false,
   loading: () => null
 });
 
