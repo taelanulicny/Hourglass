@@ -40,6 +40,19 @@ function loadFocusAreasSafe() {
   }
 }
 
+// Helper function to convert hex to RGBA
+function hexToRGBA(hex, alpha = 0.55) {
+  if (!hex) return `rgba(140, 164, 175, ${alpha})`;
+  let h = hex.trim();
+  if (h[0] === '#') h = h.slice(1);
+  if (h.length === 3) h = h.split('').map(ch => ch + ch).join('');
+  const num = parseInt(h, 16);
+  const r = (num >> 16) & 255;
+  const g = (num >> 8) & 255;
+  const b = num & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 // Normalize labels for matching
 function normalizeLabel(s) {
   return (s || "").toString().trim().toLowerCase().replace(/[-_]+/g, " ");
@@ -288,16 +301,157 @@ export default function DataPage() {
     return d;
   }, []);
 
+  const [showSideMenu, setShowSideMenu] = useState(false);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 via-purple-50 to-pink-50 text-white pb-24">
       {/* Fixed header */}
       <div className="fixed top-0 left-0 right-0 z-50">
+        {/* Main header content with safe area padding */}
         <div className="bg-white/70 backdrop-blur-xl border-b border-white/30 shadow-lg" style={{ paddingTop: `${Math.max(insets.top, 44)}px` }}>
-          <header className="px-4 pt-4 pb-4 flex items-center justify-between">
-            <h1 className="text-xl font-semibold text-gray-900">Schedule</h1>
+          {/* Top bar */}
+          <header className="px-4 pt-4 pb-4 flex items-center justify-between relative">
+            <div className="flex items-center gap-2">
+              {/* Hamburger menu button */}
+              <button 
+                onClick={() => setShowSideMenu(true)}
+                className="text-gray-900 hover:opacity-70 transition-all duration-200 p-2"
+                aria-label="Open menu"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+            </div>
+            <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center gap-2">
+              <div className="font-semibold text-lg text-gray-900">
+                Schedule
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => router.push('/settings')}
+                title="Settings"
+                aria-label="Settings"
+                className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white/20 backdrop-blur-lg border border-white/20 shadow-lg text-gray-900 hover:bg-white/30 transition-all duration-200"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="w-5 h-5"
+                >
+                  <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              </button>
+            </div>
           </header>
         </div>
       </div>
+      
+      {/* Side Menu */}
+      {showSideMenu && (
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+            onClick={() => setShowSideMenu(false)}
+          />
+          {/* Side menu - positioned below header */}
+          <div 
+            className="fixed left-0 bottom-0 w-64 bg-white/95 backdrop-blur-xl border-r border-white/30 shadow-2xl z-50 overflow-y-auto scroll-smooth rounded-r-2xl"
+            style={{ top: `${Math.max(insets.top, 44) + 76}px` }}
+          >
+            <div className="p-4">
+              {/* View Options */}
+              <div className="mb-8">
+                <div className="space-y-1">
+                  <button
+                    className="w-full text-left px-4 py-3 rounded-lg transition-colors text-gray-900 hover:bg-white/20"
+                    onClick={() => { router.push('/calendar'); setShowSideMenu(false); }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span>Calendar</span>
+                    </div>
+                  </button>
+                  <button
+                    className="w-full text-left px-4 py-3 rounded-lg transition-colors bg-white/30 text-gray-900 font-medium"
+                    onClick={() => { setShowSideMenu(false); }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span>Schedule</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Focus Areas Section */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 mb-3 px-4">Focus Areas</h3>
+                <div className="space-y-2">
+                  {focusAreas.length > 0 ? (
+                    focusAreas.map((area) => {
+                      const areaColor = area.color || COLORS[0];
+                      const isVisible = visibleFocusAreas.has(area.label);
+                      return (
+                        <div
+                          key={area.label}
+                          className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-white/20 transition-colors"
+                        >
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleFocusArea(area.label);
+                            }}
+                            className="flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors"
+                            style={{
+                              backgroundColor: isVisible ? areaColor : 'transparent',
+                              borderColor: areaColor
+                            }}
+                            aria-label={`${isVisible ? 'Hide' : 'Show'} ${area.label}`}
+                          >
+                            {isVisible && (
+                              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            )}
+                          </button>
+                          <div
+                            className="flex-1 flex items-center gap-3 cursor-pointer"
+                            onClick={() => {
+                              router.push(`/?focus=${encodeURIComponent(area.label)}`);
+                              setShowSideMenu(false);
+                            }}
+                          >
+                            <div 
+                              className="w-3 h-3 rounded-full flex-shrink-0" 
+                              style={{ backgroundColor: areaColor }}
+                            />
+                            <span className="text-sm text-gray-900 truncate">{area.label}</span>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="px-4 py-2 text-sm text-gray-600">No focus areas yet</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Main content */}
       <div className="flex-1 overflow-y-auto px-4 scroll-smooth" style={{ paddingTop: `${Math.max(insets.top, 44) + 80}px` }}>
@@ -433,17 +587,4 @@ export default function DataPage() {
       </div>
     </div>
   );
-}
-
-// Helper function to convert hex to RGBA
-function hexToRGBA(hex, alpha = 0.55) {
-  if (!hex) return `rgba(140, 164, 175, ${alpha})`;
-  let h = hex.trim();
-  if (h[0] === '#') h = h.slice(1);
-  if (h.length === 3) h = h.split('').map(ch => ch + ch).join('');
-  const num = parseInt(h, 16);
-  const r = (num >> 16) & 255;
-  const g = (num >> 8) & 255;
-  const b = num & 255;
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
