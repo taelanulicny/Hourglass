@@ -336,50 +336,61 @@ export default function DataPage() {
     }
   }, [isClient, visibleMonth]);
 
-  // Scroll to today when schedule loads (only once ever, using same approach as daily view)
+  // Scroll to today when schedule loads (always scroll to today, like calendar shows current month)
   useEffect(() => {
     if (!isClient) return;
     if (!scheduleContainerRef.current) return;
-    if (!todayRef.current) return;
     if (scheduleWithMonths.length === 0) return;
     
-    // Check if we've already done the initial scroll (persisted in localStorage)
-    const hasScrolledKey = 'schedule:hasInitiallyScrolled';
+    // Check if we've scrolled to today today (date-specific, so it scrolls once per day)
+    const todayDateStr = today.toDateString();
+    const hasScrolledKey = `schedule:hasScrolledToToday:${todayDateStr}`;
     if (typeof window !== 'undefined' && localStorage.getItem(hasScrolledKey) === 'true') {
-      return; // Already scrolled once, don't do it again
+      return; // Already scrolled to today today, don't do it again
     }
     
-    // Delay scroll to today (wait 2 seconds before scrolling, same as daily view)
-    const scrollTimer = setTimeout(() => {
+    // Wait for todayRef to be set, then scroll
+    const scrollToToday = () => {
       if (!scheduleContainerRef.current) return;
       if (!todayRef.current) return;
       
       const container = scheduleContainerRef.current;
       const todayElement = todayRef.current;
       
+      // Verify element is in DOM and has dimensions
+      if (!container.contains(todayElement) || todayElement.offsetHeight === 0) {
+        return; // Not ready yet
+      }
+      
       // Where the container starts relative to the page
       const containerRect = container.getBoundingClientRect();
-      const containerTop = container.scrollTop + containerRect.top;
       
       // Where today's element is relative to the container
       const todayRect = todayElement.getBoundingClientRect();
       const todayTop = todayRect.top - containerRect.top + container.scrollTop;
       
-      // Account for the header height (same buffer approach as daily view)
+      // Account for the header height - position today at the top
       const headerHeight = Math.max(insets.top, 44) + 80;
-      // Aim to put today about 20px below the header (similar to daily view's 240px buffer)
-      const target = Math.max(0, todayTop - headerHeight - 20);
+      const target = Math.max(0, todayTop - headerHeight);
       
       container.scrollTo({ top: target, behavior: 'smooth' });
       
-      // Mark that we've done the initial scroll (persist in localStorage)
+      // Mark that we've scrolled to today today (date-specific)
       if (typeof window !== 'undefined') {
         localStorage.setItem(hasScrolledKey, 'true');
       }
+    };
+    
+    // Delay scroll to today (wait 2 seconds before scrolling, same as daily view)
+    const scrollTimer = setTimeout(() => {
+      scrollToToday();
+      // Also try with additional delays as fallback
+      setTimeout(scrollToToday, 100);
+      setTimeout(scrollToToday, 300);
     }, 2000); // 2 second delay (same as daily view)
     
     return () => clearTimeout(scrollTimer);
-  }, [isClient, scheduleWithMonths, insets.top]);
+  }, [isClient, scheduleWithMonths, insets.top, today]);
 
   // Track visible month as user scrolls
   useEffect(() => {
