@@ -266,7 +266,7 @@ function buildMonthGrid(viewDate){
   const first = monthStart(viewDate);
   const start = new Date(first); start.setDate(1 - first.getDay());
   const days = [];
-  for(let i=0;i<42;i++){ const d = new Date(start); d.setDate(start.getDate()+i); days.push(d); }
+  for(let i=0;i<35;i++){ const d = new Date(start); d.setDate(start.getDate()+i); days.push(d); }
   return days;
 }
 function MiniMonthPicker({ valueYMD, onChange, onClose }){
