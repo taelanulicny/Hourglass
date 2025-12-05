@@ -1368,6 +1368,73 @@ function CalendarContent() {
     });
   };
 
+  // Helper function to calculate event layouts for a given day's events
+  const calculateEventLayouts = (dayEvents, dayStartMs, dayEndMs) => {
+    if (!dayEvents.length) return new Map();
+    
+    const layouts = new Map();
+    const processed = new Set();
+    
+    const eventsOverlap = (ev1, ev2) => {
+      return ev1.start < ev2.end && ev1.end > ev2.start;
+    };
+    
+    dayEvents.forEach((ev) => {
+      if (processed.has(ev.id)) return;
+      
+      const overlappingGroup = dayEvents.filter((otherEv) => {
+        if (processed.has(otherEv.id)) return false;
+        return eventsOverlap(ev, otherEv);
+      });
+      
+      if (overlappingGroup.length === 1) {
+        layouts.set(ev.id, { column: 0, totalColumns: 1, width: 1, left: 0 });
+        processed.add(ev.id);
+      } else {
+        overlappingGroup.sort((a, b) => {
+          if (a.start !== b.start) return a.start - b.start;
+          return a.end - b.end;
+        });
+        
+        const columns = new Array(overlappingGroup.length).fill(0);
+        overlappingGroup.forEach((currentEv, idx) => {
+          const usedColumns = new Set();
+          overlappingGroup.forEach((otherEv, otherIdx) => {
+            if (otherIdx < idx && eventsOverlap(currentEv, otherEv)) {
+              usedColumns.add(columns[otherIdx]);
+            }
+          });
+          
+          let column = 0;
+          while (usedColumns.has(column)) {
+            column++;
+          }
+          columns[idx] = column;
+        });
+        
+        const maxColumn = Math.max(...columns);
+        const totalColumns = maxColumn + 1;
+        const gapPercent = 0.02;
+        const totalGapWidth = gapPercent * (totalColumns - 1);
+        const availableWidth = 1 - totalGapWidth;
+        const columnWidth = availableWidth / totalColumns;
+        
+        overlappingGroup.forEach((groupEv, idx) => {
+          const column = columns[idx];
+          layouts.set(groupEv.id, {
+            column,
+            totalColumns,
+            width: columnWidth,
+            left: (column * columnWidth) + (column * gapPercent)
+          });
+          processed.add(groupEv.id);
+        });
+      }
+    });
+    
+    return layouts;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 via-purple-50 to-pink-50 text-white pb-24">
       {/* Fixed header */}
@@ -1965,7 +2032,8 @@ function CalendarContent() {
                                 y={labelY}
                                 textAnchor="middle"
                                 dominantBaseline="middle"
-                                className="text-xs font-semibold fill-gray-900"
+                                className="text-xs font-semibold"
+                                style={{ fill: area.color }}
                               >
                                 {area.percentage.toFixed(1)}%
                               </text>
@@ -2001,6 +2069,935 @@ function CalendarContent() {
               })()}
           </div>
         </div>
+        </div>
+      ) : currentView === '3 Day' ? (
+        /* 3 Day view */
+        <div className="flex-1 overflow-y-auto px-4 scroll-smooth" style={{ paddingTop: `${Math.max(insets.top, 44) + 80}px` }}>
+          {/* Calculate the 3 days */}
+          {(() => {
+            if (!selectedDate) return null;
+            
+            const day1 = new Date(selectedDate);
+            day1.setHours(0, 0, 0, 0);
+            const day2 = new Date(day1);
+            day2.setDate(day2.getDate() + 1);
+            const day3 = new Date(day1);
+            day3.setDate(day3.getDate() + 2);
+            
+            const threeDays = [day1, day2, day3];
+            
+            // Calculate day boundaries for each day
+            const daysData = threeDays.map(day => {
+              const dayStart = new Date(day);
+              dayStart.setHours(0, 0, 0, 0);
+              const dayEnd = new Date(day);
+              dayEnd.setHours(23, 59, 59, 999);
+              const dayStartMs = dayStart.getTime();
+              const dayEndMs = dayEnd.getTime();
+              
+              // Get events for this day
+              const dayEvents = events.filter(ev => ev.end > dayStartMs && ev.start < dayEndMs);
+              
+              // Calculate layouts for this day's events
+              const layouts = calculateEventLayouts(dayEvents, dayStartMs, dayEndMs);
+              
+              return {
+                date: day,
+                dayStartMs,
+                dayEndMs,
+                events: dayEvents,
+                layouts
+              };
+            });
+            
+            return (
+              <>
+                <div ref={gridRootRef} className="relative">
+                  <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl p-4">
+                    <div className="grid grid-cols-[56px_repeat(3,minmax(0,1fr))]">
+                      {/* Hours gutter */}
+                      <div className="flex flex-col items-end pr-2">
+                        {isClient && HOURS.map((h) => (
+                          <div
+                            key={h}
+                            className="text-xs text-gray-700 flex items-start"
+                            style={{ height: `${pxPerHour}px` }}
+                          >
+                            <div className="-translate-y-1">{formatHour(h)}</div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Three day columns */}
+                      {daysData.map((dayData, dayIndex) => {
+                        const isToday = sameDay(dayData.date, today);
+                        const showNowLine = isToday && isClient && nowTopPx != null;
+                        
+                        return (
+                          <div
+                            key={dayIndex}
+                            className="relative border-l border-gray-300/60 overflow-visible"
+                            style={{ touchAction: draggingId ? 'none' : undefined, userSelect: draggingId ? 'none' : undefined }}
+                          >
+                            {/* Day header */}
+                            <div className="sticky top-0 z-10 bg-white/30 backdrop-blur-sm border-b border-gray-300/60 px-2 py-1 mb-0">
+                              <div className="text-xs font-semibold text-gray-900">
+                                {dayData.date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                              </div>
+                            </div>
+                            
+                            {/* Hour slots */}
+                            {HOURS.map((h) => (
+                              <div
+                                key={h}
+                                className="h-16 border-b border-gray-200/50 hover:bg-white/10 cursor-pointer transition-colors"
+                                onClick={() => {
+                                  const clickedDate = new Date(dayData.date);
+                                  setSelectedDate(clickedDate);
+                                  // Use setTimeout to ensure state is updated before opening slot
+                                  setTimeout(() => {
+                                    setDraft({
+                                      ...DEFAULT_DRAFT,
+                                      dateYMD: ymd(clickedDate),
+                                      start: `${String(h).padStart(2, "0")}:00`,
+                                      end: h === 23 ? "23:59" : `${String(h + 1).padStart(2, "0")}:00`,
+                                    });
+                                    setShowModal(true);
+                                  }, 0);
+                                }}
+                              />
+                            ))}
+
+                            {/* Current time indicator - only for today */}
+                            {showNowLine && (
+                              <div
+                                className="pointer-events-none absolute inset-x-0 z-20"
+                                style={{ top: Math.max(0, Math.min(nowTopPx, (24 * pxPerHour) - 1)) + 32 + 'px' }}
+                              >
+                                <svg
+                                  width="14"
+                                  height="14"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  className="absolute -left-3 -translate-y-1/2"
+                                  style={{ top: 0 }}
+                                  aria-hidden="true"
+                                >
+                                  <rect x="6" y="2.5" width="12" height="3" rx="1.5" stroke="#ef4444" strokeWidth="2" />
+                                  <rect x="6" y="18.5" width="12" height="3" rx="1.5" stroke="#ef4444" strokeWidth="2" />
+                                  <path d="M8 6c0 3.2 2.2 4.7 4 6-1.8 1.3-4 2.8-4 6" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                  <path d="M16 6c0 3.2-2.2 4.7-4 6 1.8 1.3 4 2.8 4 6" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                                <div
+                                  className="absolute right-0 -translate-y-full mb-1 px-1.5 py-0.5 text-[10px] rounded bg-red-500 text-white shadow"
+                                  style={{ top: 0 }}
+                                  aria-hidden="true"
+                                >
+                                  {formatTime12(nowMs)}
+                                </div>
+                                <div className="h-[2px] bg-red-500 w-full" />
+                              </div>
+                            )}
+
+                            {/* Events for this day */}
+                            {isClient && dayData.events.map(ev => {
+                              const currentStart = resizingId === ev.id && resizeGhost ? resizeGhost.start : ev.start;
+                              const currentEnd = resizingId === ev.id && resizeGhost ? resizeGhost.end : ev.end;
+                              
+                              const visibleStart = Math.max(currentStart, dayData.dayStartMs);
+                              const visibleEnd = Math.min(currentEnd, dayData.dayEndMs);
+                              const vs = new Date(visibleStart);
+                              const topPx = (vs.getHours() + vs.getMinutes() / 60) * pxPerHour;
+                              const heightPx = ((visibleEnd - visibleStart) / (1000 * 60 * 60)) * pxPerHour;
+                              const renderColor = getAreaColor(ev.area) || ev.color || COLORS[2];
+                              
+                              const layout = dayData.layouts.get(ev.id) || { column: 0, totalColumns: 1, width: 1, left: 0 };
+                              const widthPercent = layout.width * 100;
+                              const leftPercent = layout.left * 100;
+                              
+                              return (
+                                <div
+                                  key={ev.id}
+                                  data-event-id={ev.id}
+                                  className={`absolute rounded-md shadow calendar-event select-none ${draggingId === ev.id ? 'cursor-grabbing' : dragDelayActive && dragDelayEventId === ev.id ? 'cursor-wait' : resizingId === ev.id ? 'cursor-ns-resize' : 'cursor-grab'}`}
+                                  style={{
+                                    top: (draggingId === ev.id && dragGhostTop != null ? dragGhostTop : Math.max(32, topPx + 32)) + 'px',
+                                    height: Math.max(24, heightPx) + 'px',
+                                    left: `${leftPercent}%`,
+                                    width: `${widthPercent}%`,
+                                    background: toRGBA(renderColor, dragDelayActive && dragDelayEventId === ev.id ? 0.2 : resizingId === ev.id ? 0.7 : 0.4),
+                                    borderLeft: `3px solid ${renderColor}`,
+                                    willChange: (draggingId === ev.id || resizingId === ev.id) ? 'top, height' : undefined,
+                                    opacity: dragDelayActive && dragDelayEventId === ev.id ? 0.7 : resizingId === ev.id ? 0.9 : 1,
+                                    touchAction: (draggingId === ev.id || resizingId === ev.id) ? 'none' : 'pan-y',
+                                  }}
+                                  title={ev.title}
+                                  onMouseDown={(e) => {
+                                    if (e.target.closest('[data-resize-handle]')) {
+                                      return;
+                                    }
+                                    
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    
+                                    if (dragDelayTimerRef.current) {
+                                      clearTimeout(dragDelayTimerRef.current);
+                                    }
+                                    
+                                    setDragDelayActive(true);
+                                    setDragDelayEventId(ev.id);
+                                    
+                                    dragDelayTimerRef.current = setTimeout(() => {
+                                      if (unmountedRef.current) return;
+                                      const dur = ev.end - ev.start;
+                                      setDraggingId(ev.id);
+                                      setDragDelayActive(false);
+                                      setDragDelayEventId(null);
+                                      dragRef.current = {
+                                        startY: e.clientY,
+                                        origStart: ev.start,
+                                        origEnd: ev.end,
+                                        duration: dur,
+                                        lastStartMs: null,
+                                        moved: false,
+                                      };
+                                      const vs = new Date(Math.max(ev.start, dayData.dayStartMs));
+                                      const topPxSeed = (vs.getHours() + vs.getMinutes() / 60) * pxPerHour;
+                                      setDragGhostTop(Math.max(32, topPxSeed + 32));
+                                    }, 500);
+                                  }}
+                                  onMouseUp={(e) => {
+                                    if (dragDelayActive && dragDelayEventId === ev.id) {
+                                      if (dragDelayTimerRef.current) {
+                                        clearTimeout(dragDelayTimerRef.current);
+                                      }
+                                      setDragDelayActive(false);
+                                      setDragDelayEventId(null);
+                                    }
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    if (dragDelayActive && dragDelayEventId === ev.id) {
+                                      if (dragDelayTimerRef.current) {
+                                        clearTimeout(dragDelayTimerRef.current);
+                                      }
+                                      setDragDelayActive(false);
+                                      setDragDelayEventId(null);
+                                    }
+                                  }}
+                                  onClick={(e) => { if (dragRef.current.moved || resizeRef.current.moved) { if (e.cancelable) e.preventDefault(); e.stopPropagation(); } else { openEdit(ev); } }}
+                                >
+                                  <div className="text-[11px] px-2 py-1 leading-tight">
+                                    <div className="font-semibold truncate">{ev.title}</div>
+                                    {ev.area && <div className="text-[10px] opacity-70 truncate">{ev.area}</div>}
+                                  </div>
+                                  
+                                  {!draggingId && (
+                                    <>
+                                      <div
+                                        data-resize-handle
+                                        className={`absolute top-0 left-0 w-6 h-6 cursor-ns-resize select-none hover:opacity-100 ${resizingId === ev.id && resizeHandle === 'top-left' ? 'opacity-100' : 'opacity-0'}`}
+                                        onMouseDown={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          if (dragDelayTimerRef.current) {
+                                            clearTimeout(dragDelayTimerRef.current);
+                                            dragDelayTimerRef.current = null;
+                                          }
+                                          setDragDelayActive(false);
+                                          setDragDelayEventId(null);
+                                          setResizingId(ev.id);
+                                          setResizeHandle('top-left');
+                                          resizeRef.current = {
+                                            startY: e.clientY,
+                                            origStart: ev.start,
+                                            origEnd: ev.end,
+                                            lastStartMs: ev.start,
+                                            lastEndMs: ev.end,
+                                            moved: false,
+                                          };
+                                        }}
+                                      />
+                                      <div
+                                        data-resize-handle
+                                        className={`absolute top-0 right-0 w-6 h-6 cursor-ns-resize select-none hover:opacity-100 ${resizingId === ev.id && resizeHandle === 'top-right' ? 'opacity-100' : 'opacity-0'}`}
+                                        onMouseDown={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          if (dragDelayTimerRef.current) {
+                                            clearTimeout(dragDelayTimerRef.current);
+                                            dragDelayTimerRef.current = null;
+                                          }
+                                          setDragDelayActive(false);
+                                          setDragDelayEventId(null);
+                                          setResizingId(ev.id);
+                                          setResizeHandle('top-right');
+                                          resizeRef.current = {
+                                            startY: e.clientY,
+                                            origStart: ev.start,
+                                            origEnd: ev.end,
+                                            lastStartMs: ev.start,
+                                            lastEndMs: ev.end,
+                                            moved: false,
+                                          };
+                                        }}
+                                      />
+                                      <div
+                                        data-resize-handle
+                                        className={`absolute bottom-0 left-0 w-6 h-6 cursor-ns-resize select-none hover:opacity-100 ${resizingId === ev.id && resizeHandle === 'bottom-left' ? 'opacity-100' : 'opacity-0'}`}
+                                        onMouseDown={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          if (dragDelayTimerRef.current) {
+                                            clearTimeout(dragDelayTimerRef.current);
+                                            dragDelayTimerRef.current = null;
+                                          }
+                                          setDragDelayActive(false);
+                                          setDragDelayEventId(null);
+                                          setResizingId(ev.id);
+                                          setResizeHandle('bottom-left');
+                                          resizeRef.current = {
+                                            startY: e.clientY,
+                                            origStart: ev.start,
+                                            origEnd: ev.end,
+                                            lastStartMs: ev.start,
+                                            lastEndMs: ev.end,
+                                            moved: false,
+                                          };
+                                        }}
+                                      />
+                                      <div
+                                        data-resize-handle
+                                        className={`absolute bottom-0 right-0 w-6 h-6 cursor-ns-resize select-none hover:opacity-100 ${resizingId === ev.id && resizeHandle === 'bottom-right' ? 'opacity-100' : 'opacity-0'}`}
+                                        onMouseDown={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          if (dragDelayTimerRef.current) {
+                                            clearTimeout(dragDelayTimerRef.current);
+                                            dragDelayTimerRef.current = null;
+                                          }
+                                          setDragDelayActive(false);
+                                          setDragDelayEventId(null);
+                                          setResizingId(ev.id);
+                                          setResizeHandle('bottom-right');
+                                          resizeRef.current = {
+                                            startY: e.clientY,
+                                            origStart: ev.start,
+                                            origEnd: ev.end,
+                                            lastStartMs: ev.start,
+                                            lastEndMs: ev.end,
+                                            moved: false,
+                                          };
+                                        }}
+                                      />
+                                    </>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Focus Areas Data Block for 3 Day view */}
+                <div className="mt-6 pb-6">
+                  <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl p-4">
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Daily Data Split</h2>
+                    {(() => {
+                      const dailyGoal = 1;
+                      
+                      const dayStart = selectedDate ? new Date(selectedDate) : new Date();
+                      dayStart.setHours(0, 0, 0, 0);
+                      const dayEnd = selectedDate ? new Date(selectedDate) : new Date();
+                      dayEnd.setHours(23, 59, 59, 999);
+                      const dayStartMs = dayStart.getTime();
+                      const dayEndMs = dayEnd.getTime();
+                      
+                      const normalizeLabel = (label) => (label || '').trim().toLowerCase();
+                      
+                      const focusAreaData = focusAreas.map((area, index) => {
+                        const dailyGoalHours = Number(area.goal || 0);
+                        
+                        let actualTimeLogged = 0;
+                        if (selectedDate && area.days) {
+                          const dayAbbrev = DAYS[selectedDate.getDay()];
+                          if (typeof area.days === 'object' && area.days[dayAbbrev] !== undefined) {
+                            actualTimeLogged = Number(area.days[dayAbbrev]) || 0;
+                          }
+                        }
+                        
+                        return {
+                          label: area.label,
+                          color: area.color || COLORS[index % COLORS.length],
+                          dailyGoal: dailyGoalHours,
+                          dailyPlanned: dailyGoalHours,
+                          actualTimeLogged
+                        };
+                      });
+                      
+                      const totalActual = focusAreaData.reduce((sum, area) => sum + area.actualTimeLogged, 0);
+                      
+                      const pieData = focusAreaData
+                        .filter(area => area.actualTimeLogged > 0)
+                        .map((area) => ({
+                          ...area,
+                          percentage: totalActual > 0 ? (area.actualTimeLogged / totalActual) * 100 : 0
+                        }))
+                        .sort((a, b) => b.percentage - a.percentage);
+                      
+                      let currentOffset = 0;
+                      const radius = 50;
+                      const circumference = 2 * Math.PI * radius;
+                      const centerX = 130;
+                      const centerY = 130;
+                      
+                      return (
+                        <div className="flex items-center justify-center gap-4 -mt-4 min-h-[260px]">
+                          <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '260px', height: '260px' }}>
+                            <svg width="260" height="260" viewBox="0 0 260 260">
+                              {pieData.map((area, index) => {
+                                const dashLength = (area.percentage / 100) * circumference;
+                                const dashOffset = -currentOffset;
+                                const startAngle = (currentOffset / circumference) * 360;
+                                const endAngle = ((currentOffset + dashLength) / circumference) * 360;
+                                const midAngle = (startAngle + endAngle) / 2;
+                                
+                                const isEven = index % 2 === 0;
+                                const labelRadius = radius + (isEven ? 30 : 50);
+                                
+                                const labelAngleRad = (midAngle * Math.PI) / 180;
+                                const labelX = centerX + Math.cos(labelAngleRad) * labelRadius;
+                                const labelY = centerY + Math.sin(labelAngleRad) * labelRadius;
+                                
+                                currentOffset += dashLength;
+                                
+                                return (
+                                  <g key={area.label}>
+                                    <circle
+                                      cx={centerX}
+                                      cy={centerY}
+                                      r={radius}
+                                      fill="none"
+                                      stroke={area.color}
+                                      strokeWidth="20"
+                                      strokeDasharray={`${dashLength} ${circumference}`}
+                                      strokeDashoffset={dashOffset}
+                                      strokeLinecap="round"
+                                    />
+                                    <text
+                                      x={labelX}
+                                      y={labelY}
+                                      textAnchor="middle"
+                                      dominantBaseline="middle"
+                                      className="text-xs font-semibold"
+                                      style={{ fill: area.color }}
+                                    >
+                                      {area.percentage.toFixed(1)}%
+                                    </text>
+                                  </g>
+                                );
+                              })}
+                            </svg>
+                          </div>
+
+                          <div className="flex-1 flex items-center">
+                            <div className="space-y-2 w-full">
+                              {pieData.length > 0 ? (
+                                pieData.map((area) => (
+                                  <div key={area.label} className="flex items-center gap-2">
+                                    <div 
+                                      className="w-3 h-3 rounded-full flex-shrink-0" 
+                                      style={{ backgroundColor: area.color }}
+                                    />
+                                    <span className="text-xs text-gray-900">{area.label}</span>
+                                    <span className="text-xs text-gray-600 ml-auto">
+                                      {Math.round(area.actualTimeLogged * 10) / 10}/{Math.round(area.dailyPlanned)}
+                                    </span>
+                                  </div>
+                                ))
+                              ) : (
+                                <div className="text-xs text-gray-600">No focus areas yet. Add them from the dashboard.</div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </div>
+              </>
+            );
+          })()}
+        </div>
+      ) : currentView === 'Week' ? (
+        /* Week view */
+        <div className="flex-1 overflow-y-auto px-4 scroll-smooth" style={{ paddingTop: `${Math.max(insets.top, 44) + 80}px` }}>
+          {/* Calculate the 7 days of the week */}
+          {(() => {
+            if (!selectedDate) return null;
+            
+            // Get the start of the week (Sunday)
+            const weekStart = startOfWeek(selectedDate);
+            const weekDays = Array.from({ length: 7 }, (_, i) => {
+              const day = new Date(weekStart);
+              day.setDate(weekStart.getDate() + i);
+              day.setHours(0, 0, 0, 0);
+              return day;
+            });
+            
+            // Calculate day boundaries for each day
+            const daysData = weekDays.map(day => {
+              const dayStart = new Date(day);
+              dayStart.setHours(0, 0, 0, 0);
+              const dayEnd = new Date(day);
+              dayEnd.setHours(23, 59, 59, 999);
+              const dayStartMs = dayStart.getTime();
+              const dayEndMs = dayEnd.getTime();
+              
+              // Get events for this day
+              const dayEvents = events.filter(ev => ev.end > dayStartMs && ev.start < dayEndMs);
+              
+              // Calculate layouts for this day's events
+              const layouts = calculateEventLayouts(dayEvents, dayStartMs, dayEndMs);
+              
+              return {
+                date: day,
+                dayStartMs,
+                dayEndMs,
+                events: dayEvents,
+                layouts
+              };
+            });
+            
+            return (
+              <>
+                <div ref={gridRootRef} className="relative">
+                  <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl p-4">
+                    <div className="grid grid-cols-[56px_repeat(7,minmax(0,1fr))]">
+                      {/* Hours gutter */}
+                      <div className="flex flex-col items-end pr-2">
+                        {isClient && HOURS.map((h) => (
+                          <div
+                            key={h}
+                            className="text-xs text-gray-700 flex items-start"
+                            style={{ height: `${pxPerHour}px` }}
+                          >
+                            <div className="-translate-y-1">{formatHour(h)}</div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Seven day columns */}
+                      {daysData.map((dayData, dayIndex) => {
+                        const isToday = sameDay(dayData.date, today);
+                        const showNowLine = isToday && isClient && nowTopPx != null;
+                        
+                        return (
+                          <div
+                            key={dayIndex}
+                            className="relative border-l border-gray-300/60 overflow-visible"
+                            style={{ touchAction: draggingId ? 'none' : undefined, userSelect: draggingId ? 'none' : undefined }}
+                          >
+                            {/* Day header */}
+                            <div className={`sticky top-0 z-10 backdrop-blur-sm border-b border-gray-300/60 px-2 py-1 mb-0 ${isToday ? 'bg-blue-100/50' : 'bg-white/30'}`}>
+                              <div className={`text-xs font-semibold ${isToday ? 'text-blue-700' : 'text-gray-900'}`}>
+                                {dayData.date.toLocaleDateString("en-US", { weekday: "short" })}
+                              </div>
+                              <div className={`text-xs ${isToday ? 'text-blue-600 font-medium' : 'text-gray-600'}`}>
+                                {dayData.date.getDate()}
+                              </div>
+                            </div>
+                            
+                            {/* Hour slots */}
+                            {HOURS.map((h) => (
+                              <div
+                                key={h}
+                                className="h-16 border-b border-gray-200/50 hover:bg-white/10 cursor-pointer transition-colors"
+                                onClick={() => {
+                                  const clickedDate = new Date(dayData.date);
+                                  setSelectedDate(clickedDate);
+                                  // Use setTimeout to ensure state is updated before opening slot
+                                  setTimeout(() => {
+                                    setDraft({
+                                      ...DEFAULT_DRAFT,
+                                      dateYMD: ymd(clickedDate),
+                                      start: `${String(h).padStart(2, "0")}:00`,
+                                      end: h === 23 ? "23:59" : `${String(h + 1).padStart(2, "0")}:00`,
+                                    });
+                                    setShowModal(true);
+                                  }, 0);
+                                }}
+                              />
+                            ))}
+
+                            {/* Current time indicator - only for today */}
+                            {showNowLine && (
+                              <div
+                                className="pointer-events-none absolute inset-x-0 z-20"
+                                style={{ top: Math.max(0, Math.min(nowTopPx, (24 * pxPerHour) - 1)) + 48 + 'px' }}
+                              >
+                                <svg
+                                  width="14"
+                                  height="14"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  className="absolute -left-3 -translate-y-1/2"
+                                  style={{ top: 0 }}
+                                  aria-hidden="true"
+                                >
+                                  <rect x="6" y="2.5" width="12" height="3" rx="1.5" stroke="#ef4444" strokeWidth="2" />
+                                  <rect x="6" y="18.5" width="12" height="3" rx="1.5" stroke="#ef4444" strokeWidth="2" />
+                                  <path d="M8 6c0 3.2 2.2 4.7 4 6-1.8 1.3-4 2.8-4 6" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                  <path d="M16 6c0 3.2-2.2 4.7-4 6 1.8 1.3 4 2.8 4 6" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                                <div
+                                  className="absolute right-0 -translate-y-full mb-1 px-1.5 py-0.5 text-[10px] rounded bg-red-500 text-white shadow"
+                                  style={{ top: 0 }}
+                                  aria-hidden="true"
+                                >
+                                  {formatTime12(nowMs)}
+                                </div>
+                                <div className="h-[2px] bg-red-500 w-full" />
+                              </div>
+                            )}
+
+                            {/* Events for this day */}
+                            {isClient && dayData.events.map(ev => {
+                              const currentStart = resizingId === ev.id && resizeGhost ? resizeGhost.start : ev.start;
+                              const currentEnd = resizingId === ev.id && resizeGhost ? resizeGhost.end : ev.end;
+                              
+                              const visibleStart = Math.max(currentStart, dayData.dayStartMs);
+                              const visibleEnd = Math.min(currentEnd, dayData.dayEndMs);
+                              const vs = new Date(visibleStart);
+                              const topPx = (vs.getHours() + vs.getMinutes() / 60) * pxPerHour;
+                              const heightPx = ((visibleEnd - visibleStart) / (1000 * 60 * 60)) * pxPerHour;
+                              const renderColor = getAreaColor(ev.area) || ev.color || COLORS[2];
+                              
+                              const layout = dayData.layouts.get(ev.id) || { column: 0, totalColumns: 1, width: 1, left: 0 };
+                              const widthPercent = layout.width * 100;
+                              const leftPercent = layout.left * 100;
+                              
+                              return (
+                                <div
+                                  key={ev.id}
+                                  data-event-id={ev.id}
+                                  className={`absolute rounded-md shadow calendar-event select-none ${draggingId === ev.id ? 'cursor-grabbing' : dragDelayActive && dragDelayEventId === ev.id ? 'cursor-wait' : resizingId === ev.id ? 'cursor-ns-resize' : 'cursor-grab'}`}
+                                  style={{
+                                    top: (draggingId === ev.id && dragGhostTop != null ? dragGhostTop : Math.max(48, topPx + 48)) + 'px',
+                                    height: Math.max(24, heightPx) + 'px',
+                                    left: `${leftPercent}%`,
+                                    width: `${widthPercent}%`,
+                                    background: toRGBA(renderColor, dragDelayActive && dragDelayEventId === ev.id ? 0.2 : resizingId === ev.id ? 0.7 : 0.4),
+                                    borderLeft: `3px solid ${renderColor}`,
+                                    willChange: (draggingId === ev.id || resizingId === ev.id) ? 'top, height' : undefined,
+                                    opacity: dragDelayActive && dragDelayEventId === ev.id ? 0.7 : resizingId === ev.id ? 0.9 : 1,
+                                    touchAction: (draggingId === ev.id || resizingId === ev.id) ? 'none' : 'pan-y',
+                                  }}
+                                  title={ev.title}
+                                  onMouseDown={(e) => {
+                                    if (e.target.closest('[data-resize-handle]')) {
+                                      return;
+                                    }
+                                    
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    
+                                    if (dragDelayTimerRef.current) {
+                                      clearTimeout(dragDelayTimerRef.current);
+                                    }
+                                    
+                                    setDragDelayActive(true);
+                                    setDragDelayEventId(ev.id);
+                                    
+                                    dragDelayTimerRef.current = setTimeout(() => {
+                                      if (unmountedRef.current) return;
+                                      const dur = ev.end - ev.start;
+                                      setDraggingId(ev.id);
+                                      setDragDelayActive(false);
+                                      setDragDelayEventId(null);
+                                      dragRef.current = {
+                                        startY: e.clientY,
+                                        origStart: ev.start,
+                                        origEnd: ev.end,
+                                        duration: dur,
+                                        lastStartMs: null,
+                                        moved: false,
+                                      };
+                                      const vs = new Date(Math.max(ev.start, dayData.dayStartMs));
+                                      const topPxSeed = (vs.getHours() + vs.getMinutes() / 60) * pxPerHour;
+                                      setDragGhostTop(Math.max(48, topPxSeed + 48));
+                                    }, 500);
+                                  }}
+                                  onMouseUp={(e) => {
+                                    if (dragDelayActive && dragDelayEventId === ev.id) {
+                                      if (dragDelayTimerRef.current) {
+                                        clearTimeout(dragDelayTimerRef.current);
+                                      }
+                                      setDragDelayActive(false);
+                                      setDragDelayEventId(null);
+                                    }
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    if (dragDelayActive && dragDelayEventId === ev.id) {
+                                      if (dragDelayTimerRef.current) {
+                                        clearTimeout(dragDelayTimerRef.current);
+                                      }
+                                      setDragDelayActive(false);
+                                      setDragDelayEventId(null);
+                                    }
+                                  }}
+                                  onClick={(e) => { if (dragRef.current.moved || resizeRef.current.moved) { if (e.cancelable) e.preventDefault(); e.stopPropagation(); } else { openEdit(ev); } }}
+                                >
+                                  <div className="text-[11px] px-2 py-1 leading-tight">
+                                    <div className="font-semibold truncate">{ev.title}</div>
+                                    {ev.area && <div className="text-[10px] opacity-70 truncate">{ev.area}</div>}
+                                  </div>
+                                  
+                                  {!draggingId && (
+                                    <>
+                                      <div
+                                        data-resize-handle
+                                        className={`absolute top-0 left-0 w-6 h-6 cursor-ns-resize select-none hover:opacity-100 ${resizingId === ev.id && resizeHandle === 'top-left' ? 'opacity-100' : 'opacity-0'}`}
+                                        onMouseDown={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          if (dragDelayTimerRef.current) {
+                                            clearTimeout(dragDelayTimerRef.current);
+                                            dragDelayTimerRef.current = null;
+                                          }
+                                          setDragDelayActive(false);
+                                          setDragDelayEventId(null);
+                                          setResizingId(ev.id);
+                                          setResizeHandle('top-left');
+                                          resizeRef.current = {
+                                            startY: e.clientY,
+                                            origStart: ev.start,
+                                            origEnd: ev.end,
+                                            lastStartMs: ev.start,
+                                            lastEndMs: ev.end,
+                                            moved: false,
+                                          };
+                                        }}
+                                      />
+                                      <div
+                                        data-resize-handle
+                                        className={`absolute top-0 right-0 w-6 h-6 cursor-ns-resize select-none hover:opacity-100 ${resizingId === ev.id && resizeHandle === 'top-right' ? 'opacity-100' : 'opacity-0'}`}
+                                        onMouseDown={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          if (dragDelayTimerRef.current) {
+                                            clearTimeout(dragDelayTimerRef.current);
+                                            dragDelayTimerRef.current = null;
+                                          }
+                                          setDragDelayActive(false);
+                                          setDragDelayEventId(null);
+                                          setResizingId(ev.id);
+                                          setResizeHandle('top-right');
+                                          resizeRef.current = {
+                                            startY: e.clientY,
+                                            origStart: ev.start,
+                                            origEnd: ev.end,
+                                            lastStartMs: ev.start,
+                                            lastEndMs: ev.end,
+                                            moved: false,
+                                          };
+                                        }}
+                                      />
+                                      <div
+                                        data-resize-handle
+                                        className={`absolute bottom-0 left-0 w-6 h-6 cursor-ns-resize select-none hover:opacity-100 ${resizingId === ev.id && resizeHandle === 'bottom-left' ? 'opacity-100' : 'opacity-0'}`}
+                                        onMouseDown={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          if (dragDelayTimerRef.current) {
+                                            clearTimeout(dragDelayTimerRef.current);
+                                            dragDelayTimerRef.current = null;
+                                          }
+                                          setDragDelayActive(false);
+                                          setDragDelayEventId(null);
+                                          setResizingId(ev.id);
+                                          setResizeHandle('bottom-left');
+                                          resizeRef.current = {
+                                            startY: e.clientY,
+                                            origStart: ev.start,
+                                            origEnd: ev.end,
+                                            lastStartMs: ev.start,
+                                            lastEndMs: ev.end,
+                                            moved: false,
+                                          };
+                                        }}
+                                      />
+                                      <div
+                                        data-resize-handle
+                                        className={`absolute bottom-0 right-0 w-6 h-6 cursor-ns-resize select-none hover:opacity-100 ${resizingId === ev.id && resizeHandle === 'bottom-right' ? 'opacity-100' : 'opacity-0'}`}
+                                        onMouseDown={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          if (dragDelayTimerRef.current) {
+                                            clearTimeout(dragDelayTimerRef.current);
+                                            dragDelayTimerRef.current = null;
+                                          }
+                                          setDragDelayActive(false);
+                                          setDragDelayEventId(null);
+                                          setResizingId(ev.id);
+                                          setResizeHandle('bottom-right');
+                                          resizeRef.current = {
+                                            startY: e.clientY,
+                                            origStart: ev.start,
+                                            origEnd: ev.end,
+                                            lastStartMs: ev.start,
+                                            lastEndMs: ev.end,
+                                            moved: false,
+                                          };
+                                        }}
+                                      />
+                                    </>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Focus Areas Data Block for Week view */}
+                <div className="mt-6 pb-6">
+                  <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl p-4">
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Weekly Data Split</h2>
+                    {(() => {
+                      // Calculate weekly totals for the selected week
+                      const weekStartDate = startOfWeek(selectedDate);
+                      const weekEndDate = new Date(weekStartDate);
+                      weekEndDate.setDate(weekStartDate.getDate() + 6);
+                      weekEndDate.setHours(23, 59, 59, 999);
+                      
+                      const normalizeLabel = (label) => (label || '').trim().toLowerCase();
+                      
+                      const focusAreaData = focusAreas.map((area, index) => {
+                        // Sum up actual time logged across all days in the week
+                        let actualTimeLogged = 0;
+                        if (area.days && typeof area.days === 'object') {
+                          for (let i = 0; i < 7; i++) {
+                            const day = new Date(weekStartDate);
+                            day.setDate(weekStartDate.getDate() + i);
+                            const dayAbbrev = DAYS[day.getDay()];
+                            if (area.days[dayAbbrev] !== undefined) {
+                              actualTimeLogged += Number(area.days[dayAbbrev]) || 0;
+                            }
+                          }
+                        }
+                        
+                        // Calculate weekly goal (daily goal * 7)
+                        const dailyGoalHours = Number(area.goal || 0);
+                        const weeklyGoal = dailyGoalHours * 7;
+                        
+                        return {
+                          label: area.label,
+                          color: area.color || COLORS[index % COLORS.length],
+                          dailyGoal: dailyGoalHours,
+                          weeklyGoal: weeklyGoal,
+                          actualTimeLogged
+                        };
+                      });
+                      
+                      const totalActual = focusAreaData.reduce((sum, area) => sum + area.actualTimeLogged, 0);
+                      
+                      const pieData = focusAreaData
+                        .filter(area => area.actualTimeLogged > 0)
+                        .map((area) => ({
+                          ...area,
+                          percentage: totalActual > 0 ? (area.actualTimeLogged / totalActual) * 100 : 0
+                        }))
+                        .sort((a, b) => b.percentage - a.percentage);
+                      
+                      let currentOffset = 0;
+                      const radius = 50;
+                      const circumference = 2 * Math.PI * radius;
+                      const centerX = 130;
+                      const centerY = 130;
+                      
+                      return (
+                        <div className="flex items-center justify-center gap-4 -mt-4 min-h-[260px]">
+                          <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '260px', height: '260px' }}>
+                            <svg width="260" height="260" viewBox="0 0 260 260">
+                              {pieData.map((area, index) => {
+                                const dashLength = (area.percentage / 100) * circumference;
+                                const dashOffset = -currentOffset;
+                                const startAngle = (currentOffset / circumference) * 360;
+                                const endAngle = ((currentOffset + dashLength) / circumference) * 360;
+                                const midAngle = (startAngle + endAngle) / 2;
+                                
+                                const isEven = index % 2 === 0;
+                                const labelRadius = radius + (isEven ? 30 : 50);
+                                
+                                const labelAngleRad = (midAngle * Math.PI) / 180;
+                                const labelX = centerX + Math.cos(labelAngleRad) * labelRadius;
+                                const labelY = centerY + Math.sin(labelAngleRad) * labelRadius;
+                                
+                                currentOffset += dashLength;
+                                
+                                return (
+                                  <g key={area.label}>
+                                    <circle
+                                      cx={centerX}
+                                      cy={centerY}
+                                      r={radius}
+                                      fill="none"
+                                      stroke={area.color}
+                                      strokeWidth="20"
+                                      strokeDasharray={`${dashLength} ${circumference}`}
+                                      strokeDashoffset={dashOffset}
+                                      strokeLinecap="round"
+                                    />
+                                    <text
+                                      x={labelX}
+                                      y={labelY}
+                                      textAnchor="middle"
+                                      dominantBaseline="middle"
+                                      className="text-xs font-semibold"
+                                      style={{ fill: area.color }}
+                                    >
+                                      {area.percentage.toFixed(1)}%
+                                    </text>
+                                  </g>
+                                );
+                              })}
+                            </svg>
+                          </div>
+
+                          <div className="flex-1 flex items-center">
+                            <div className="space-y-2 w-full">
+                              {pieData.length > 0 ? (
+                                pieData.map((area) => (
+                                  <div key={area.label} className="flex items-center gap-2">
+                                    <div 
+                                      className="w-3 h-3 rounded-full flex-shrink-0" 
+                                      style={{ backgroundColor: area.color }}
+                                    />
+                                    <span className="text-xs text-gray-900">{area.label}</span>
+                                    <span className="text-xs text-gray-600 ml-auto">
+                                      {Math.round(area.actualTimeLogged * 10) / 10}/{Math.round(area.weeklyGoal)}
+                                    </span>
+                                  </div>
+                                ))
+                              ) : (
+                                <div className="text-xs text-gray-600">No focus areas yet. Add them from the dashboard.</div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </div>
+              </>
+            );
+          })()}
         </div>
       ) : (
         /* Month view */
@@ -2214,7 +3211,8 @@ function CalendarContent() {
                              y={labelY}
                              textAnchor="middle"
                              dominantBaseline="middle"
-                             className="text-xs font-semibold fill-gray-900"
+                             className="text-xs font-semibold"
+                             style={{ fill: area.color }}
                            >
                              {area.percentage.toFixed(1)}%
                            </text>
