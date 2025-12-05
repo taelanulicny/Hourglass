@@ -548,6 +548,9 @@ function CalendarContent() {
   
   // Ref for focus area rings horizontal scrolling
   const focusRingsRef = useRef(null);
+  
+  // Ref for year view scrolling
+  const yearViewRef = useRef(null);
 
   const stripDays = useMemo(() => {
     const start = new Date(today);
@@ -601,6 +604,24 @@ function CalendarContent() {
       }, 100);
     }
   }, [focusAreas]);
+
+  // Scroll to current month when Year view is opened
+  useEffect(() => {
+    if (currentView === 'Year' && yearViewRef.current && selectedDate) {
+      // Wait for DOM to render, then scroll to the current month (index 12)
+      setTimeout(() => {
+        if (yearViewRef.current) {
+          // Each month section is approximately 400px tall (estimate)
+          // The current month is at index 12, so we need to scroll to approximately 12 * 400px
+          const monthHeight = 400; // Approximate height per month
+          const currentMonthIndex = 12;
+          const scrollPosition = currentMonthIndex * monthHeight;
+          
+          yearViewRef.current.scrollTo({ top: scrollPosition, behavior: "smooth" });
+        }
+      }, 100);
+    }
+  }, [currentView, selectedDate]);
 
   // Modal state for new event (showModal/showEditModal/draft declared above)
   const [editingId, setEditingId] = useState(null);
@@ -2404,35 +2425,42 @@ function CalendarContent() {
                 {/* Focus Areas Data Block for 3 Day view */}
                 <div className="mt-6 pb-6">
                   <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl p-4">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Daily Data Split</h2>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4">3 Day Data Split</h2>
                     {(() => {
-                      const dailyGoal = 1;
-                      
-                      const dayStart = selectedDate ? new Date(selectedDate) : new Date();
-                      dayStart.setHours(0, 0, 0, 0);
-                      const dayEnd = selectedDate ? new Date(selectedDate) : new Date();
-                      dayEnd.setHours(23, 59, 59, 999);
-                      const dayStartMs = dayStart.getTime();
-                      const dayEndMs = dayEnd.getTime();
+                      // Calculate 3 day totals for the selected 3 days
+                      const day1 = selectedDate ? new Date(selectedDate) : new Date();
+                      day1.setHours(0, 0, 0, 0);
+                      const day2 = new Date(day1);
+                      day2.setDate(day2.getDate() + 1);
+                      const day3 = new Date(day1);
+                      day3.setDate(day3.getDate() + 2);
+                      const threeDays = [day1, day2, day3];
                       
                       const normalizeLabel = (label) => (label || '').trim().toLowerCase();
                       
                       const focusAreaData = focusAreas.map((area, index) => {
                         const dailyGoalHours = Number(area.goal || 0);
                         
+                        // Sum up actual time logged across all 3 days
                         let actualTimeLogged = 0;
-                        if (selectedDate && area.days) {
-                          const dayAbbrev = DAYS[selectedDate.getDay()];
-                          if (typeof area.days === 'object' && area.days[dayAbbrev] !== undefined) {
-                            actualTimeLogged = Number(area.days[dayAbbrev]) || 0;
+                        if (area.days && typeof area.days === 'object') {
+                          for (let i = 0; i < 3; i++) {
+                            const day = threeDays[i];
+                            const dayAbbrev = DAYS[day.getDay()];
+                            if (area.days[dayAbbrev] !== undefined) {
+                              actualTimeLogged += Number(area.days[dayAbbrev]) || 0;
+                            }
                           }
                         }
+                        
+                        // Calculate 3 day goal (daily goal * 3)
+                        const threeDayGoal = dailyGoalHours * 3;
                         
                         return {
                           label: area.label,
                           color: area.color || COLORS[index % COLORS.length],
                           dailyGoal: dailyGoalHours,
-                          dailyPlanned: dailyGoalHours,
+                          threeDayGoal: threeDayGoal,
                           actualTimeLogged
                         };
                       });
@@ -2513,7 +2541,7 @@ function CalendarContent() {
                                     />
                                     <span className="text-xs text-gray-900">{area.label}</span>
                                     <span className="text-xs text-gray-600 ml-auto">
-                                      {Math.round(area.actualTimeLogged * 10) / 10}/{Math.round(area.dailyPlanned)}
+                                      {Math.round(area.actualTimeLogged * 10) / 10}/{Math.round(area.threeDayGoal)}
                                     </span>
                                   </div>
                                 ))
@@ -2999,7 +3027,7 @@ function CalendarContent() {
             );
           })()}
         </div>
-      ) : (
+      ) : currentView === 'Month' ? (
         /* Month view */
         <div className="flex-1 overflow-y-auto px-4 scroll-smooth" style={{ paddingTop: `${Math.max(insets.top, 44) + 80}px` }}>
           {/* Month grid */}
@@ -3065,7 +3093,115 @@ function CalendarContent() {
             </div>
           </div>
         </div>
-      )}
+      ) : currentView === 'Year' ? (
+        /* Year view - continuous scrolling of 24 months */
+        <div ref={yearViewRef} className="flex-1 overflow-y-auto px-4 scroll-smooth" style={{ paddingTop: `${Math.max(insets.top, 44) + 80}px` }}>
+          {(() => {
+            if (!selectedDate) return null;
+            
+            // Calculate 24 months: 12 months back, current month, 12 months forward
+            const currentMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+            const months = [];
+            
+            // Add 12 months before
+            for (let i = 12; i > 0; i--) {
+              const month = new Date(currentMonth);
+              month.setMonth(currentMonth.getMonth() - i);
+              months.push(month);
+            }
+            
+            // Add current month (index 12)
+            months.push(new Date(currentMonth));
+            
+            // Add 12 months after
+            for (let i = 1; i <= 12; i++) {
+              const month = new Date(currentMonth);
+              month.setMonth(currentMonth.getMonth() + i);
+              months.push(month);
+            }
+            
+            return (
+              <div className="space-y-6 pb-6">
+                {months.map((monthDate, monthIndex) => {
+                  const monthGrid = buildMonthGrid(monthDate);
+                  const isCurrentMonth = monthDate.getMonth() === today.getMonth() && monthDate.getFullYear() === today.getFullYear();
+                  
+                  return (
+                    <div key={monthIndex} className="w-full">
+                      {/* Month header */}
+                      <div className="mb-3">
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                        </h3>
+                      </div>
+                      
+                      {/* Calendar grid container with glassmorphic styling */}
+                      <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl p-4">
+                        {/* Days of week header */}
+                        <div className="grid grid-cols-7 gap-1 mb-2">
+                          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                            <div key={i} className="text-center text-xs font-semibold text-gray-900 py-2">
+                              {day}
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Calendar grid */}
+                        <div className="grid grid-cols-7 gap-1">
+                          {monthGrid.map((date, idx) => {
+                            const inMonth = date.getMonth() === monthDate.getMonth();
+                            const isToday = sameDay(date, today);
+                            const dayEvents = getEventsForDate(date);
+                            
+                            return (
+                              <div
+                                key={idx}
+                                className={`h-[80px] p-1 rounded-md border flex flex-col ${inMonth ? 'bg-white/40 backdrop-blur-sm hover:bg-white/50 border-gray-300/60' : 'bg-white/20 border-gray-200/40'} ${isToday ? 'ring-2 ring-slate-500 border-slate-400' : ''} transition-all cursor-pointer`}
+                                onClick={() => {
+                                  setSelectedDate(new Date(date));
+                                  setCurrentView('Day');
+                                }}
+                              >
+                                <div className={`text-sm font-medium text-center flex-shrink-0 h-8 flex items-center justify-center ${inMonth ? 'text-gray-900' : 'text-gray-500'} ${isToday ? 'text-slate-600' : ''}`}>
+                                  {isToday ? (
+                                    <div className="w-8 h-8 rounded-full bg-slate-500 text-white flex items-center justify-center mx-auto">
+                                      {date.getDate()}
+                                    </div>
+                                  ) : (
+                                    date.getDate()
+                                  )}
+                                </div>
+                                <div className="flex flex-wrap items-center justify-center gap-1 px-1 flex-shrink-0 mt-auto">
+                                  {dayEvents.slice(0, 3).map((ev) => {
+                                    const evColor = getAreaColor(ev.area) || ev.color || COLORS[2];
+                                    return (
+                                      <div
+                                        key={ev.id}
+                                        className="w-2 h-2 rounded-full flex-shrink-0 pointer-events-none"
+                                        style={{ backgroundColor: evColor }}
+                                        title={ev.title}
+                                      />
+                                    );
+                                  })}
+                                  {dayEvents.length > 3 && (
+                                    <div className="w-2 h-2 rounded-full bg-gray-400 flex items-center justify-center flex-shrink-0 pointer-events-none">
+                                      <span className="text-[8px] text-white leading-none">+</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+        </div>
+      ) : null}
 
        {/* Focus Areas Data Block - Only show in Month view */}
        {currentView === 'Month' && (
