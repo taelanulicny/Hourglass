@@ -336,58 +336,49 @@ export default function DataPage() {
     }
   }, [isClient, visibleMonth]);
 
-  // Scroll to today when schedule loads (only once on initial load)
+  // Scroll to today when schedule loads (only once ever, using same approach as daily view)
   useEffect(() => {
-    if (isClient && !hasScrolledToToday.current && scheduleContainerRef.current && scheduleWithMonths.length > 0) {
-      // Wait for DOM to fully render using requestAnimationFrame
-      const scrollToToday = () => {
-        if (scheduleContainerRef.current && todayRef.current && !hasScrolledToToday.current) {
-          const container = scheduleContainerRef.current;
-          const todayElement = todayRef.current;
-          
-          // Verify the element is actually in the DOM and has dimensions
-          if (!container.contains(todayElement) || todayElement.offsetHeight === 0) {
-            return; // Element not ready yet, try again
-          }
-          
-          // Get the container's scroll position
-          const containerRect = container.getBoundingClientRect();
-          const todayRect = todayElement.getBoundingClientRect();
-          
-          // Calculate the scroll position needed to put today at the top
-          // Account for the header height
-          const headerHeight = Math.max(insets.top, 44) + 80;
-          const scrollOffset = todayRect.top - containerRect.top - headerHeight + container.scrollTop;
-          
-          // Scroll to position today at the top
-          if (scrollOffset >= 0) {
-            container.scrollTo({ 
-              top: scrollOffset, 
-              behavior: "smooth" 
-            });
-            hasScrolledToToday.current = true;
-          }
-        }
-      };
-      
-      // Use requestAnimationFrame to ensure layout is complete
-      const timeouts = [];
-      const rafId = requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          scrollToToday();
-          // Also try with delays as fallback to handle slow rendering
-          timeouts.push(setTimeout(scrollToToday, 100));
-          timeouts.push(setTimeout(scrollToToday, 300));
-          timeouts.push(setTimeout(scrollToToday, 500));
-          timeouts.push(setTimeout(scrollToToday, 800));
-        });
-      });
-      
-      return () => {
-        cancelAnimationFrame(rafId);
-        timeouts.forEach(timeout => clearTimeout(timeout));
-      };
+    if (!isClient) return;
+    if (!scheduleContainerRef.current) return;
+    if (!todayRef.current) return;
+    if (scheduleWithMonths.length === 0) return;
+    
+    // Check if we've already done the initial scroll (persisted in localStorage)
+    const hasScrolledKey = 'schedule:hasInitiallyScrolled';
+    if (typeof window !== 'undefined' && localStorage.getItem(hasScrolledKey) === 'true') {
+      return; // Already scrolled once, don't do it again
     }
+    
+    // Delay scroll to today (wait 2 seconds before scrolling, same as daily view)
+    const scrollTimer = setTimeout(() => {
+      if (!scheduleContainerRef.current) return;
+      if (!todayRef.current) return;
+      
+      const container = scheduleContainerRef.current;
+      const todayElement = todayRef.current;
+      
+      // Where the container starts relative to the page
+      const containerRect = container.getBoundingClientRect();
+      const containerTop = container.scrollTop + containerRect.top;
+      
+      // Where today's element is relative to the container
+      const todayRect = todayElement.getBoundingClientRect();
+      const todayTop = todayRect.top - containerRect.top + container.scrollTop;
+      
+      // Account for the header height (same buffer approach as daily view)
+      const headerHeight = Math.max(insets.top, 44) + 80;
+      // Aim to put today about 20px below the header (similar to daily view's 240px buffer)
+      const target = Math.max(0, todayTop - headerHeight - 20);
+      
+      container.scrollTo({ top: target, behavior: 'smooth' });
+      
+      // Mark that we've done the initial scroll (persist in localStorage)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(hasScrolledKey, 'true');
+      }
+    }, 2000); // 2 second delay (same as daily view)
+    
+    return () => clearTimeout(scrollTimer);
   }, [isClient, scheduleWithMonths, insets.top]);
 
   // Track visible month as user scrolls
