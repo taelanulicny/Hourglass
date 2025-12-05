@@ -348,15 +348,11 @@ export default function DataPage() {
     if (!scheduleContainerRef.current) return;
     if (scheduleWithMonths.length === 0) return;
     
-    // Check if we've scrolled to today today (date-specific, so it scrolls once per day)
-    const todayDateStr = today.toDateString();
-    const hasScrolledKey = `schedule:hasScrolledToToday:${todayDateStr}`;
-    if (typeof window !== 'undefined' && localStorage.getItem(hasScrolledKey) === 'true') {
-      return; // Already scrolled to today today, don't do it again
-    }
+    let hasScrolled = false;
     
     // Wait for todayRef to be set, then scroll
     const scrollToToday = () => {
+      if (hasScrolled) return; // Only scroll once per effect run
       if (!scheduleContainerRef.current) return;
       if (!todayRef.current) return;
       
@@ -365,7 +361,7 @@ export default function DataPage() {
       
       // Verify element is in DOM and has dimensions
       if (!container.contains(todayElement) || todayElement.offsetHeight === 0) {
-        return; // Not ready yet
+        return; // Not ready yet, will try again
       }
       
       // Where the container starts relative to the page
@@ -380,22 +376,27 @@ export default function DataPage() {
       const target = Math.max(0, todayTop - headerHeight);
       
       container.scrollTo({ top: target, behavior: 'smooth' });
-      
-      // Mark that we've scrolled to today today (date-specific)
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(hasScrolledKey, 'true');
-      }
+      hasScrolled = true;
     };
     
-    // Delay scroll to today (wait 2 seconds before scrolling, same as daily view)
-    const scrollTimer = setTimeout(() => {
-      scrollToToday();
-      // Also try with additional delays as fallback
-      setTimeout(scrollToToday, 100);
-      setTimeout(scrollToToday, 300);
-    }, 2000); // 2 second delay (same as daily view)
+    // Use requestAnimationFrame to ensure DOM is ready, then try multiple times
+    const timeouts = [];
+    const rafId = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        // Try scrolling immediately, then with delays
+        scrollToToday();
+        timeouts.push(setTimeout(scrollToToday, 100));
+        timeouts.push(setTimeout(scrollToToday, 300));
+        timeouts.push(setTimeout(scrollToToday, 500));
+        timeouts.push(setTimeout(scrollToToday, 1000));
+        timeouts.push(setTimeout(scrollToToday, 2000));
+      });
+    });
     
-    return () => clearTimeout(scrollTimer);
+    return () => {
+      cancelAnimationFrame(rafId);
+      timeouts.forEach(timeout => clearTimeout(timeout));
+    };
   }, [isClient, scheduleWithMonths, insets.top, today]);
 
   // Track visible month as user scrolls
