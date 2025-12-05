@@ -255,7 +255,7 @@ export default function SearchPage() {
                   placeholder="Search events, notes, focus areas..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-3 pl-10 bg-white/90 backdrop-blur-lg rounded-xl border border-white/30 shadow-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 pl-10 bg-white/90 backdrop-blur-lg rounded-xl border border-white/30 shadow-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-slate-500"
                 />
                 <svg 
                   className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
@@ -276,7 +276,7 @@ export default function SearchPage() {
                   onClick={() => setTimeFilter("all")}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                     timeFilter === "all"
-                      ? "bg-blue-600 text-white"
+                      ? "bg-slate-500 text-white"
                       : "text-gray-700 hover:bg-white/50"
                   }`}
                 >
@@ -286,7 +286,7 @@ export default function SearchPage() {
                   onClick={() => setTimeFilter("past")}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                     timeFilter === "past"
-                      ? "bg-blue-600 text-white"
+                      ? "bg-slate-500 text-white"
                       : "text-gray-700 hover:bg-white/50"
                   }`}
                 >
@@ -296,7 +296,7 @@ export default function SearchPage() {
                   onClick={() => setTimeFilter("future")}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                     timeFilter === "future"
-                      ? "bg-blue-600 text-white"
+                      ? "bg-slate-500 text-white"
                       : "text-gray-700 hover:bg-white/50"
                   }`}
                 >
@@ -309,7 +309,7 @@ export default function SearchPage() {
                 <select
                   value={selectedFocusArea}
                   onChange={(e) => setSelectedFocusArea(e.target.value)}
-                  className="px-3 py-1.5 bg-white/90 backdrop-blur-lg rounded-xl border border-white/30 shadow-lg text-gray-900 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-3 py-1.5 bg-white/90 backdrop-blur-lg rounded-xl border border-white/30 shadow-lg text-gray-900 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-slate-500"
                 >
                   <option value="all">All Focus Areas</option>
                   {focusAreas.map((area) => (
@@ -400,7 +400,7 @@ export default function SearchPage() {
                           {/* Past/Future indicator */}
                           <div className="mt-2">
                             {isToday ? (
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
                                 Today
                               </span>
                             ) : isPast ? (
