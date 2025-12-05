@@ -1834,14 +1834,14 @@ function CalendarContent() {
                 let currentOffset = 0;
                 const radius = 50;
                 const circumference = 2 * Math.PI * radius;
-                const centerX = 70;
-                const centerY = 70;
+                const centerX = 110;
+                const centerY = 110;
                 
                 return (
-                  <div className="flex items-center justify-center gap-4 -mt-4 min-h-[180px]">
+                  <div className="flex items-center justify-center gap-4 -mt-4 min-h-[220px]">
                     {/* Pie Chart */}
-                    <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '180px', height: '180px' }}>
-                      <svg width="180" height="180" viewBox="0 0 180 180" className="transform -rotate-90">
+                    <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '220px', height: '220px' }}>
+                      <svg width="220" height="220" viewBox="0 0 220 220" className="transform -rotate-90">
                         {pieData.map((area, index) => {
                           const dashLength = (area.percentage / 100) * circumference;
                           const dashOffset = -currentOffset;
@@ -1850,7 +1850,7 @@ function CalendarContent() {
                           const midAngle = (startAngle + endAngle) / 2;
                           
                           // Calculate label position - outside the ring
-                          const labelRadius = radius + 15; // Position outside the ring
+                          const labelRadius = radius + 30; // Position outside the ring with more spacing
                           const labelAngleRad = (midAngle * Math.PI) / 180;
                           const labelX = centerX + Math.cos(labelAngleRad) * labelRadius;
                           const labelY = centerY + Math.sin(labelAngleRad) * labelRadius;
@@ -2085,14 +2085,14 @@ function CalendarContent() {
              let currentOffset = 0;
              const radius = 50;
              const circumference = 2 * Math.PI * radius;
-             const centerX = 70;
-             const centerY = 70;
+             const centerX = 110;
+             const centerY = 110;
              
           return (
-               <div className="flex items-center justify-center gap-4 -mt-4 min-h-[180px]">
+               <div className="flex items-center justify-center gap-4 -mt-4 min-h-[220px]">
                  {/* Pie Chart */}
-                 <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '180px', height: '180px' }}>
-                   <svg width="180" height="180" viewBox="0 0 180 180" className="transform -rotate-90">
+                 <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '220px', height: '220px' }}>
+                   <svg width="220" height="220" viewBox="0 0 220 220" className="transform -rotate-90">
                      {pieData.map((area, index) => {
                        const dashLength = (area.percentage / 100) * circumference;
                        const dashOffset = -currentOffset;
