@@ -357,14 +357,14 @@ function CalendarContent() {
     return () => window.removeEventListener("storage", onStorage);
   }, [selectedDate]);
 
-  // Load visible focus areas from localStorage (for schedule page)
+  // Load visible focus areas from localStorage (for calendar views)
   useEffect(() => {
     const areas = loadFocusAreasForDate(new Date());
     const visible = new Set(areas.map(a => a.label));
     setVisibleFocusAreas(visible);
     
     try {
-      const saved = localStorage.getItem('schedule:visibleFocusAreas');
+      const saved = localStorage.getItem('calendar:visibleFocusAreas');
       if (saved) {
         const savedSet = new Set(JSON.parse(saved));
         setVisibleFocusAreas(savedSet);
@@ -382,11 +382,21 @@ function CalendarContent() {
         next.add(label);
       }
       try {
-        localStorage.setItem('schedule:visibleFocusAreas', JSON.stringify([...next]));
+        localStorage.setItem('calendar:visibleFocusAreas', JSON.stringify([...next]));
       } catch {}
       return next;
     });
   };
+
+  // Helper function to filter events by visible focus areas
+  const filterEventsByVisibility = useCallback((eventList) => {
+    return eventList.filter(ev => {
+      // If event has no focus area, show it
+      if (!ev.area) return true;
+      // If focus area is visible, show it
+      return visibleFocusAreas.has(ev.area);
+    });
+  }, [visibleFocusAreas]);
   
   // Modal state must be defined before the effects that use it
   const [showModal, setShowModal] = useState(false);
@@ -1354,8 +1364,10 @@ function CalendarContent() {
   const eventsForSelected = useMemo(() => {
     // include events that overlap the selected day window [dayStartMs, dayEndMs)
     if (!dayStartMs || !dayEndMs) return [];
-    return events.filter((ev) => ev.end > dayStartMs && ev.start < dayEndMs);
-  }, [events, dayStartMs, dayEndMs]);
+    const dayEvents = events.filter((ev) => ev.end > dayStartMs && ev.start < dayEndMs);
+    // Filter by visible focus areas
+    return filterEventsByVisibility(dayEvents);
+  }, [events, dayStartMs, dayEndMs, visibleFocusAreas]);
 
   // Calculate overlapping event layout (columns, widths, positions)
   const eventLayouts = useMemo(() => {
@@ -1462,11 +1474,13 @@ function CalendarContent() {
     dateStart.setHours(0, 0, 0, 0);
     const dateEnd = new Date(date);
     dateEnd.setHours(23, 59, 59, 999);
-    return events.filter(ev => {
+    const dayEvents = events.filter(ev => {
       const evStart = new Date(ev.start);
       const evEnd = new Date(ev.end);
       return evStart <= dateEnd && evEnd >= dateStart;
     });
+    // Filter by visible focus areas
+    return filterEventsByVisibility(dayEvents);
   };
 
   // Helper function to calculate event layouts for a given day's events
@@ -2225,7 +2239,9 @@ function CalendarContent() {
               const dayEndMs = dayEnd.getTime();
               
               // Get events for this day
-              const dayEvents = events.filter(ev => ev.end > dayStartMs && ev.start < dayEndMs);
+              const allDayEvents = events.filter(ev => ev.end > dayStartMs && ev.start < dayEndMs);
+              // Filter by visible focus areas
+              const dayEvents = filterEventsByVisibility(allDayEvents);
               
               // Calculate layouts for this day's events
               const layouts = calculateEventLayouts(dayEvents, dayStartMs, dayEndMs);
@@ -2693,7 +2709,9 @@ function CalendarContent() {
               const dayEndMs = dayEnd.getTime();
               
               // Get events for this day
-              const dayEvents = events.filter(ev => ev.end > dayStartMs && ev.start < dayEndMs);
+              const allDayEvents = events.filter(ev => ev.end > dayStartMs && ev.start < dayEndMs);
+              // Filter by visible focus areas
+              const dayEvents = filterEventsByVisibility(allDayEvents);
               
               // Calculate layouts for this day's events
               const layouts = calculateEventLayouts(dayEvents, dayStartMs, dayEndMs);
