@@ -964,14 +964,14 @@ function CalendarContent() {
     // Delay scroll to current time (wait 2 seconds before scrolling)
     const scrollTimer = setTimeout(() => {
       if (!dayColRef.current) return;
-      
-      // Where the day column starts relative to the page
-      const rect = dayColRef.current.getBoundingClientRect();
-      const pageTop = window.scrollY + rect.top;
-      // Aim to put the red line about 2 hours (240px) below the top of the viewport
-      const target = Math.max(0, pageTop + nowTopPx - 240);
-      window.scrollTo({ top: target, behavior: 'smooth' });
-      
+    
+    // Where the day column starts relative to the page
+    const rect = dayColRef.current.getBoundingClientRect();
+    const pageTop = window.scrollY + rect.top;
+    // Aim to put the red line about 2 hours (240px) below the top of the viewport
+    const target = Math.max(0, pageTop + nowTopPx - 240);
+    window.scrollTo({ top: target, behavior: 'smooth' });
+    
       // Mark that we've done the initial scroll (persist in localStorage)
       if (typeof window !== 'undefined') {
         localStorage.setItem(hasScrolledKey, 'true');
@@ -1293,11 +1293,8 @@ function CalendarContent() {
     <div className="min-h-screen bg-gradient-to-br from-blue-100 via-purple-50 to-pink-50 text-white pb-24">
       {/* Fixed header */}
       <div className="fixed top-0 left-0 right-0 z-50">
-        {/* Safe area background filler */}
-        <div className="absolute top-0 left-0 right-0 bg-gradient-to-br from-blue-100 via-purple-50 to-pink-50" style={{ height: `${insets.top}px` }} />
-        
-        {/* Main header content */}
-        <div className="bg-white/70 backdrop-blur-xl border-b border-white/30 shadow-lg" style={{ marginTop: `${insets.top}px` }}>
+        {/* Main header content with safe area padding */}
+        <div className="bg-white/70 backdrop-blur-xl border-b border-white/30 shadow-lg" style={{ paddingTop: `${Math.max(insets.top, 44)}px` }}>
           {/* Top bar */}
           <header className="px-4 pt-4 pb-4 flex items-center justify-between relative">
         <div className="flex items-center gap-2">
@@ -1317,23 +1314,23 @@ function CalendarContent() {
             <>
               <button 
                 className="text-lg px-2 text-gray-900 hover:text-gray-700" 
-                aria-label="Previous Day" 
-                onClick={() => selectedDate && setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() - 1))}
-                disabled={!selectedDate}
-              >
-                ‹
-              </button>
+            aria-label="Previous Day" 
+            onClick={() => selectedDate && setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() - 1))}
+            disabled={!selectedDate}
+          >
+            ‹
+          </button>
               <div className="font-semibold text-base text-gray-900 whitespace-nowrap">
                 {selectedDate ? selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) : ''}
               </div>
-              <button 
+          <button 
                 className="text-lg px-2 text-gray-900 hover:text-gray-700" 
-                aria-label="Next Day" 
-                onClick={() => selectedDate && setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() + 1))}
-                disabled={!selectedDate}
-              >
-                ›
-              </button>
+            aria-label="Next Day" 
+            onClick={() => selectedDate && setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() + 1))}
+            disabled={!selectedDate}
+          >
+            ›
+          </button>
             </>
           ) : (
             <>
@@ -1397,7 +1394,7 @@ function CalendarContent() {
           <div className="fixed left-0 top-0 bottom-0 w-64 bg-white/20 backdrop-blur-xl border-r border-white/30 shadow-2xl z-50 overflow-y-auto scroll-smooth">
             <div className="p-4 pt-20">
               {/* Close button */}
-              <button
+            <button
                 onClick={() => setShowSideMenu(false)}
                 className="absolute top-4 right-4 text-gray-900 hover:opacity-70"
                 aria-label="Close menu"
@@ -1405,7 +1402,7 @@ function CalendarContent() {
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
-              </button>
+            </button>
 
               {/* View Options */}
               <div className="mb-8">
@@ -1495,9 +1492,9 @@ function CalendarContent() {
                   ) : (
                     <div className="px-4 py-2 text-sm text-gray-600">No focus areas yet</div>
                   )}
-                </div>
-              </div>
-            </div>
+        </div>
+        </div>
+      </div>
           </div>
         </>
       )}
@@ -1505,7 +1502,7 @@ function CalendarContent() {
       {/* Calendar view area */}
       {currentView === 'Day' ? (
         /* Day view */
-        <div className="flex-1 overflow-y-auto px-4 scroll-smooth" style={{ paddingTop: `${insets.top + 80}px` }}>
+        <div className="flex-1 overflow-y-auto px-4 scroll-smooth" style={{ paddingTop: `${Math.max(insets.top, 44) + 80}px` }}>
           {/* Day info header */}
           {selectedDate && (
             <div className="mb-4 flex items-center gap-4">
@@ -1518,257 +1515,257 @@ function CalendarContent() {
           
           <div ref={gridRootRef} className="relative">
             <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl p-4">
-              <div className="grid grid-cols-[56px_minmax(0,1fr)]">
-                {/* Hours gutter */}
-                <div className="flex flex-col items-end pr-2">
-                  {isClient && HOURS.map((h) => (
-                    <div
-                      key={h}
+        <div className="grid grid-cols-[56px_minmax(0,1fr)]">
+          {/* Hours gutter */}
+          <div className="flex flex-col items-end pr-2">
+            {isClient && HOURS.map((h) => (
+              <div
+                key={h}
                       className="text-xs text-gray-700 flex items-start"
-                      style={{ height: `${pxPerHour}px` }}
-                    >
-                      <div className="-translate-y-1">{formatHour(h)}</div>
-                    </div>
-                  ))}
-                </div>
+                style={{ height: `${pxPerHour}px` }}
+              >
+                <div className="-translate-y-1">{formatHour(h)}</div>
+              </div>
+            ))}
+          </div>
 
                 {/* Day column */}
-                <div
-                  ref={dayColRef}
+          <div
+            ref={dayColRef}
                   className="relative border-l border-gray-300/60 overflow-visible"
-                  style={{ touchAction: draggingId ? 'none' : undefined, userSelect: draggingId ? 'none' : undefined }}
-                >
-                  {HOURS.map((h) => (
-                    <div
-                      key={h}
+            style={{ touchAction: draggingId ? 'none' : undefined, userSelect: draggingId ? 'none' : undefined }}
+          >
+            {HOURS.map((h) => (
+              <div
+                key={h}
                       className="h-16 border-b border-gray-200/50 hover:bg-white/10 cursor-pointer transition-colors"
-                      onClick={() => openForSlot(h)}
-                    />
-                  ))}
+                onClick={() => openForSlot(h)}
+              />
+            ))}
 
                   {/* Current time indicator */}
-                  {isClient && nowTopPx != null && (
-                    <div
-                      className="pointer-events-none absolute inset-x-0 z-20"
-                      style={{ top: Math.max(0, Math.min(nowTopPx, (24 * pxPerHour) - 1)) + 'px' }}
-                    >
+            {isClient && nowTopPx != null && (
+              <div
+                className="pointer-events-none absolute inset-x-0 z-20"
+                style={{ top: Math.max(0, Math.min(nowTopPx, (24 * pxPerHour) - 1)) + 'px' }}
+              >
                       {/* Hourglass marker */}
-                      <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        className="absolute -left-3 -translate-y-1/2"
-                        style={{ top: 0 }}
-                        aria-hidden="true"
-                      >
-                        <rect x="6" y="2.5" width="12" height="3" rx="1.5" stroke="#ef4444" strokeWidth="2" />
-                        <rect x="6" y="18.5" width="12" height="3" rx="1.5" stroke="#ef4444" strokeWidth="2" />
-                        <path d="M8 6c0 3.2 2.2 4.7 4 6-1.8 1.3-4 2.8-4 6" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M16 6c0 3.2-2.2 4.7-4 6 1.8 1.3 4 2.8 4 6" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  className="absolute -left-3 -translate-y-1/2"
+                  style={{ top: 0 }}
+                  aria-hidden="true"
+                >
+                  <rect x="6" y="2.5" width="12" height="3" rx="1.5" stroke="#ef4444" strokeWidth="2" />
+                  <rect x="6" y="18.5" width="12" height="3" rx="1.5" stroke="#ef4444" strokeWidth="2" />
+                  <path d="M8 6c0 3.2 2.2 4.7 4 6-1.8 1.3-4 2.8-4 6" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M16 6c0 3.2-2.2 4.7-4 6 1.8 1.3 4 2.8 4 6" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
                       {/* Time label */}
-                      <div
-                        className="absolute right-0 -translate-y-full mb-1 px-1.5 py-0.5 text-[10px] rounded bg-red-500 text-white shadow"
-                        style={{ top: 0 }}
-                        aria-hidden="true"
-                      >
-                        {formatTime12(nowMs)}
-                      </div>
-                      {/* The line itself */}
-                      <div className="h-[2px] bg-red-500 w-full" />
-                    </div>
-                  )}
+                <div
+                  className="absolute right-0 -translate-y-full mb-1 px-1.5 py-0.5 text-[10px] rounded bg-red-500 text-white shadow"
+                  style={{ top: 0 }}
+                  aria-hidden="true"
+                >
+                  {formatTime12(nowMs)}
+                </div>
+                {/* The line itself */}
+                <div className="h-[2px] bg-red-500 w-full" />
+              </div>
+            )}
 
                   {/* Events */}
-                  {isClient && eventsForSelected.map(ev => {
-                    const currentStart = resizingId === ev.id && resizeGhost ? resizeGhost.start : ev.start;
-                    const currentEnd = resizingId === ev.id && resizeGhost ? resizeGhost.end : ev.end;
-                    
-                    const visibleStart = Math.max(currentStart, dayStartMs);
+            {isClient && eventsForSelected.map(ev => {
+              const currentStart = resizingId === ev.id && resizeGhost ? resizeGhost.start : ev.start;
+              const currentEnd = resizingId === ev.id && resizeGhost ? resizeGhost.end : ev.end;
+              
+              const visibleStart = Math.max(currentStart, dayStartMs);
                     const visibleEnd = Math.min(currentEnd, dayEndMs);
-                    const vs = new Date(visibleStart);
-                    const topPx = (vs.getHours() + vs.getMinutes() / 60) * pxPerHour;
-                    const heightPx = ((visibleEnd - visibleStart) / (1000 * 60 * 60)) * pxPerHour;
-                    const renderColor = getAreaColor(ev.area) || ev.color || COLORS[2];
+              const vs = new Date(visibleStart);
+              const topPx = (vs.getHours() + vs.getMinutes() / 60) * pxPerHour;
+              const heightPx = ((visibleEnd - visibleStart) / (1000 * 60 * 60)) * pxPerHour;
+              const renderColor = getAreaColor(ev.area) || ev.color || COLORS[2];
                     
-                    return (
-                      <div
-                        key={ev.id}
-                        data-event-id={ev.id}
-                        className={`absolute left-1 right-1 rounded-md shadow calendar-event select-none ${draggingId === ev.id ? 'cursor-grabbing' : dragDelayActive && dragDelayEventId === ev.id ? 'cursor-wait' : resizingId === ev.id ? 'cursor-ns-resize' : 'cursor-grab'}`}
-                        style={{
-                          top: (draggingId === ev.id && dragGhostTop != null ? dragGhostTop : Math.max(0, topPx)) + 'px',
-                          height: Math.max(24, heightPx) + 'px',
-                          background: toRGBA(renderColor, dragDelayActive && dragDelayEventId === ev.id ? 0.2 : resizingId === ev.id ? 0.7 : 0.4),
-                          borderLeft: `3px solid ${renderColor}`,
-                          willChange: (draggingId === ev.id || resizingId === ev.id) ? 'top, height' : undefined,
-                          opacity: dragDelayActive && dragDelayEventId === ev.id ? 0.7 : resizingId === ev.id ? 0.9 : 1,
-                          touchAction: (draggingId === ev.id || resizingId === ev.id) ? 'none' : 'pan-y',
-                        }}
-                        title={ev.title}
-                        onMouseDown={(e) => {
+              return (
+                <div
+                  key={ev.id}
+                  data-event-id={ev.id}
+                  className={`absolute left-1 right-1 rounded-md shadow calendar-event select-none ${draggingId === ev.id ? 'cursor-grabbing' : dragDelayActive && dragDelayEventId === ev.id ? 'cursor-wait' : resizingId === ev.id ? 'cursor-ns-resize' : 'cursor-grab'}`}
+                  style={{
+                    top: (draggingId === ev.id && dragGhostTop != null ? dragGhostTop : Math.max(0, topPx)) + 'px',
+                    height: Math.max(24, heightPx) + 'px',
+                    background: toRGBA(renderColor, dragDelayActive && dragDelayEventId === ev.id ? 0.2 : resizingId === ev.id ? 0.7 : 0.4),
+                    borderLeft: `3px solid ${renderColor}`,
+                    willChange: (draggingId === ev.id || resizingId === ev.id) ? 'top, height' : undefined,
+                    opacity: dragDelayActive && dragDelayEventId === ev.id ? 0.7 : resizingId === ev.id ? 0.9 : 1,
+                    touchAction: (draggingId === ev.id || resizingId === ev.id) ? 'none' : 'pan-y',
+                  }}
+                  title={ev.title}
+                  onMouseDown={(e) => {
                           // Don't start drag if clicking on resize handles
                           if (e.target.closest('[data-resize-handle]')) {
                             return;
                           }
                           
-                          e.preventDefault();
-                          e.stopPropagation();
-                          
-                          if (dragDelayTimerRef.current) {
-                            clearTimeout(dragDelayTimerRef.current);
-                          }
-                          
-                          setDragDelayActive(true);
-                          setDragDelayEventId(ev.id);
-                          
-                          dragDelayTimerRef.current = setTimeout(() => {
-                            if (unmountedRef.current) return;
-                            const dur = ev.end - ev.start;
-                            setDraggingId(ev.id);
-                            setDragDelayActive(false);
-                            setDragDelayEventId(null);
-                            dragRef.current = {
-                              startY: e.clientY,
-                              origStart: ev.start,
-                              origEnd: ev.end,
-                              duration: dur,
-                              lastStartMs: null,
-                              moved: false,
-                            };
-                            const vs = new Date(Math.max(ev.start, dayStartMs));
-                            const topPxSeed = (vs.getHours() + vs.getMinutes() / 60) * pxPerHour;
-                            setDragGhostTop(Math.max(0, topPxSeed));
-                          }, 500);
-                        }}
-                        onMouseUp={(e) => {
-                          if (dragDelayActive && dragDelayEventId === ev.id) {
-                            if (dragDelayTimerRef.current) {
-                              clearTimeout(dragDelayTimerRef.current);
-                            }
-                            setDragDelayActive(false);
-                            setDragDelayEventId(null);
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (dragDelayActive && dragDelayEventId === ev.id) {
-                            if (dragDelayTimerRef.current) {
-                              clearTimeout(dragDelayTimerRef.current);
-                            }
-                            setDragDelayActive(false);
-                            setDragDelayEventId(null);
-                          }
-                        }}
-                        onClick={(e) => { if (dragRef.current.moved || resizeRef.current.moved) { if (e.cancelable) e.preventDefault(); e.stopPropagation(); } else { openEdit(ev); } }}
-                      >
-                        <div className="text-[11px] px-2 py-1 leading-tight">
-                          <div className="font-semibold truncate">{ev.title}</div>
-                          {ev.area && <div className="text-[10px] opacity-70 truncate">{ev.area}</div>}
-                        </div>
-                        
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    if (dragDelayTimerRef.current) {
+                      clearTimeout(dragDelayTimerRef.current);
+                    }
+                    
+                    setDragDelayActive(true);
+                    setDragDelayEventId(ev.id);
+                    
+                    dragDelayTimerRef.current = setTimeout(() => {
+                      if (unmountedRef.current) return;
+                      const dur = ev.end - ev.start;
+                      setDraggingId(ev.id);
+                      setDragDelayActive(false);
+                      setDragDelayEventId(null);
+                      dragRef.current = {
+                        startY: e.clientY,
+                        origStart: ev.start,
+                        origEnd: ev.end,
+                        duration: dur,
+                        lastStartMs: null,
+                        moved: false,
+                      };
+                      const vs = new Date(Math.max(ev.start, dayStartMs));
+                      const topPxSeed = (vs.getHours() + vs.getMinutes() / 60) * pxPerHour;
+                      setDragGhostTop(Math.max(0, topPxSeed));
+                    }, 500);
+                  }}
+                  onMouseUp={(e) => {
+                    if (dragDelayActive && dragDelayEventId === ev.id) {
+                      if (dragDelayTimerRef.current) {
+                        clearTimeout(dragDelayTimerRef.current);
+                      }
+                      setDragDelayActive(false);
+                      setDragDelayEventId(null);
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (dragDelayActive && dragDelayEventId === ev.id) {
+                      if (dragDelayTimerRef.current) {
+                        clearTimeout(dragDelayTimerRef.current);
+                      }
+                      setDragDelayActive(false);
+                      setDragDelayEventId(null);
+                    }
+                  }}
+                  onClick={(e) => { if (dragRef.current.moved || resizeRef.current.moved) { if (e.cancelable) e.preventDefault(); e.stopPropagation(); } else { openEdit(ev); } }}
+                >
+                  <div className="text-[11px] px-2 py-1 leading-tight">
+                    <div className="font-semibold truncate">{ev.title}</div>
+                    {ev.area && <div className="text-[10px] opacity-70 truncate">{ev.area}</div>}
+                  </div>
+                  
                         {/* Resize handles - all four corners */}
-                        {!draggingId && (
-                          <>
+                  {!draggingId && (
+                    <>
                             {/* Top-left */}
-                            <div
+                      <div
                               data-resize-handle
                               className={`absolute top-0 left-0 w-6 h-6 cursor-ns-resize select-none hover:opacity-100 ${resizingId === ev.id && resizeHandle === 'top-left' ? 'opacity-100' : 'opacity-0'}`}
-                              onMouseDown={(e) => {
-                                e.stopPropagation();
-                                e.preventDefault();
-                                if (dragDelayTimerRef.current) {
-                                  clearTimeout(dragDelayTimerRef.current);
-                                  dragDelayTimerRef.current = null;
-                                }
-                                setDragDelayActive(false);
-                                setDragDelayEventId(null);
-                                setResizingId(ev.id);
-                                setResizeHandle('top-left');
-                                resizeRef.current = {
-                                  startY: e.clientY,
-                                  origStart: ev.start,
-                                  origEnd: ev.end,
-                                  lastStartMs: ev.start,
-                                  lastEndMs: ev.end,
-                                  moved: false,
-                                };
-                              }}
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          if (dragDelayTimerRef.current) {
+                            clearTimeout(dragDelayTimerRef.current);
+                            dragDelayTimerRef.current = null;
+                          }
+                          setDragDelayActive(false);
+                          setDragDelayEventId(null);
+                          setResizingId(ev.id);
+                          setResizeHandle('top-left');
+                          resizeRef.current = {
+                            startY: e.clientY,
+                            origStart: ev.start,
+                            origEnd: ev.end,
+                            lastStartMs: ev.start,
+                            lastEndMs: ev.end,
+                            moved: false,
+                          };
+                        }}
                             />
                             {/* Top-right */}
                             <div
                               data-resize-handle
                               className={`absolute top-0 right-0 w-6 h-6 cursor-ns-resize select-none hover:opacity-100 ${resizingId === ev.id && resizeHandle === 'top-right' ? 'opacity-100' : 'opacity-0'}`}
-                              onMouseDown={(e) => {
-                                e.stopPropagation();
-                                e.preventDefault();
-                                if (dragDelayTimerRef.current) {
-                                  clearTimeout(dragDelayTimerRef.current);
-                                  dragDelayTimerRef.current = null;
-                                }
-                                setDragDelayActive(false);
-                                setDragDelayEventId(null);
-                                setResizingId(ev.id);
-                                setResizeHandle('top-right');
-                                resizeRef.current = {
-                                  startY: e.clientY,
-                                  origStart: ev.start,
-                                  origEnd: ev.end,
-                                  lastStartMs: ev.start,
-                                  lastEndMs: ev.end,
-                                  moved: false,
-                                };
-                              }}
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          if (dragDelayTimerRef.current) {
+                            clearTimeout(dragDelayTimerRef.current);
+                            dragDelayTimerRef.current = null;
+                          }
+                          setDragDelayActive(false);
+                          setDragDelayEventId(null);
+                          setResizingId(ev.id);
+                          setResizeHandle('top-right');
+                          resizeRef.current = {
+                            startY: e.clientY,
+                            origStart: ev.start,
+                            origEnd: ev.end,
+                            lastStartMs: ev.start,
+                            lastEndMs: ev.end,
+                            moved: false,
+                          };
+                        }}
                             />
                             {/* Bottom-left */}
                             <div
                               data-resize-handle
                               className={`absolute bottom-0 left-0 w-6 h-6 cursor-ns-resize select-none hover:opacity-100 ${resizingId === ev.id && resizeHandle === 'bottom-left' ? 'opacity-100' : 'opacity-0'}`}
-                              onMouseDown={(e) => {
-                                e.stopPropagation();
-                                e.preventDefault();
-                                if (dragDelayTimerRef.current) {
-                                  clearTimeout(dragDelayTimerRef.current);
-                                  dragDelayTimerRef.current = null;
-                                }
-                                setDragDelayActive(false);
-                                setDragDelayEventId(null);
-                                setResizingId(ev.id);
-                                setResizeHandle('bottom-left');
-                                resizeRef.current = {
-                                  startY: e.clientY,
-                                  origStart: ev.start,
-                                  origEnd: ev.end,
-                                  lastStartMs: ev.start,
-                                  lastEndMs: ev.end,
-                                  moved: false,
-                                };
-                              }}
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          if (dragDelayTimerRef.current) {
+                            clearTimeout(dragDelayTimerRef.current);
+                            dragDelayTimerRef.current = null;
+                          }
+                          setDragDelayActive(false);
+                          setDragDelayEventId(null);
+                          setResizingId(ev.id);
+                          setResizeHandle('bottom-left');
+                          resizeRef.current = {
+                            startY: e.clientY,
+                            origStart: ev.start,
+                            origEnd: ev.end,
+                            lastStartMs: ev.start,
+                            lastEndMs: ev.end,
+                            moved: false,
+                          };
+                        }}
                             />
                             {/* Bottom-right */}
                             <div
                               data-resize-handle
                               className={`absolute bottom-0 right-0 w-6 h-6 cursor-ns-resize select-none hover:opacity-100 ${resizingId === ev.id && resizeHandle === 'bottom-right' ? 'opacity-100' : 'opacity-0'}`}
-                              onMouseDown={(e) => {
-                                e.stopPropagation();
-                                e.preventDefault();
-                                if (dragDelayTimerRef.current) {
-                                  clearTimeout(dragDelayTimerRef.current);
-                                  dragDelayTimerRef.current = null;
-                                }
-                                setDragDelayActive(false);
-                                setDragDelayEventId(null);
-                                setResizingId(ev.id);
-                                setResizeHandle('bottom-right');
-                                resizeRef.current = {
-                                  startY: e.clientY,
-                                  origStart: ev.start,
-                                  origEnd: ev.end,
-                                  lastStartMs: ev.start,
-                                  lastEndMs: ev.end,
-                                  moved: false,
-                                };
-                              }}
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          if (dragDelayTimerRef.current) {
+                            clearTimeout(dragDelayTimerRef.current);
+                            dragDelayTimerRef.current = null;
+                          }
+                          setDragDelayActive(false);
+                          setDragDelayEventId(null);
+                          setResizingId(ev.id);
+                          setResizeHandle('bottom-right');
+                          resizeRef.current = {
+                            startY: e.clientY,
+                            origStart: ev.start,
+                            origEnd: ev.end,
+                            lastStartMs: ev.start,
+                            lastEndMs: ev.end,
+                            moved: false,
+                          };
+                        }}
                             />
                           </>
                         )}
@@ -1888,7 +1885,7 @@ function CalendarContent() {
                           );
                         })}
                       </svg>
-                    </div>
+                      </div>
 
                     {/* Focus Areas List */}
                     <div className="flex-1 flex items-center">
@@ -1911,15 +1908,15 @@ function CalendarContent() {
                         )}
                       </div>
                     </div>
-                  </div>
-                );
+                </div>
+              );
               })()}
-            </div>
           </div>
+        </div>
         </div>
       ) : (
         /* Month view */
-        <div className="flex-1 overflow-y-auto px-4 scroll-smooth" style={{ paddingTop: `${insets.top + 80}px` }}>
+        <div className="flex-1 overflow-y-auto px-4 scroll-smooth" style={{ paddingTop: `${Math.max(insets.top, 44) + 80}px` }}>
           {/* Month grid */}
           <div className="w-full">
             {/* Calendar grid container with glassmorphic styling */}
@@ -1931,8 +1928,8 @@ function CalendarContent() {
                     {day}
                   </div>
                 ))}
-              </div>
-              
+      </div>
+
               {/* Calendar grid */}
               <div className="grid grid-cols-7 gap-1">
                 {monthGrid.map((date, idx) => {
@@ -1953,11 +1950,11 @@ function CalendarContent() {
                         {isToday ? (
                           <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center mx-auto">
                             {date.getDate()}
-                          </div>
+        </div>
                         ) : (
                           date.getDate()
                         )}
-                      </div>
+      </div>
                       <div className="flex flex-wrap items-center justify-center gap-1 px-1 flex-1 min-h-0 overflow-hidden">
                         {dayEvents.slice(0, 3).map((ev) => {
                           const evColor = getAreaColor(ev.area) || ev.color || COLORS[2];
@@ -2091,7 +2088,7 @@ function CalendarContent() {
              const centerX = 70;
              const centerY = 70;
              
-             return (
+          return (
                <div className="flex items-center justify-center gap-4 -mt-4 min-h-[180px]">
                  {/* Pie Chart */}
                  <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '180px', height: '180px' }}>
@@ -2117,12 +2114,12 @@ function CalendarContent() {
                              cx={centerX}
                              cy={centerY}
                              r={radius}
-                             fill="none"
+                  fill="none"
                              stroke={area.color}
                              strokeWidth="20"
                              strokeDasharray={`${dashLength} ${circumference}`}
                              strokeDashoffset={dashOffset}
-                             strokeLinecap="round"
+                  strokeLinecap="round"
                            />
                            {/* Percentage label - outside the ring */}
                            <text
@@ -2139,7 +2136,7 @@ function CalendarContent() {
                        );
                      })}
                    </svg>
-                 </div>
+                    </div>
 
                  {/* Focus Areas List */}
                  <div className="flex-1 flex items-center">
@@ -2155,17 +2152,17 @@ function CalendarContent() {
                            <span className="text-xs text-gray-600 ml-auto">
                              {Math.round(area.actualTimeLogged)}/{Math.round(area.monthlyPlanned)}
                            </span>
-                         </div>
+                    </div>
                        ))
                      ) : (
                        <div className="text-xs text-gray-600">No focus areas yet. Add them from the dashboard.</div>
                      )}
-                   </div>
+                  </div>
                  </div>
-               </div>
-             );
+            </div>
+          );
            })()}
-         </div>
+      </div>
        </div>
        )}
 
