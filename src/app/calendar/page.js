@@ -1834,14 +1834,14 @@ function CalendarContent() {
                 let currentOffset = 0;
                 const radius = 50;
                 const circumference = 2 * Math.PI * radius;
-                const centerX = 110;
-                const centerY = 110;
+                const centerX = 130;
+                const centerY = 130;
                 
                 return (
-                  <div className="flex items-center justify-center gap-4 -mt-4 min-h-[220px]">
+                  <div className="flex items-center justify-center gap-4 -mt-4 min-h-[260px]">
                     {/* Pie Chart */}
-                    <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '220px', height: '220px' }}>
-                      <svg width="220" height="220" viewBox="0 0 220 220" className="transform -rotate-90">
+                    <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '260px', height: '260px' }}>
+                      <svg width="260" height="260" viewBox="0 0 260 260" className="transform -rotate-90">
                         {pieData.map((area, index) => {
                           const dashLength = (area.percentage / 100) * circumference;
                           const dashOffset = -currentOffset;
@@ -1850,7 +1850,7 @@ function CalendarContent() {
                           const midAngle = (startAngle + endAngle) / 2;
                           
                           // Calculate label position - outside the ring
-                          const labelRadius = radius + 30; // Position outside the ring with more spacing
+                          const labelRadius = radius + 50; // Position outside the ring with much more spacing
                           const labelAngleRad = (midAngle * Math.PI) / 180;
                           const labelX = centerX + Math.cos(labelAngleRad) * labelRadius;
                           const labelY = centerY + Math.sin(labelAngleRad) * labelRadius;
@@ -1946,16 +1946,16 @@ function CalendarContent() {
                         setCurrentView('Day');
                       }}
                     >
-                      <div className={`text-sm font-medium mb-1 text-center flex-shrink-0 ${inMonth ? 'text-gray-900' : 'text-gray-500'} ${isToday ? 'text-blue-600' : ''}`}>
+                      <div className={`text-sm font-medium text-center flex-shrink-0 h-8 flex items-center justify-center ${inMonth ? 'text-gray-900' : 'text-gray-500'} ${isToday ? 'text-blue-600' : ''}`}>
                         {isToday ? (
                           <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center mx-auto">
                             {date.getDate()}
-        </div>
+                          </div>
                         ) : (
                           date.getDate()
                         )}
-      </div>
-                      <div className="flex flex-wrap items-center justify-center gap-1 px-1 flex-1 min-h-0 overflow-hidden">
+                      </div>
+                      <div className="flex flex-wrap items-center justify-center gap-1 px-1 flex-shrink-0 mt-auto">
                         {dayEvents.slice(0, 3).map((ev) => {
                           const evColor = getAreaColor(ev.area) || ev.color || COLORS[2];
                           return (
@@ -2085,14 +2085,14 @@ function CalendarContent() {
              let currentOffset = 0;
              const radius = 50;
              const circumference = 2 * Math.PI * radius;
-             const centerX = 110;
-             const centerY = 110;
+             const centerX = 130;
+             const centerY = 130;
              
           return (
-               <div className="flex items-center justify-center gap-4 -mt-4 min-h-[220px]">
+               <div className="flex items-center justify-center gap-4 -mt-4 min-h-[260px]">
                  {/* Pie Chart */}
-                 <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '220px', height: '220px' }}>
-                   <svg width="220" height="220" viewBox="0 0 220 220" className="transform -rotate-90">
+                 <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '260px', height: '260px' }}>
+                   <svg width="260" height="260" viewBox="0 0 260 260" className="transform -rotate-90">
                      {pieData.map((area, index) => {
                        const dashLength = (area.percentage / 100) * circumference;
                        const dashOffset = -currentOffset;
@@ -2101,7 +2101,7 @@ function CalendarContent() {
                        const midAngle = (startAngle + endAngle) / 2;
                        
                        // Calculate label position - outside the ring
-                       const labelRadius = radius + 15; // Position outside the ring
+                       const labelRadius = radius + 50; // Position outside the ring with much more spacing
                        const labelAngleRad = (midAngle * Math.PI) / 180;
                        const labelX = centerX + Math.cos(labelAngleRad) * labelRadius;
                        const labelY = centerY + Math.sin(labelAngleRad) * labelRadius;
@@ -2177,7 +2177,7 @@ function CalendarContent() {
           });
           setShowModal(true);
         }}
-        className="fixed bottom-24 right-4 w-14 h-14 rounded-full bg-blue-500/80 backdrop-blur-lg text-white flex items-center justify-center shadow-xl border border-white/20 z-50 hover:bg-blue-600/80 transition-all"
+        className="fixed bottom-24 right-4 w-14 h-14 rounded-full bg-slate-500/80 backdrop-blur-lg text-white flex items-center justify-center shadow-xl border border-white/20 z-50 hover:bg-slate-600/80 transition-all"
         aria-label="Add Event"
       >
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2186,7 +2186,7 @@ function CalendarContent() {
       </button>
 
 
-      {/* Bottom buttons: Dashboard | Calendar */}
+      {/* Bottom buttons: Dashboard | Calendar | Data */}
       <div className="fixed bottom-0 left-0 right-0 p-3 pb-7 z-[9999]">
         <div className="max-w-md mx-auto grid grid-cols-3 gap-3">
           <button
@@ -2201,6 +2201,12 @@ function CalendarContent() {
             aria-current="page"
           >
             Calendar
+          </button>
+          <button
+            onClick={() => router.push('/data')}
+            className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-medium border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
+          >
+            Data
           </button>
         </div>
       </div>

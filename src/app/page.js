@@ -1908,18 +1908,19 @@ function HomeContent() {
           )}
         </div>
 
-        {/* Floating notes button for focus area view */}
+
+        {/* Floating action button for adding events */}
         <button
-          onClick={() => router.push('/notes')}
-          className="fixed bottom-20 right-4 bg-[#6B7280]/30 backdrop-blur-lg text-gray-700 rounded-full w-12 h-12 flex items-center justify-center text-2xl shadow-md border border-white/20 z-[10000]"
-          aria-label="Go to Notes"
+          onClick={() => router.push('/calendar?new=1')}
+          className="fixed bottom-24 right-4 w-14 h-14 rounded-full bg-slate-500/80 backdrop-blur-lg text-white flex items-center justify-center shadow-xl border border-white/20 z-50 hover:bg-slate-600/80 transition-all"
+          aria-label="Add Event"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
         </button>
 
-        {/* Bottom navigation: Dashboard | Calendar */}
+        {/* Bottom navigation: Dashboard | Calendar | Data */}
         <div className="fixed bottom-0 left-0 right-0 p-3 pb-7 z-[9999]">
           <div className="max-w-md mx-auto grid grid-cols-3 gap-3">
             <button
@@ -1936,10 +1937,10 @@ function HomeContent() {
               Calendar
             </button>
             <button
-              onClick={() => router.push('/connect')}
+              onClick={() => router.push('/data')}
               className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-medium border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
             >
-              Discover
+              Data
             </button>
           </div>
         </div>
@@ -2297,7 +2298,19 @@ function HomeContent() {
         </div>
       </div>
     </div>
-    {/* Bottom navigation: Dashboard | Calendar | AI Assistant */}
+
+    {/* Floating action button for adding events */}
+    <button
+      onClick={() => router.push('/calendar?new=1')}
+      className="fixed bottom-24 right-4 w-14 h-14 rounded-full bg-slate-500/80 backdrop-blur-lg text-white flex items-center justify-center shadow-xl border border-white/20 z-50 hover:bg-slate-600/80 transition-all"
+      aria-label="Add Event"
+    >
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+      </svg>
+    </button>
+
+    {/* Bottom navigation: Dashboard | Calendar | Data */}
     <div className="fixed bottom-0 left-0 right-0 p-3 pb-7 z-[9999]">
       <div className="max-w-md mx-auto grid grid-cols-3 gap-3">
         <button
@@ -2312,6 +2325,12 @@ function HomeContent() {
           className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-medium border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
         >
           Calendar
+        </button>
+        <button
+          onClick={() => router.push('/data')}
+          className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-medium border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
+        >
+          Data
         </button>
       </div>
     </div>
@@ -2577,14 +2596,15 @@ function HomeContent() {
       </div>
     )}
 
-    {/* Floating notes button for dashboard view */}
+
+    {/* Floating action button for adding events */}
     <button
-      onClick={() => router.push('/notes')}
-      className="fixed bottom-20 right-4 bg-white/40 backdrop-blur-xl text-gray-700 rounded-full w-12 h-12 flex items-center justify-center text-2xl shadow-2xl border-2 border-white/50 hover:bg-white/50 transition-all duration-200 z-[10000]"
-      aria-label="Go to Notes"
+      onClick={() => router.push('/calendar?new=1')}
+      className="fixed bottom-24 right-4 w-14 h-14 rounded-full bg-slate-500/80 backdrop-blur-lg text-white flex items-center justify-center shadow-xl border border-white/20 z-50 hover:bg-slate-600/80 transition-all"
+      aria-label="Add Event"
     >
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
       </svg>
     </button>
 
@@ -2603,6 +2623,12 @@ function HomeContent() {
           className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-medium border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
         >
           Calendar
+        </button>
+        <button
+          onClick={() => router.push('/data')}
+          className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-medium border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
+        >
+          Data
         </button>
       </div>
     </div>
