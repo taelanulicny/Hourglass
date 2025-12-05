@@ -482,7 +482,12 @@ export default function DataPage() {
                     const container = scheduleContainerRef.current;
                     const todayElement = todayRef.current;
                     
-                    // Get the container's scroll position
+                    // Ensure the element is in the DOM
+                    if (!container.contains(todayElement)) {
+                      return;
+                    }
+                    
+                    // Get the current scroll position and element positions
                     const containerRect = container.getBoundingClientRect();
                     const todayRect = todayElement.getBoundingClientRect();
                     
@@ -500,7 +505,7 @@ export default function DataPage() {
                 }}
                 title="Go to today"
                 aria-label="Go to today"
-                className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white/20 backdrop-blur-lg border border-white/20 shadow-lg text-gray-900 hover:bg-white/30 transition-all duration-200 font-semibold text-sm"
+                className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white/20 backdrop-blur-lg border border-white/20 shadow-lg text-gray-900 hover:bg-white/30 active:bg-white/40 transition-all duration-200 font-semibold text-sm cursor-pointer"
               >
                 {today.getDate()}
               </button>
