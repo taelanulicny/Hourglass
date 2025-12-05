@@ -1940,7 +1940,7 @@ function HomeContent() {
               onClick={() => router.push('/data')}
               className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-medium border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
             >
-              Data
+              Schedule
             </button>
           </div>
         </div>

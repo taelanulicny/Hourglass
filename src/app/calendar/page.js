@@ -1471,7 +1471,7 @@ function CalendarContent() {
           />
           {/* Side menu - positioned below header */}
           <div 
-            className="fixed left-0 bottom-0 w-64 bg-white/95 backdrop-blur-xl border-r border-white/30 shadow-2xl z-50 overflow-y-auto scroll-smooth"
+            className="fixed left-0 bottom-0 w-64 bg-white/75 backdrop-blur-xl border-r border-white/30 shadow-2xl z-50 overflow-y-auto scroll-smooth rounded-r-2xl"
             style={{ top: `${Math.max(insets.top, 44) + 76}px` }}
           >
             <div className="p-4">
@@ -1586,12 +1586,9 @@ function CalendarContent() {
         /* Day view */
         <div className="flex-1 overflow-y-auto px-4 scroll-smooth" style={{ paddingTop: `${Math.max(insets.top, 44) + 80}px` }}>
           {/* Day info header */}
-          {selectedDate && (
-            <div className="mb-4 flex items-center gap-4">
-              <div className="text-blue-600 font-semibold text-sm">{DAYS[selectedDate.getDay()]}</div>
-              {eventsForSelected.length === 0 && (
-                <div className="text-gray-600 text-sm">Nothing planned</div>
-              )}
+          {selectedDate && eventsForSelected.length === 0 && (
+            <div className="mb-4">
+              <div className="text-gray-600 text-sm">Nothing planned</div>
             </div>
           )}
           
@@ -1869,6 +1866,7 @@ function CalendarContent() {
           {/* Focus Areas Data Block for Day view */}
           <div className="mt-6 pb-6">
             <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl p-4">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Daily Data Split</h2>
               {(() => {
                 // Calculate daily planned hours for each focus area
                 const dailyGoal = 1; // For day view, we use daily goals
@@ -1930,7 +1928,7 @@ function CalendarContent() {
                   <div className="flex items-center justify-center gap-4 -mt-4 min-h-[260px]">
                     {/* Pie Chart */}
                     <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '260px', height: '260px' }}>
-                      <svg width="260" height="260" viewBox="0 0 260 260" className="transform -rotate-90">
+                      <svg width="260" height="260" viewBox="0 0 260 260" className="transform rotate-90">
                         {pieData.map((area, index) => {
                           const dashLength = (area.percentage / 100) * circumference;
                           const dashOffset = -currentOffset;
@@ -2030,15 +2028,15 @@ function CalendarContent() {
                   return (
                     <div
                       key={idx}
-                      className={`h-[80px] p-1 rounded-md border flex flex-col ${inMonth ? 'bg-white/40 backdrop-blur-sm hover:bg-white/50 border-gray-300/60' : 'bg-white/20 border-gray-200/40'} ${isToday ? 'ring-2 ring-blue-500 border-blue-400' : ''} transition-all cursor-pointer`}
+                      className={`h-[80px] p-1 rounded-md border flex flex-col ${inMonth ? 'bg-white/40 backdrop-blur-sm hover:bg-white/50 border-gray-300/60' : 'bg-white/20 border-gray-200/40'} ${isToday ? 'ring-2 ring-slate-500 border-slate-400' : ''} transition-all cursor-pointer`}
                       onClick={() => {
                         setSelectedDate(new Date(date));
                         setCurrentView('Day');
                       }}
                     >
-                      <div className={`text-sm font-medium text-center flex-shrink-0 h-8 flex items-center justify-center ${inMonth ? 'text-gray-900' : 'text-gray-500'} ${isToday ? 'text-blue-600' : ''}`}>
+                      <div className={`text-sm font-medium text-center flex-shrink-0 h-8 flex items-center justify-center ${inMonth ? 'text-gray-900' : 'text-gray-500'} ${isToday ? 'text-slate-600' : ''}`}>
                         {isToday ? (
-                          <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center mx-auto">
+                          <div className="w-8 h-8 rounded-full bg-slate-500 text-white flex items-center justify-center mx-auto">
                             {date.getDate()}
                           </div>
                         ) : (
@@ -2076,6 +2074,7 @@ function CalendarContent() {
        {currentView === 'Month' && (
        <div className="px-4 mt-6 pb-6">
          <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl p-4">
+           <h2 className="text-lg font-semibold text-gray-900 mb-4">Monthly Data Split</h2>
            {(() => {
              // Calculate monthly planned hours for each focus area
              const daysInMonth = viewMonth ? new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1, 0).getDate() : 30;
@@ -2178,7 +2177,7 @@ function CalendarContent() {
                <div className="flex items-center justify-center gap-4 -mt-4 min-h-[260px]">
                  {/* Pie Chart */}
                  <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '260px', height: '260px' }}>
-                   <svg width="260" height="260" viewBox="0 0 260 260" className="transform -rotate-90">
+                   <svg width="260" height="260" viewBox="0 0 260 260" className="transform rotate-90">
                      {pieData.map((area, index) => {
                        const dashLength = (area.percentage / 100) * circumference;
                        const dashOffset = -currentOffset;
@@ -2293,7 +2292,7 @@ function CalendarContent() {
             onClick={() => router.push('/data')}
             className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-medium border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
           >
-            Data
+            Schedule
           </button>
         </div>
       </div>

@@ -38,7 +38,7 @@ export default function DataPage() {
       <div className="fixed top-0 left-0 right-0 z-50">
         <div className="bg-white/70 backdrop-blur-xl border-b border-white/30 shadow-lg" style={{ paddingTop: `${Math.max(insets.top, 44)}px` }}>
           <header className="px-4 pt-4 pb-4 flex items-center justify-between">
-            <h1 className="text-xl font-semibold text-gray-900">Data</h1>
+            <h1 className="text-xl font-semibold text-gray-900">Schedule</h1>
           </header>
         </div>
       </div>
@@ -84,7 +84,7 @@ export default function DataPage() {
             disabled
             aria-current="page"
           >
-            Data
+            Schedule
           </button>
         </div>
       </div>
