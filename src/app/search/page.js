@@ -349,7 +349,11 @@ export default function SearchPage() {
                   return (
                     <div
                       key={ev.id || `${ev.title}-${ev.start}`}
-                      onClick={() => router.push(`/calendar?edit=${ev.id}`)}
+                      onClick={() => {
+                        const evDate = new Date(ev.start);
+                        const dateStr = `${evDate.getFullYear()}-${String(evDate.getMonth() + 1).padStart(2, '0')}-${String(evDate.getDate()).padStart(2, '0')}`;
+                        router.push(`/calendar?edit=${ev.id}&date=${dateStr}&view=Day`);
+                      }}
                       className="bg-white/90 backdrop-blur-lg rounded-xl border border-white/30 shadow-lg p-4 cursor-pointer hover:shadow-xl transition-all"
                     >
                       <div className="flex items-start gap-3">

@@ -564,6 +564,53 @@ function CalendarContent() {
     try { router.replace('/calendar', { scroll: false }); } catch {}
   }, [searchParams, router, selectedDate]);
 
+  // Auto-open Edit modal when arriving with ?edit=id&date=yyyy-mm-dd&view=Day
+  useEffect(() => {
+    if (!searchParams) return;
+    const editId = searchParams.get('edit');
+    if (!editId) return;
+
+    const dateParam = searchParams.get('date'); // yyyy-mm-dd
+    const viewParam = searchParams.get('view'); // Day, Week, Month, Year
+
+    // Find the event
+    const event = events.find(ev => ev.id === editId);
+    if (!event) return;
+
+    // Set the date from URL or event date
+    if (dateParam) {
+      try {
+        const eventDate = parseYMD(dateParam);
+        setSelectedDate(eventDate);
+      } catch {}
+    } else {
+      const eventDate = new Date(event.start);
+      eventDate.setHours(0, 0, 0, 0);
+      setSelectedDate(eventDate);
+    }
+
+    // Switch to Day view if specified
+    if (viewParam === 'Day') {
+      setCurrentView('Day');
+    }
+
+    // Open edit modal
+    setEditingId(event.id);
+    setEditDurMs(Math.max(0, (event.end || 0) - (event.start || 0)) || 60 * 60 * 1000);
+    setDraft({
+      title: event.title || '',
+      area: event.area || '',
+      dateYMD: dateParam || ymd(new Date(event.start)),
+      start: msToHHMM(event.start),
+      end: msToHHMM(event.end),
+      notes: event.notes || '',
+    });
+    setShowEditModal(true);
+
+    // Clean the URL so refresh doesn't re-open the modal
+    try { router.replace('/calendar', { scroll: false }); } catch {}
+  }, [searchParams, router, events]);
+
   const headerLabel = useMemo(() => {
     if (!selectedDate) return "Loading...";
     return selectedDate.toLocaleDateString("en-US", {
