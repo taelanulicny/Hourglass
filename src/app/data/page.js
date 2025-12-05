@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 
 // Hook to get safe area insets for iOS devices
 const useSafeAreaInsets = () => {
@@ -277,7 +277,7 @@ export default function DataPage() {
       
       const month = firstDate.getMonth();
       const year = firstDate.getFullYear();
-      const monthKey = `${year}-${month}`;
+      const monthKey = `${year}-${month + 1}`; // Use 1-based month for consistency
       
       if (currentMonth !== monthKey) {
         currentMonth = monthKey;
@@ -285,7 +285,8 @@ export default function DataPage() {
           type: 'month',
           month: firstDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
           monthShort: firstDate.toLocaleDateString('en-US', { month: 'short' }),
-          year: firstDate.getFullYear()
+          year: firstDate.getFullYear(),
+          monthIndex: month + 1 // Store 1-based month index
         });
       }
       
@@ -302,6 +303,97 @@ export default function DataPage() {
   }, []);
 
   const [showSideMenu, setShowSideMenu] = useState(false);
+  const scheduleContainerRef = useRef(null);
+  const todayRef = useRef(null);
+  const [visibleMonth, setVisibleMonth] = useState(null);
+  const monthRefs = useRef(new Map());
+
+  // Initialize visible month to current month
+  useEffect(() => {
+    if (isClient && !visibleMonth) {
+      const now = new Date();
+      setVisibleMonth({
+        month: now.toLocaleDateString('en-US', { month: 'long' }),
+        year: now.getFullYear()
+      });
+    }
+  }, [isClient, visibleMonth]);
+
+  // Scroll to today when schedule loads
+  useEffect(() => {
+    if (isClient && scheduleContainerRef.current && todayRef.current && scheduleWithMonths.length > 0) {
+      // Wait for DOM to render
+      setTimeout(() => {
+        if (scheduleContainerRef.current && todayRef.current) {
+          const containerRect = scheduleContainerRef.current.getBoundingClientRect();
+          const todayRect = todayRef.current.getBoundingClientRect();
+          const scrollTop = scheduleContainerRef.current.scrollTop;
+          const targetScrollTop = scrollTop + todayRect.top - containerRect.top - 20; // 20px offset from top
+          
+          scheduleContainerRef.current.scrollTo({ top: targetScrollTop, behavior: "smooth" });
+        }
+      }, 200);
+    }
+  }, [isClient, scheduleWithMonths]);
+
+  // Track visible month as user scrolls
+  useEffect(() => {
+    if (!isClient || !scheduleContainerRef.current) return;
+
+    const container = scheduleContainerRef.current;
+    
+    const handleScroll = () => {
+      const containerRect = container.getBoundingClientRect();
+      const containerTop = containerRect.top;
+      const viewportMiddle = containerTop + (containerRect.height / 2);
+      
+      // Find which month banner is most visible
+      let closestMonth = null;
+      let closestDistance = Infinity;
+      
+      monthRefs.current.forEach((ref, key) => {
+        if (!ref) return;
+        const rect = ref.getBoundingClientRect();
+        const monthMiddle = rect.top + (rect.height / 2);
+        const distance = Math.abs(viewportMiddle - monthMiddle);
+        
+        if (distance < closestDistance && rect.top <= viewportMiddle && rect.bottom >= viewportMiddle) {
+          closestDistance = distance;
+          closestMonth = key;
+        }
+      });
+      
+      // If no month is in viewport, find the closest one
+      if (!closestMonth) {
+        monthRefs.current.forEach((ref, key) => {
+          if (!ref) return;
+          const rect = ref.getBoundingClientRect();
+          const distance = Math.abs(rect.top - containerTop);
+          if (distance < closestDistance) {
+            closestDistance = distance;
+            closestMonth = key;
+          }
+        });
+      }
+      
+      if (closestMonth) {
+        const [year, month] = closestMonth.split('-');
+        const monthDate = new Date(parseInt(year), parseInt(month) - 1, 1);
+        setVisibleMonth({
+          month: monthDate.toLocaleDateString('en-US', { month: 'long' }),
+          year: parseInt(year)
+        });
+      }
+    };
+    
+    container.addEventListener('scroll', handleScroll);
+    // Also check on initial load
+    handleScroll();
+    
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+    };
+  }, [isClient, scheduleWithMonths]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 via-purple-50 to-pink-50 text-white pb-24">
@@ -325,10 +417,27 @@ export default function DataPage() {
             </div>
             <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center gap-2">
               <div className="font-semibold text-lg text-gray-900">
-                Schedule
+                {visibleMonth ? `${visibleMonth.month} ${visibleMonth.year}` : 'Schedule'}
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {/* Today button */}
+              <button
+                onClick={() => {
+                  if (scheduleContainerRef.current && todayRef.current) {
+                    const containerRect = scheduleContainerRef.current.getBoundingClientRect();
+                    const todayRect = todayRef.current.getBoundingClientRect();
+                    const scrollTop = scheduleContainerRef.current.scrollTop;
+                    const targetScrollTop = scrollTop + todayRect.top - containerRect.top - 20;
+                    scheduleContainerRef.current.scrollTo({ top: targetScrollTop, behavior: "smooth" });
+                  }
+                }}
+                title="Go to today"
+                aria-label="Go to today"
+                className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white/20 backdrop-blur-lg border border-white/20 shadow-lg text-gray-900 hover:bg-white/30 transition-all duration-200 font-semibold text-sm"
+              >
+                {today.getDate()}
+              </button>
               <button
                 onClick={() => router.push('/settings')}
                 title="Settings"
@@ -454,33 +563,47 @@ export default function DataPage() {
       )}
 
       {/* Main content */}
-      <div className="flex-1 overflow-y-auto px-4 scroll-smooth" style={{ paddingTop: `${Math.max(insets.top, 44) + 80}px` }}>
-        <div className="max-w-md mx-auto py-6">
-          {!isClient ? (
-            <div className="text-center text-gray-600 py-8">Loading...</div>
-          ) : scheduleWithMonths.length === 0 ? (
-            <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl p-6 text-center">
+      <div ref={scheduleContainerRef} className="flex-1 overflow-y-auto scroll-smooth" style={{ paddingTop: `${Math.max(insets.top, 44) + 80}px` }}>
+        {!isClient ? (
+          <div className="text-center text-gray-600 py-8">Loading...</div>
+        ) : scheduleWithMonths.length === 0 ? (
+          <div className="px-4">
+            <div className="max-w-md mx-auto bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl p-6 text-center">
               <p className="text-gray-700">No events scheduled. Tap the + button to add events.</p>
             </div>
-          ) : (
-            <div className="space-y-6">
-              {scheduleWithMonths.map((item, idx) => {
-                if (item.type === 'month') {
-                  return (
-                    <div key={`month-${idx}`} className="relative">
-                      {/* Month banner */}
-                      <div className="sticky top-0 z-10 bg-gradient-to-r from-green-100 to-green-50 border-2 border-green-200 rounded-lg p-4 mb-4 shadow-md">
-                        <h2 className="text-lg font-bold text-gray-900">
-                          {item.monthShort} {item.year}
-                        </h2>
-                      </div>
-                    </div>
-                  );
-                }
+          </div>
+        ) : (
+          <div>
+            {scheduleWithMonths.map((item, idx) => {
+              if (item.type === 'month') {
+                // Create a proper month key (year-month format, e.g., "2024-12")
+                const monthKey = `${item.year}-${item.monthIndex}`;
                 
-                // Week group
                 return (
-                  <div key={`week-${idx}`} className="space-y-2">
+                  <div key={`month-${idx}`} className="relative w-full">
+                    {/* Month banner - full width */}
+                    <div 
+                      ref={(el) => {
+                        if (el) {
+                          monthRefs.current.set(monthKey, el);
+                        } else {
+                          monthRefs.current.delete(monthKey);
+                        }
+                      }}
+                      className="sticky top-0 z-10 w-full bg-gradient-to-r from-green-100 via-green-50 to-green-100 border-y-2 border-green-200 py-4 px-4 shadow-md"
+                    >
+                      <h2 className="text-lg font-bold text-gray-900">
+                        {item.monthShort} {item.year}
+                      </h2>
+                    </div>
+                  </div>
+                );
+              }
+              
+              // Week group - constrained width
+              return (
+                <div key={`week-${idx}`} className="px-4">
+                  <div className="max-w-md mx-auto space-y-2 py-2">
                     {/* Week header */}
                     <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide px-2">
                       {formatWeekRange(item.weekStart, item.weekEnd)}
@@ -491,7 +614,7 @@ export default function DataPage() {
                       const isToday = dayData.date.toDateString() === today.toDateString();
                       
                       return (
-                        <div key={`day-${dayIdx}`} className="space-y-2">
+                        <div key={`day-${dayIdx}`} className="space-y-2" ref={isToday ? todayRef : null}>
                           {/* Day header */}
                           <div className="flex items-center gap-2 px-2">
                             <div className={`text-sm font-semibold ${isToday ? 'text-blue-600' : 'text-gray-900'}`}>
@@ -515,24 +638,24 @@ export default function DataPage() {
                             return (
                               <div
                                 key={ev.id || evIdx}
-                                className="rounded-lg p-3 mx-2 cursor-pointer hover:opacity-80 transition-opacity"
+                                className="rounded-lg px-3 py-2 mx-2 cursor-pointer hover:opacity-80 transition-opacity"
                                 style={{
                                   backgroundColor: isChecked ? hexToRGBA(areaColor, 0.4) : 'transparent',
-                                  borderWidth: '3px',
+                                  borderWidth: '2px',
                                   borderStyle: isChecked ? 'solid' : 'dashed',
                                   borderColor: areaColor,
                                   opacity: isChecked ? 1 : 0.7
                                 }}
                                 onClick={() => router.push(`/calendar?edit=${ev.id}`)}
                               >
-                                <div className={`font-semibold ${isChecked ? 'text-gray-900' : 'text-gray-700'}`}>
+                                <div className={`font-semibold text-sm ${isChecked ? 'text-gray-900' : 'text-gray-700'}`}>
                                   {ev.title || ev.area}
                                 </div>
-                                <div className={`text-sm mt-1 ${isChecked ? 'text-gray-700' : 'text-gray-600'}`}>
+                                <div className={`text-xs mt-0.5 ${isChecked ? 'text-gray-700' : 'text-gray-600'}`}>
                                   {formatTime(evStart)} - {formatTime(evEnd)}
                                 </div>
                                 {ev.notes && (
-                                  <div className={`text-xs mt-1 ${isChecked ? 'text-gray-600' : 'text-gray-500'}`}>
+                                  <div className={`text-xs mt-0.5 ${isChecked ? 'text-gray-600' : 'text-gray-500'}`}>
                                     {ev.notes}
                                   </div>
                                 )}
@@ -543,11 +666,11 @@ export default function DataPage() {
                       );
                     })}
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Floating action button for adding events */}

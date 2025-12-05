@@ -1557,6 +1557,22 @@ function CalendarContent() {
           )}
         </div>
         <div className="flex items-center gap-2">
+          {/* Today button */}
+          <button
+            onClick={() => {
+              const todayDate = new Date();
+              todayDate.setHours(0, 0, 0, 0);
+              setSelectedDate(todayDate);
+              if (currentView === 'Month' || currentView === 'Year') {
+                setViewMonth(monthStart(todayDate));
+              }
+            }}
+            title="Go to today"
+            aria-label="Go to today"
+            className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white/20 backdrop-blur-lg border border-white/20 shadow-lg text-gray-900 hover:bg-white/30 transition-all duration-200 font-semibold text-sm"
+          >
+            {today.getDate()}
+          </button>
           <button
             onClick={() => router.push('/settings')}
             title="Settings"
@@ -2058,7 +2074,7 @@ function CalendarContent() {
                 const centerY = 130;
                 
                 return (
-                  <div className="flex items-center justify-center gap-4 -mt-4 min-h-[260px]">
+                  <div className="flex items-center gap-3 -mt-4 min-h-[260px] px-4">
                     {/* Pie Chart */}
                     <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '260px', height: '260px' }}>
                       <svg width="260" height="260" viewBox="0 0 260 260">
@@ -2110,7 +2126,7 @@ function CalendarContent() {
                       </div>
 
                     {/* Focus Areas List */}
-                    <div className="flex-1 flex items-center">
+                    <div className="flex-1 flex items-center pr-6">
                       <div className="space-y-2 w-full">
                         {pieData.length > 0 ? (
                           pieData.map((area) => (
@@ -2527,7 +2543,7 @@ function CalendarContent() {
                       const centerY = 130;
                       
                       return (
-                        <div className="flex items-center justify-center gap-4 -mt-4 min-h-[260px]">
+                        <div className="flex items-center gap-3 -mt-4 min-h-[260px] px-4">
                           <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '260px', height: '260px' }}>
                             <svg width="260" height="260" viewBox="0 0 260 260">
                               {pieData.map((area, index) => {
@@ -2575,7 +2591,7 @@ function CalendarContent() {
                             </svg>
                           </div>
 
-                          <div className="flex-1 flex items-center">
+                          <div className="flex-1 flex items-center pr-6">
                             <div className="space-y-2 w-full">
                               {pieData.length > 0 ? (
                                 pieData.map((area) => (
@@ -2995,7 +3011,7 @@ function CalendarContent() {
                       const centerY = 130;
                       
                       return (
-                        <div className="flex items-center justify-center gap-4 -mt-4 min-h-[260px]">
+                        <div className="flex items-center gap-3 -mt-4 min-h-[260px] px-4">
                           <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '260px', height: '260px' }}>
                             <svg width="260" height="260" viewBox="0 0 260 260">
                               {pieData.map((area, index) => {
@@ -3043,7 +3059,7 @@ function CalendarContent() {
                             </svg>
                           </div>
 
-                          <div className="flex-1 flex items-center">
+                          <div className="flex-1 flex items-center pr-6">
                             <div className="space-y-2 w-full">
                               {pieData.length > 0 ? (
                                 pieData.map((area) => (
@@ -3356,7 +3372,7 @@ function CalendarContent() {
              const centerY = 130;
              
           return (
-               <div className="flex items-center justify-center gap-4 -mt-4 min-h-[260px]">
+               <div className="flex items-center gap-3 -mt-4 min-h-[260px] px-4">
                  {/* Pie Chart */}
                  <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '260px', height: '260px' }}>
                    <svg width="260" height="260" viewBox="0 0 260 260">
@@ -3408,7 +3424,7 @@ function CalendarContent() {
                     </div>
 
                  {/* Focus Areas List */}
-                 <div className="flex-1 flex items-center">
+                 <div className="flex-1 flex items-center pr-6">
                    <div className="space-y-2 w-full">
                      {pieData.length > 0 ? (
                        pieData.map((area) => (
@@ -3484,7 +3500,7 @@ function CalendarContent() {
       {/* Add Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 pb-20">
-          <div className={`bg-white/90 backdrop-blur-xl rounded-xl shadow-2xl border-2 border-white/60 p-4 w-[92%] max-w-md ${showCustomRepeat ? 'max-h-[90vh] flex flex-col' : ''}`}>
+          <div className={`bg-white/95 backdrop-blur-xl rounded-xl shadow-2xl border-2 border-white/60 p-4 w-[92%] max-w-md ${showCustomRepeat ? 'max-h-[90vh] flex flex-col' : ''}`}>
             <div className="flex justify-between items-center mb-2">
               <h3 className="font-semibold text-black">New Event</h3>
               <button className="text-sm text-black" onClick={() => { setShowModal(false); setDraft(DEFAULT_DRAFT); }}>Cancel</button>
@@ -3692,7 +3708,7 @@ function CalendarContent() {
 
       {showEditModal && (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 pb-20">
-          <div className="bg-white/90 backdrop-blur-xl rounded-xl shadow-2xl border-2 border-white/60 p-4 w-[92%] max-w-md">
+          <div className="bg-white/95 backdrop-blur-xl rounded-xl shadow-2xl border-2 border-white/60 p-4 w-[92%] max-w-md">
             <div className="flex justify-between items-center mb-2">
               <h3 className="font-semibold text-black">Edit Event</h3>
               <button className="text-sm text-black" onClick={() => { setShowEditModal(false); setEditingId(null); }}>Cancel</button>
