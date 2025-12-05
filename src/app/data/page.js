@@ -186,11 +186,27 @@ export default function DataPage() {
     });
   };
 
+  // Today's date - defined early so it can be used in other useMemos
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+
   // Calculate date range: 12 months back to 12 months forward
   const dateRange = useMemo(() => {
-    if (!isClient) return [];
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    if (!isClient) {
+      // Return a default range during SSR
+      const defaultToday = new Date();
+      defaultToday.setHours(0, 0, 0, 0);
+      const start = new Date(defaultToday);
+      start.setMonth(start.getMonth() - 12);
+      start.setDate(1);
+      const end = new Date(defaultToday);
+      end.setMonth(end.getMonth() + 12);
+      end.setDate(0);
+      return { start, end };
+    }
     const start = new Date(today);
     start.setMonth(start.getMonth() - 12);
     start.setDate(1); // Start of month
@@ -200,7 +216,7 @@ export default function DataPage() {
     end.setDate(0); // Last day of month
     
     return { start, end };
-  }, [isClient]);
+  }, [isClient, today]);
 
   // Filter and group events
   const groupedEvents = useMemo(() => {
@@ -301,12 +317,6 @@ export default function DataPage() {
     
     return result;
   }, [groupedEvents]);
-
-  const today = useMemo(() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d;
-  }, []);
 
   const [showSideMenu, setShowSideMenu] = useState(false);
   const scheduleContainerRef = useRef(null);
