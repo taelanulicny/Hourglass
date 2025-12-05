@@ -340,6 +340,8 @@ function CalendarContent() {
 
   // Focus areas from Dashboard/localStorage (prefer weekly snapshot based on selectedDate)
   const [focusAreas, setFocusAreas] = useState([]);
+  const [visibleFocusAreas, setVisibleFocusAreas] = useState(new Set());
+  
   useEffect(() => {
     setFocusAreas(loadFocusAreasForDate(new Date())); // initial load (today)
   }, []);
@@ -354,6 +356,37 @@ function CalendarContent() {
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
   }, [selectedDate]);
+
+  // Load visible focus areas from localStorage (for schedule page)
+  useEffect(() => {
+    const areas = loadFocusAreasForDate(new Date());
+    const visible = new Set(areas.map(a => a.label));
+    setVisibleFocusAreas(visible);
+    
+    try {
+      const saved = localStorage.getItem('schedule:visibleFocusAreas');
+      if (saved) {
+        const savedSet = new Set(JSON.parse(saved));
+        setVisibleFocusAreas(savedSet);
+      }
+    } catch {}
+  }, [focusAreas]);
+
+  // Toggle focus area visibility
+  const toggleFocusAreaVisibility = (label) => {
+    setVisibleFocusAreas(prev => {
+      const next = new Set(prev);
+      if (next.has(label)) {
+        next.delete(label);
+      } else {
+        next.add(label);
+      }
+      try {
+        localStorage.setItem('schedule:visibleFocusAreas', JSON.stringify([...next]));
+      } catch {}
+      return next;
+    });
+  };
   
   // Modal state must be defined before the effects that use it
   const [showModal, setShowModal] = useState(false);
@@ -1631,20 +1664,43 @@ function CalendarContent() {
                   {focusAreas.length > 0 ? (
                     focusAreas.map((area) => {
                       const areaColor = area.color || COLORS[0];
+                      const isVisible = visibleFocusAreas.has(area.label);
                       return (
                         <div
                           key={area.label}
-                          className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-white/20 transition-colors cursor-pointer"
-                          onClick={() => {
-                            router.push(`/?focus=${encodeURIComponent(area.label)}`);
-                            setShowSideMenu(false);
-                          }}
+                          className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-white/20 transition-colors"
                         >
-                          <div 
-                            className="w-3 h-3 rounded-full flex-shrink-0" 
-                            style={{ backgroundColor: areaColor }}
-                          />
-                          <span className="text-sm text-gray-900 truncate">{area.label}</span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleFocusAreaVisibility(area.label);
+                            }}
+                            className="flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors"
+                            style={{
+                              backgroundColor: isVisible ? areaColor : 'transparent',
+                              borderColor: areaColor
+                            }}
+                            aria-label={`${isVisible ? 'Hide' : 'Show'} ${area.label}`}
+                          >
+                            {isVisible && (
+                              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            )}
+                          </button>
+                          <div
+                            className="flex-1 flex items-center gap-3 cursor-pointer"
+                            onClick={() => {
+                              router.push(`/?focus=${encodeURIComponent(area.label)}`);
+                              setShowSideMenu(false);
+                            }}
+                          >
+                            <div 
+                              className="w-3 h-3 rounded-full flex-shrink-0" 
+                              style={{ backgroundColor: areaColor }}
+                            />
+                            <span className="text-sm text-gray-900 truncate">{area.label}</span>
+                          </div>
                         </div>
                       );
                     })
