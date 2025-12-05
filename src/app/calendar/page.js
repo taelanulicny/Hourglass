@@ -1256,6 +1256,85 @@ function CalendarContent() {
     return events.filter((ev) => ev.end > dayStartMs && ev.start < dayEndMs);
   }, [events, dayStartMs, dayEndMs]);
 
+  // Calculate overlapping event layout (columns, widths, positions)
+  const eventLayouts = useMemo(() => {
+    if (!eventsForSelected.length) return new Map();
+    
+    const layouts = new Map();
+    const processed = new Set();
+    
+    // Helper to check if two events overlap
+    const eventsOverlap = (ev1, ev2) => {
+      return ev1.start < ev2.end && ev1.end > ev2.start;
+    };
+    
+    // For each event, find all events that overlap with it
+    eventsForSelected.forEach((ev) => {
+      if (processed.has(ev.id)) return;
+      
+      // Find all events that overlap with this one (including itself)
+      const overlappingGroup = eventsForSelected.filter((otherEv) => {
+        if (processed.has(otherEv.id)) return false;
+        return eventsOverlap(ev, otherEv);
+      });
+      
+      if (overlappingGroup.length === 1) {
+        // No overlaps, full width
+        layouts.set(ev.id, { column: 0, totalColumns: 1, width: 1, left: 0 });
+        processed.add(ev.id);
+      } else {
+        // Multiple overlapping events - assign columns
+        // Sort by start time, then by end time
+        overlappingGroup.sort((a, b) => {
+          if (a.start !== b.start) return a.start - b.start;
+          return a.end - b.end;
+        });
+        
+        // Assign columns using a greedy algorithm
+        const columns = new Array(overlappingGroup.length).fill(0);
+        overlappingGroup.forEach((currentEv, idx) => {
+          // Find the first available column
+          const usedColumns = new Set();
+          overlappingGroup.forEach((otherEv, otherIdx) => {
+            if (otherIdx < idx && eventsOverlap(currentEv, otherEv)) {
+              usedColumns.add(columns[otherIdx]);
+            }
+          });
+          
+          // Find first unused column
+          let column = 0;
+          while (usedColumns.has(column)) {
+            column++;
+          }
+          columns[idx] = column;
+        });
+        
+        const maxColumn = Math.max(...columns);
+        const totalColumns = maxColumn + 1;
+        
+        // Assign layout to each event in the group
+        // Add small gap between columns (2% of width per gap)
+        const gapPercent = 0.02;
+        const totalGapWidth = gapPercent * (totalColumns - 1);
+        const availableWidth = 1 - totalGapWidth;
+        const columnWidth = availableWidth / totalColumns;
+        
+        overlappingGroup.forEach((groupEv, idx) => {
+          const column = columns[idx];
+          layouts.set(groupEv.id, {
+            column,
+            totalColumns,
+            width: columnWidth,
+            left: (column * columnWidth) + (column * gapPercent)
+          });
+          processed.add(groupEv.id);
+        });
+      }
+    });
+    
+    return layouts;
+  }, [eventsForSelected]);
+
 
   // --- Get selected day abbrev for focus area rings ---
   const selectedDayAbbrev = selectedDate ? DAYS[selectedDate.getDay()] : null;
@@ -1581,7 +1660,7 @@ function CalendarContent() {
             )}
 
                   {/* Events */}
-            {isClient && eventsForSelected.map(ev => {
+                  {isClient && eventsForSelected.map(ev => {
               const currentStart = resizingId === ev.id && resizeGhost ? resizeGhost.start : ev.start;
               const currentEnd = resizingId === ev.id && resizeGhost ? resizeGhost.end : ev.end;
               
@@ -1591,15 +1670,22 @@ function CalendarContent() {
               const topPx = (vs.getHours() + vs.getMinutes() / 60) * pxPerHour;
               const heightPx = ((visibleEnd - visibleStart) / (1000 * 60 * 60)) * pxPerHour;
               const renderColor = getAreaColor(ev.area) || ev.color || COLORS[2];
+              
+              // Get layout for overlapping events
+              const layout = eventLayouts.get(ev.id) || { column: 0, totalColumns: 1, width: 1, left: 0 };
+              const widthPercent = layout.width * 100;
+              const leftPercent = layout.left * 100;
                     
               return (
                 <div
                   key={ev.id}
                   data-event-id={ev.id}
-                  className={`absolute left-1 right-1 rounded-md shadow calendar-event select-none ${draggingId === ev.id ? 'cursor-grabbing' : dragDelayActive && dragDelayEventId === ev.id ? 'cursor-wait' : resizingId === ev.id ? 'cursor-ns-resize' : 'cursor-grab'}`}
+                  className={`absolute rounded-md shadow calendar-event select-none ${draggingId === ev.id ? 'cursor-grabbing' : dragDelayActive && dragDelayEventId === ev.id ? 'cursor-wait' : resizingId === ev.id ? 'cursor-ns-resize' : 'cursor-grab'}`}
                   style={{
                     top: (draggingId === ev.id && dragGhostTop != null ? dragGhostTop : Math.max(0, topPx)) + 'px',
                     height: Math.max(24, heightPx) + 'px',
+                    left: `${leftPercent}%`,
+                    width: `${widthPercent}%`,
                     background: toRGBA(renderColor, dragDelayActive && dragDelayEventId === ev.id ? 0.2 : resizingId === ev.id ? 0.7 : 0.4),
                     borderLeft: `3px solid ${renderColor}`,
                     willChange: (draggingId === ev.id || resizingId === ev.id) ? 'top, height' : undefined,
@@ -1852,8 +1938,10 @@ function CalendarContent() {
                           const endAngle = ((currentOffset + dashLength) / circumference) * 360;
                           const midAngle = (startAngle + endAngle) / 2;
                           
-                          // Calculate label position - outside the ring
-                          const labelRadius = radius + 50; // Position outside the ring with much more spacing
+                          // Alternate label distance (closer/further) to prevent overlap
+                          const isEven = index % 2 === 0;
+                          const labelRadius = radius + (isEven ? 30 : 50);
+                          
                           const labelAngleRad = (midAngle * Math.PI) / 180;
                           const labelX = centerX + Math.cos(labelAngleRad) * labelRadius;
                           const labelY = centerY + Math.sin(labelAngleRad) * labelRadius;
@@ -1873,14 +1961,13 @@ function CalendarContent() {
                                 strokeDashoffset={dashOffset}
                                 strokeLinecap="round"
                               />
-                              {/* Percentage label - outside the ring */}
+                              {/* Percentage label - outside the ring, always horizontal */}
                               <text
                                 x={labelX}
                                 y={labelY}
                                 textAnchor="middle"
                                 dominantBaseline="middle"
                                 className="text-xs font-semibold fill-gray-900"
-                                transform={`rotate(${midAngle + 90} ${labelX} ${labelY})`}
                               >
                                 {area.percentage.toFixed(1)}%
                               </text>
@@ -2099,8 +2186,10 @@ function CalendarContent() {
                        const endAngle = ((currentOffset + dashLength) / circumference) * 360;
                        const midAngle = (startAngle + endAngle) / 2;
                        
-                       // Calculate label position - outside the ring
-                       const labelRadius = radius + 50; // Position outside the ring with much more spacing
+                       // Alternate label distance (closer/further) to prevent overlap
+                       const isEven = index % 2 === 0;
+                       const labelRadius = radius + (isEven ? 30 : 50);
+                       
                        const labelAngleRad = (midAngle * Math.PI) / 180;
                        const labelX = centerX + Math.cos(labelAngleRad) * labelRadius;
                        const labelY = centerY + Math.sin(labelAngleRad) * labelRadius;
@@ -2120,14 +2209,13 @@ function CalendarContent() {
                              strokeDashoffset={dashOffset}
                   strokeLinecap="round"
                            />
-                           {/* Percentage label - outside the ring */}
+                           {/* Percentage label - outside the ring, always horizontal */}
                            <text
                              x={labelX}
                              y={labelY}
                              textAnchor="middle"
                              dominantBaseline="middle"
                              className="text-xs font-semibold fill-gray-900"
-                             transform={`rotate(${midAngle + 90} ${labelX} ${labelY})`}
                            >
                              {area.percentage.toFixed(1)}%
                            </text>
