@@ -232,28 +232,34 @@ export default function DataPage() {
     // Sort by start time
     filtered.sort((a, b) => new Date(a.start) - new Date(b.start));
 
-    // Group by date
-    const byDate = new Map();
+    // Group events by date
+    const eventsByDate = new Map();
     filtered.forEach(ev => {
       const evStart = new Date(ev.start);
       const dateKey = evStart.toDateString();
-      if (!byDate.has(dateKey)) {
-        byDate.set(dateKey, []);
+      if (!eventsByDate.has(dateKey)) {
+        eventsByDate.set(dateKey, []);
       }
-      byDate.get(dateKey).push(ev);
+      eventsByDate.get(dateKey).push(ev);
     });
 
-    // Always include today's date, even if there are no events
-    const todayKey = today.toDateString();
-    if (!byDate.has(todayKey)) {
-      byDate.set(todayKey, []);
+    // Generate ALL dates in the range (12 months back to 12 months forward)
+    // This ensures the schedule always shows the full range, like Google Calendar
+    const byDate = new Map();
+    const currentDate = new Date(dateRange.start);
+    
+    while (currentDate <= dateRange.end) {
+      const dateKey = currentDate.toDateString();
+      // Initialize with empty array, then add events if they exist
+      byDate.set(dateKey, eventsByDate.get(dateKey) || []);
+      currentDate.setDate(currentDate.getDate() + 1);
     }
 
     // Convert to array and group by weeks
     const result = [];
     const processedDates = new Set();
     
-    // Get all unique dates sorted
+    // Get all dates sorted (now includes all dates in range)
     const sortedDates = Array.from(byDate.keys()).sort((a, b) => 
       new Date(a) - new Date(b)
     );
