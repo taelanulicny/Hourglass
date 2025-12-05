@@ -1385,9 +1385,6 @@ function CalendarContent() {
         </div>
       </div>
       
-      {/* Spacer to prevent content from going under fixed header */}
-      <div style={{ height: `${insets.top + 72}px` }} />
-
       {/* Side Menu */}
       {showSideMenu && (
         <>
@@ -1508,7 +1505,7 @@ function CalendarContent() {
       {/* Calendar view area */}
       {currentView === 'Day' ? (
         /* Day view */
-        <div className="flex-1 overflow-y-auto px-4 pt-4 scroll-smooth">
+        <div className="flex-1 overflow-y-auto px-4 scroll-smooth" style={{ paddingTop: `${insets.top + 80}px` }}>
           {/* Day info header */}
           {selectedDate && (
             <div className="mb-4 flex items-center gap-4">
@@ -1922,7 +1919,7 @@ function CalendarContent() {
         </div>
       ) : (
         /* Month view */
-        <div className="flex-1 overflow-y-auto px-4 pt-4 scroll-smooth">
+        <div className="flex-1 overflow-y-auto px-4 scroll-smooth" style={{ paddingTop: `${insets.top + 80}px` }}>
           {/* Month grid */}
           <div className="w-full">
             {/* Calendar grid container with glassmorphic styling */}
