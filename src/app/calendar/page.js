@@ -551,6 +551,7 @@ function CalendarContent() {
   
   // Ref for year view scrolling
   const yearViewRef = useRef(null);
+  const currentMonthRef = useRef(null);
 
   const stripDays = useMemo(() => {
     const start = new Date(today);
@@ -607,21 +608,20 @@ function CalendarContent() {
 
   // Scroll to current month when Year view is opened
   useEffect(() => {
-    if (currentView === 'Year' && yearViewRef.current && selectedDate) {
-      // Wait for DOM to render, then scroll to the current month (index 12)
+    if (currentView === 'Year' && yearViewRef.current && currentMonthRef.current) {
+      // Wait for DOM to render, then scroll to the current month
       setTimeout(() => {
-        if (yearViewRef.current) {
-          // Each month section is approximately 400px tall (estimate)
-          // The current month is at index 12, so we need to scroll to approximately 12 * 400px
-          const monthHeight = 400; // Approximate height per month
-          const currentMonthIndex = 12;
-          const scrollPosition = currentMonthIndex * monthHeight;
+        if (yearViewRef.current && currentMonthRef.current) {
+          const containerRect = yearViewRef.current.getBoundingClientRect();
+          const monthRect = currentMonthRef.current.getBoundingClientRect();
+          const scrollTop = yearViewRef.current.scrollTop;
+          const targetScrollTop = scrollTop + monthRect.top - containerRect.top - 20; // 20px offset from top
           
-          yearViewRef.current.scrollTo({ top: scrollPosition, behavior: "smooth" });
+          yearViewRef.current.scrollTo({ top: targetScrollTop, behavior: "smooth" });
         }
-      }, 100);
+      }, 200);
     }
-  }, [currentView, selectedDate]);
+  }, [currentView]);
 
   // Modal state for new event (showModal/showEditModal/draft declared above)
   const [editingId, setEditingId] = useState(null);
@@ -1528,7 +1528,7 @@ function CalendarContent() {
             onClick={() => router.push('/settings')}
             title="Settings"
             aria-label="Settings"
-            className="inline-flex items-center justify-center w-10 h-10 rounded-xl text-gray-900 hover:opacity-70 transition-all duration-200"
+            className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white/20 backdrop-blur-lg border border-white/20 shadow-lg text-gray-900 hover:bg-white/30 transition-all duration-200"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -1559,21 +1559,10 @@ function CalendarContent() {
           />
           {/* Side menu - positioned below header */}
           <div 
-            className="fixed left-0 bottom-0 w-64 bg-white/75 backdrop-blur-xl border-r border-white/30 shadow-2xl z-50 overflow-y-auto scroll-smooth rounded-r-2xl"
+            className="fixed left-0 bottom-0 w-64 bg-white/95 backdrop-blur-xl border-r border-white/30 shadow-2xl z-50 overflow-y-auto scroll-smooth rounded-r-2xl"
             style={{ top: `${Math.max(insets.top, 44) + 76}px` }}
           >
             <div className="p-4">
-              {/* Close button */}
-            <button
-                onClick={() => setShowSideMenu(false)}
-                className="absolute top-4 right-4 text-gray-900 hover:opacity-70"
-                aria-label="Close menu"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-
               {/* View Options */}
               <div className="mb-8">
                 <div className="space-y-1">
@@ -3127,7 +3116,11 @@ function CalendarContent() {
                   const isCurrentMonth = monthDate.getMonth() === today.getMonth() && monthDate.getFullYear() === today.getFullYear();
                   
                   return (
-                    <div key={monthIndex} className="w-full">
+                    <div 
+                      key={monthIndex} 
+                      ref={isCurrentMonth ? currentMonthRef : null}
+                      className="w-full"
+                    >
                       {/* Month header */}
                       <div className="mb-3">
                         <h3 className="text-lg font-semibold text-gray-900">
