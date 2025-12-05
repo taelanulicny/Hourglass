@@ -3491,7 +3491,7 @@ function CalendarContent() {
       </button>
 
 
-      {/* Bottom buttons: Dashboard | Calendar | Data */}
+      {/* Bottom buttons: Dashboard | Calendar | Search */}
       <div className="fixed bottom-0 left-0 right-0 p-3 pb-7 z-[9999]">
         <div className="max-w-md mx-auto grid grid-cols-3 gap-3">
           <button
@@ -3508,10 +3508,10 @@ function CalendarContent() {
             Calendar
           </button>
           <button
-            onClick={() => router.push('/data')}
+            onClick={() => router.push('/search')}
             className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-medium border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
           >
-            Schedule
+            Search
           </button>
         </div>
       </div>
