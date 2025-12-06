@@ -698,20 +698,52 @@ function CalendarContent() {
 
   // Scroll to current month when Year view is opened
   useEffect(() => {
-    if (currentView === 'Year' && yearViewRef.current && currentMonthRef.current) {
+    if (currentView === 'Year' && yearViewRef.current) {
       // Wait for DOM to render, then scroll to the current month
-      setTimeout(() => {
+      const scrollToCurrentMonth = () => {
         if (yearViewRef.current && currentMonthRef.current) {
-          const containerRect = yearViewRef.current.getBoundingClientRect();
-          const monthRect = currentMonthRef.current.getBoundingClientRect();
-          const scrollTop = yearViewRef.current.scrollTop;
-          const targetScrollTop = scrollTop + monthRect.top - containerRect.top - 20; // 20px offset from top
+          const container = yearViewRef.current;
+          const monthElement = currentMonthRef.current;
           
-          yearViewRef.current.scrollTo({ top: targetScrollTop, behavior: "smooth" });
+          // Verify element is in DOM and has dimensions
+          if (!container.contains(monthElement) || monthElement.offsetHeight === 0) {
+            return; // Not ready yet, will try again
+          }
+          
+          // Get the container's scroll position
+          const containerRect = container.getBoundingClientRect();
+          const monthRect = monthElement.getBoundingClientRect();
+          
+          // Calculate scroll position to put current month at the top
+          // Account for the header height
+          const headerHeight = Math.max(insets.top, 44) + 80;
+          const scrollOffset = monthRect.top - containerRect.top - headerHeight + container.scrollTop;
+          
+          // Scroll to position current month at the top
+          container.scrollTo({ 
+            top: Math.max(0, scrollOffset), 
+            behavior: "smooth" 
+          });
         }
-      }, 200);
+      };
+      
+      // Use requestAnimationFrame to ensure layout is complete, then try multiple times
+      const rafId = requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          scrollToCurrentMonth();
+          // Also try with delays as fallback to handle slow rendering
+          setTimeout(scrollToCurrentMonth, 100);
+          setTimeout(scrollToCurrentMonth, 300);
+          setTimeout(scrollToCurrentMonth, 500);
+          setTimeout(scrollToCurrentMonth, 800);
+        });
+      });
+      
+      return () => {
+        cancelAnimationFrame(rafId);
+      };
     }
-  }, [currentView]);
+  }, [currentView, insets.top]);
 
   // Modal state for new event (showModal/showEditModal/draft declared above)
   const [editingId, setEditingId] = useState(null);
@@ -3225,24 +3257,25 @@ function CalendarContent() {
           {(() => {
             if (!selectedDate) return null;
             
-            // Calculate 24 months: 12 months back, current month, 12 months forward
-            const currentMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+            // Calculate 24 months: 12 months back from today, current month (today), 12 months forward
+            // Use today to ensure we always show the current month in the list
+            const todayMonth = new Date(today.getFullYear(), today.getMonth(), 1);
             const months = [];
             
-            // Add 12 months before
+            // Add 12 months before today
             for (let i = 12; i > 0; i--) {
-              const month = new Date(currentMonth);
-              month.setMonth(currentMonth.getMonth() - i);
+              const month = new Date(todayMonth);
+              month.setMonth(todayMonth.getMonth() - i);
               months.push(month);
             }
             
-            // Add current month (index 12)
-            months.push(new Date(currentMonth));
+            // Add current month (today) - this is index 12
+            months.push(new Date(todayMonth));
             
-            // Add 12 months after
+            // Add 12 months after today
             for (let i = 1; i <= 12; i++) {
-              const month = new Date(currentMonth);
-              month.setMonth(currentMonth.getMonth() + i);
+              const month = new Date(todayMonth);
+              month.setMonth(todayMonth.getMonth() + i);
               months.push(month);
             }
             
