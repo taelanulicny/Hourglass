@@ -1006,6 +1006,26 @@ function CalendarContent() {
     lastEndMs: null,
     moved: false,
   });
+
+  // Helper function to start resize from a handle
+  const startResize = (ev, handle, clientY) => {
+    if (dragDelayTimerRef.current) {
+      clearTimeout(dragDelayTimerRef.current);
+      dragDelayTimerRef.current = null;
+    }
+    setDragDelayActive(false);
+    setDragDelayEventId(null);
+    setResizingId(ev.id);
+    setResizeHandle(handle);
+    resizeRef.current = {
+      startY: clientY,
+      origStart: ev.start,
+      origEnd: ev.end,
+      lastStartMs: ev.start,
+      lastEndMs: ev.end,
+      moved: false,
+    };
+  };
   const dragDelayTimerRef = useRef(null); // timer for drag delay
   const startTouchRef = useRef(null);
   const unmountedRef = useRef(false);
@@ -1934,101 +1954,69 @@ function CalendarContent() {
                             {/* Top-left */}
                       <div
                               data-resize-handle
-                              className={`absolute top-0 left-0 w-6 h-6 cursor-ns-resize select-none hover:opacity-100 ${resizingId === ev.id && resizeHandle === 'top-left' ? 'opacity-100' : 'opacity-0'}`}
+                              className={`absolute top-0 left-0 w-6 h-6 cursor-ns-resize select-none bg-white/60 rounded-full border-2 border-white/80 hover:opacity-100 active:opacity-100 ${resizingId === ev.id && resizeHandle === 'top-left' ? 'opacity-100' : 'opacity-60'}`}
                         onMouseDown={(e) => {
                           e.stopPropagation();
                           e.preventDefault();
-                          if (dragDelayTimerRef.current) {
-                            clearTimeout(dragDelayTimerRef.current);
-                            dragDelayTimerRef.current = null;
+                          startResize(ev, 'top-left', e.clientY);
+                        }}
+                        onTouchStart={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          if (e.touches[0]) {
+                            startResize(ev, 'top-left', e.touches[0].clientY);
                           }
-                          setDragDelayActive(false);
-                          setDragDelayEventId(null);
-                          setResizingId(ev.id);
-                          setResizeHandle('top-left');
-                          resizeRef.current = {
-                            startY: e.clientY,
-                            origStart: ev.start,
-                            origEnd: ev.end,
-                            lastStartMs: ev.start,
-                            lastEndMs: ev.end,
-                            moved: false,
-                          };
                         }}
                             />
                             {/* Top-right */}
                             <div
                               data-resize-handle
-                              className={`absolute top-0 right-0 w-6 h-6 cursor-ns-resize select-none hover:opacity-100 ${resizingId === ev.id && resizeHandle === 'top-right' ? 'opacity-100' : 'opacity-0'}`}
+                              className={`absolute top-0 right-0 w-6 h-6 cursor-ns-resize select-none bg-white/60 rounded-full border-2 border-white/80 hover:opacity-100 active:opacity-100 ${resizingId === ev.id && resizeHandle === 'top-right' ? 'opacity-100' : 'opacity-60'}`}
                         onMouseDown={(e) => {
                           e.stopPropagation();
                           e.preventDefault();
-                          if (dragDelayTimerRef.current) {
-                            clearTimeout(dragDelayTimerRef.current);
-                            dragDelayTimerRef.current = null;
+                          startResize(ev, 'top-right', e.clientY);
+                        }}
+                        onTouchStart={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          if (e.touches[0]) {
+                            startResize(ev, 'top-right', e.touches[0].clientY);
                           }
-                          setDragDelayActive(false);
-                          setDragDelayEventId(null);
-                          setResizingId(ev.id);
-                          setResizeHandle('top-right');
-                          resizeRef.current = {
-                            startY: e.clientY,
-                            origStart: ev.start,
-                            origEnd: ev.end,
-                            lastStartMs: ev.start,
-                            lastEndMs: ev.end,
-                            moved: false,
-                          };
                         }}
                             />
                             {/* Bottom-left */}
                             <div
                               data-resize-handle
-                              className={`absolute bottom-0 left-0 w-6 h-6 cursor-ns-resize select-none hover:opacity-100 ${resizingId === ev.id && resizeHandle === 'bottom-left' ? 'opacity-100' : 'opacity-0'}`}
+                              className={`absolute bottom-0 left-0 w-6 h-6 cursor-ns-resize select-none bg-white/60 rounded-full border-2 border-white/80 hover:opacity-100 active:opacity-100 ${resizingId === ev.id && resizeHandle === 'bottom-left' ? 'opacity-100' : 'opacity-60'}`}
                         onMouseDown={(e) => {
                           e.stopPropagation();
                           e.preventDefault();
-                          if (dragDelayTimerRef.current) {
-                            clearTimeout(dragDelayTimerRef.current);
-                            dragDelayTimerRef.current = null;
+                          startResize(ev, 'bottom-left', e.clientY);
+                        }}
+                        onTouchStart={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          if (e.touches[0]) {
+                            startResize(ev, 'bottom-left', e.touches[0].clientY);
                           }
-                          setDragDelayActive(false);
-                          setDragDelayEventId(null);
-                          setResizingId(ev.id);
-                          setResizeHandle('bottom-left');
-                          resizeRef.current = {
-                            startY: e.clientY,
-                            origStart: ev.start,
-                            origEnd: ev.end,
-                            lastStartMs: ev.start,
-                            lastEndMs: ev.end,
-                            moved: false,
-                          };
                         }}
                             />
                             {/* Bottom-right */}
                             <div
                               data-resize-handle
-                              className={`absolute bottom-0 right-0 w-6 h-6 cursor-ns-resize select-none hover:opacity-100 ${resizingId === ev.id && resizeHandle === 'bottom-right' ? 'opacity-100' : 'opacity-0'}`}
+                              className={`absolute bottom-0 right-0 w-6 h-6 cursor-ns-resize select-none bg-white/60 rounded-full border-2 border-white/80 hover:opacity-100 active:opacity-100 ${resizingId === ev.id && resizeHandle === 'bottom-right' ? 'opacity-100' : 'opacity-60'}`}
                         onMouseDown={(e) => {
                           e.stopPropagation();
                           e.preventDefault();
-                          if (dragDelayTimerRef.current) {
-                            clearTimeout(dragDelayTimerRef.current);
-                            dragDelayTimerRef.current = null;
+                          startResize(ev, 'bottom-right', e.clientY);
+                        }}
+                        onTouchStart={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          if (e.touches[0]) {
+                            startResize(ev, 'bottom-right', e.touches[0].clientY);
                           }
-                          setDragDelayActive(false);
-                          setDragDelayEventId(null);
-                          setResizingId(ev.id);
-                          setResizeHandle('bottom-right');
-                          resizeRef.current = {
-                            startY: e.clientY,
-                            origStart: ev.start,
-                            origEnd: ev.end,
-                            lastStartMs: ev.start,
-                            lastEndMs: ev.end,
-                            moved: false,
-                          };
                         }}
                             />
                           </>
@@ -2408,98 +2396,66 @@ function CalendarContent() {
                                     <>
                                       <div
                                         data-resize-handle
-                                        className={`absolute top-0 left-0 w-6 h-6 cursor-ns-resize select-none hover:opacity-100 ${resizingId === ev.id && resizeHandle === 'top-left' ? 'opacity-100' : 'opacity-0'}`}
+                                        className={`absolute top-0 left-0 w-6 h-6 cursor-ns-resize select-none bg-white/60 rounded-full border-2 border-white/80 hover:opacity-100 active:opacity-100 ${resizingId === ev.id && resizeHandle === 'top-left' ? 'opacity-100' : 'opacity-60'}`}
                                         onMouseDown={(e) => {
                                           e.stopPropagation();
                                           e.preventDefault();
-                                          if (dragDelayTimerRef.current) {
-                                            clearTimeout(dragDelayTimerRef.current);
-                                            dragDelayTimerRef.current = null;
+                                          startResize(ev, 'top-left', e.clientY);
+                                        }}
+                                        onTouchStart={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          if (e.touches[0]) {
+                                            startResize(ev, 'top-left', e.touches[0].clientY);
                                           }
-                                          setDragDelayActive(false);
-                                          setDragDelayEventId(null);
-                                          setResizingId(ev.id);
-                                          setResizeHandle('top-left');
-                                          resizeRef.current = {
-                                            startY: e.clientY,
-                                            origStart: ev.start,
-                                            origEnd: ev.end,
-                                            lastStartMs: ev.start,
-                                            lastEndMs: ev.end,
-                                            moved: false,
-                                          };
                                         }}
                                       />
                                       <div
                                         data-resize-handle
-                                        className={`absolute top-0 right-0 w-6 h-6 cursor-ns-resize select-none hover:opacity-100 ${resizingId === ev.id && resizeHandle === 'top-right' ? 'opacity-100' : 'opacity-0'}`}
+                                        className={`absolute top-0 right-0 w-6 h-6 cursor-ns-resize select-none bg-white/60 rounded-full border-2 border-white/80 hover:opacity-100 active:opacity-100 ${resizingId === ev.id && resizeHandle === 'top-right' ? 'opacity-100' : 'opacity-60'}`}
                                         onMouseDown={(e) => {
                                           e.stopPropagation();
                                           e.preventDefault();
-                                          if (dragDelayTimerRef.current) {
-                                            clearTimeout(dragDelayTimerRef.current);
-                                            dragDelayTimerRef.current = null;
+                                          startResize(ev, 'top-right', e.clientY);
+                                        }}
+                                        onTouchStart={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          if (e.touches[0]) {
+                                            startResize(ev, 'top-right', e.touches[0].clientY);
                                           }
-                                          setDragDelayActive(false);
-                                          setDragDelayEventId(null);
-                                          setResizingId(ev.id);
-                                          setResizeHandle('top-right');
-                                          resizeRef.current = {
-                                            startY: e.clientY,
-                                            origStart: ev.start,
-                                            origEnd: ev.end,
-                                            lastStartMs: ev.start,
-                                            lastEndMs: ev.end,
-                                            moved: false,
-                                          };
                                         }}
                                       />
                                       <div
                                         data-resize-handle
-                                        className={`absolute bottom-0 left-0 w-6 h-6 cursor-ns-resize select-none hover:opacity-100 ${resizingId === ev.id && resizeHandle === 'bottom-left' ? 'opacity-100' : 'opacity-0'}`}
+                                        className={`absolute bottom-0 left-0 w-6 h-6 cursor-ns-resize select-none bg-white/60 rounded-full border-2 border-white/80 hover:opacity-100 active:opacity-100 ${resizingId === ev.id && resizeHandle === 'bottom-left' ? 'opacity-100' : 'opacity-60'}`}
                                         onMouseDown={(e) => {
                                           e.stopPropagation();
                                           e.preventDefault();
-                                          if (dragDelayTimerRef.current) {
-                                            clearTimeout(dragDelayTimerRef.current);
-                                            dragDelayTimerRef.current = null;
+                                          startResize(ev, 'bottom-left', e.clientY);
+                                        }}
+                                        onTouchStart={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          if (e.touches[0]) {
+                                            startResize(ev, 'bottom-left', e.touches[0].clientY);
                                           }
-                                          setDragDelayActive(false);
-                                          setDragDelayEventId(null);
-                                          setResizingId(ev.id);
-                                          setResizeHandle('bottom-left');
-                                          resizeRef.current = {
-                                            startY: e.clientY,
-                                            origStart: ev.start,
-                                            origEnd: ev.end,
-                                            lastStartMs: ev.start,
-                                            lastEndMs: ev.end,
-                                            moved: false,
-                                          };
                                         }}
                                       />
                                       <div
                                         data-resize-handle
-                                        className={`absolute bottom-0 right-0 w-6 h-6 cursor-ns-resize select-none hover:opacity-100 ${resizingId === ev.id && resizeHandle === 'bottom-right' ? 'opacity-100' : 'opacity-0'}`}
+                                        className={`absolute bottom-0 right-0 w-6 h-6 cursor-ns-resize select-none bg-white/60 rounded-full border-2 border-white/80 hover:opacity-100 active:opacity-100 ${resizingId === ev.id && resizeHandle === 'bottom-right' ? 'opacity-100' : 'opacity-60'}`}
                                         onMouseDown={(e) => {
                                           e.stopPropagation();
                                           e.preventDefault();
-                                          if (dragDelayTimerRef.current) {
-                                            clearTimeout(dragDelayTimerRef.current);
-                                            dragDelayTimerRef.current = null;
+                                          startResize(ev, 'bottom-right', e.clientY);
+                                        }}
+                                        onTouchStart={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          if (e.touches[0]) {
+                                            startResize(ev, 'bottom-right', e.touches[0].clientY);
                                           }
-                                          setDragDelayActive(false);
-                                          setDragDelayEventId(null);
-                                          setResizingId(ev.id);
-                                          setResizeHandle('bottom-right');
-                                          resizeRef.current = {
-                                            startY: e.clientY,
-                                            origStart: ev.start,
-                                            origEnd: ev.end,
-                                            lastStartMs: ev.start,
-                                            lastEndMs: ev.end,
-                                            moved: false,
-                                          };
                                         }}
                                       />
                                     </>
@@ -2881,98 +2837,66 @@ function CalendarContent() {
                                     <>
                                       <div
                                         data-resize-handle
-                                        className={`absolute top-0 left-0 w-6 h-6 cursor-ns-resize select-none hover:opacity-100 ${resizingId === ev.id && resizeHandle === 'top-left' ? 'opacity-100' : 'opacity-0'}`}
+                                        className={`absolute top-0 left-0 w-6 h-6 cursor-ns-resize select-none bg-white/60 rounded-full border-2 border-white/80 hover:opacity-100 active:opacity-100 ${resizingId === ev.id && resizeHandle === 'top-left' ? 'opacity-100' : 'opacity-60'}`}
                                         onMouseDown={(e) => {
                                           e.stopPropagation();
                                           e.preventDefault();
-                                          if (dragDelayTimerRef.current) {
-                                            clearTimeout(dragDelayTimerRef.current);
-                                            dragDelayTimerRef.current = null;
+                                          startResize(ev, 'top-left', e.clientY);
+                                        }}
+                                        onTouchStart={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          if (e.touches[0]) {
+                                            startResize(ev, 'top-left', e.touches[0].clientY);
                                           }
-                                          setDragDelayActive(false);
-                                          setDragDelayEventId(null);
-                                          setResizingId(ev.id);
-                                          setResizeHandle('top-left');
-                                          resizeRef.current = {
-                                            startY: e.clientY,
-                                            origStart: ev.start,
-                                            origEnd: ev.end,
-                                            lastStartMs: ev.start,
-                                            lastEndMs: ev.end,
-                                            moved: false,
-                                          };
                                         }}
                                       />
                                       <div
                                         data-resize-handle
-                                        className={`absolute top-0 right-0 w-6 h-6 cursor-ns-resize select-none hover:opacity-100 ${resizingId === ev.id && resizeHandle === 'top-right' ? 'opacity-100' : 'opacity-0'}`}
+                                        className={`absolute top-0 right-0 w-6 h-6 cursor-ns-resize select-none bg-white/60 rounded-full border-2 border-white/80 hover:opacity-100 active:opacity-100 ${resizingId === ev.id && resizeHandle === 'top-right' ? 'opacity-100' : 'opacity-60'}`}
                                         onMouseDown={(e) => {
                                           e.stopPropagation();
                                           e.preventDefault();
-                                          if (dragDelayTimerRef.current) {
-                                            clearTimeout(dragDelayTimerRef.current);
-                                            dragDelayTimerRef.current = null;
+                                          startResize(ev, 'top-right', e.clientY);
+                                        }}
+                                        onTouchStart={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          if (e.touches[0]) {
+                                            startResize(ev, 'top-right', e.touches[0].clientY);
                                           }
-                                          setDragDelayActive(false);
-                                          setDragDelayEventId(null);
-                                          setResizingId(ev.id);
-                                          setResizeHandle('top-right');
-                                          resizeRef.current = {
-                                            startY: e.clientY,
-                                            origStart: ev.start,
-                                            origEnd: ev.end,
-                                            lastStartMs: ev.start,
-                                            lastEndMs: ev.end,
-                                            moved: false,
-                                          };
                                         }}
                                       />
                                       <div
                                         data-resize-handle
-                                        className={`absolute bottom-0 left-0 w-6 h-6 cursor-ns-resize select-none hover:opacity-100 ${resizingId === ev.id && resizeHandle === 'bottom-left' ? 'opacity-100' : 'opacity-0'}`}
+                                        className={`absolute bottom-0 left-0 w-6 h-6 cursor-ns-resize select-none bg-white/60 rounded-full border-2 border-white/80 hover:opacity-100 active:opacity-100 ${resizingId === ev.id && resizeHandle === 'bottom-left' ? 'opacity-100' : 'opacity-60'}`}
                                         onMouseDown={(e) => {
                                           e.stopPropagation();
                                           e.preventDefault();
-                                          if (dragDelayTimerRef.current) {
-                                            clearTimeout(dragDelayTimerRef.current);
-                                            dragDelayTimerRef.current = null;
+                                          startResize(ev, 'bottom-left', e.clientY);
+                                        }}
+                                        onTouchStart={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          if (e.touches[0]) {
+                                            startResize(ev, 'bottom-left', e.touches[0].clientY);
                                           }
-                                          setDragDelayActive(false);
-                                          setDragDelayEventId(null);
-                                          setResizingId(ev.id);
-                                          setResizeHandle('bottom-left');
-                                          resizeRef.current = {
-                                            startY: e.clientY,
-                                            origStart: ev.start,
-                                            origEnd: ev.end,
-                                            lastStartMs: ev.start,
-                                            lastEndMs: ev.end,
-                                            moved: false,
-                                          };
                                         }}
                                       />
                                       <div
                                         data-resize-handle
-                                        className={`absolute bottom-0 right-0 w-6 h-6 cursor-ns-resize select-none hover:opacity-100 ${resizingId === ev.id && resizeHandle === 'bottom-right' ? 'opacity-100' : 'opacity-0'}`}
+                                        className={`absolute bottom-0 right-0 w-6 h-6 cursor-ns-resize select-none bg-white/60 rounded-full border-2 border-white/80 hover:opacity-100 active:opacity-100 ${resizingId === ev.id && resizeHandle === 'bottom-right' ? 'opacity-100' : 'opacity-60'}`}
                                         onMouseDown={(e) => {
                                           e.stopPropagation();
                                           e.preventDefault();
-                                          if (dragDelayTimerRef.current) {
-                                            clearTimeout(dragDelayTimerRef.current);
-                                            dragDelayTimerRef.current = null;
+                                          startResize(ev, 'bottom-right', e.clientY);
+                                        }}
+                                        onTouchStart={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          if (e.touches[0]) {
+                                            startResize(ev, 'bottom-right', e.touches[0].clientY);
                                           }
-                                          setDragDelayActive(false);
-                                          setDragDelayEventId(null);
-                                          setResizingId(ev.id);
-                                          setResizeHandle('bottom-right');
-                                          resizeRef.current = {
-                                            startY: e.clientY,
-                                            origStart: ev.start,
-                                            origEnd: ev.end,
-                                            lastStartMs: ev.start,
-                                            lastEndMs: ev.end,
-                                            moved: false,
-                                          };
                                         }}
                                       />
                                     </>
