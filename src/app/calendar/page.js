@@ -327,7 +327,7 @@ function CalendarContent() {
   // Side menu state
   const [showSideMenu, setShowSideMenu] = useState(false);
 
-  // View mode state (Day, Week, Month, Year)
+  // View mode state (Day, Week, Month)
   const [currentView, setCurrentView] = useState('Month');
 
   // Selected day (for modals/editing)
@@ -581,7 +581,7 @@ function CalendarContent() {
     if (!editId) return;
 
     const dateParam = searchParams.get('date'); // yyyy-mm-dd
-    const viewParam = searchParams.get('view'); // Day, Week, Month, Year
+    const viewParam = searchParams.get('view'); // Day, Week, Month
 
     // Find the event
     const event = events.find(ev => ev.id === editId);
@@ -638,10 +638,6 @@ function CalendarContent() {
   
   // Ref for focus area rings horizontal scrolling
   const focusRingsRef = useRef(null);
-  
-  // Ref for year view scrolling
-  const yearViewRef = useRef(null);
-  const currentMonthRef = useRef(null);
 
   const stripDays = useMemo(() => {
     const start = new Date(today);
@@ -695,55 +691,6 @@ function CalendarContent() {
       }, 100);
     }
   }, [focusAreas]);
-
-  // Scroll to current month when Year view is opened
-  useEffect(() => {
-    if (currentView === 'Year' && yearViewRef.current) {
-      // Wait for DOM to render, then scroll to the current month
-      const scrollToCurrentMonth = () => {
-        if (yearViewRef.current && currentMonthRef.current) {
-          const container = yearViewRef.current;
-          const monthElement = currentMonthRef.current;
-          
-          // Verify element is in DOM and has dimensions
-          if (!container.contains(monthElement) || monthElement.offsetHeight === 0) {
-            return; // Not ready yet, will try again
-          }
-          
-          // Get the container's scroll position
-          const containerRect = container.getBoundingClientRect();
-          const monthRect = monthElement.getBoundingClientRect();
-          
-          // Calculate scroll position to put current month at the top
-          // Account for the header height
-          const headerHeight = Math.max(insets.top, 44) + 80;
-          const scrollOffset = monthRect.top - containerRect.top - headerHeight + container.scrollTop;
-          
-          // Scroll to position current month at the top
-          container.scrollTo({ 
-            top: Math.max(0, scrollOffset), 
-            behavior: "smooth" 
-          });
-        }
-      };
-      
-      // Use requestAnimationFrame to ensure layout is complete, then try multiple times
-      const rafId = requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          scrollToCurrentMonth();
-          // Also try with delays as fallback to handle slow rendering
-          setTimeout(scrollToCurrentMonth, 100);
-          setTimeout(scrollToCurrentMonth, 300);
-          setTimeout(scrollToCurrentMonth, 500);
-          setTimeout(scrollToCurrentMonth, 800);
-        });
-      });
-      
-      return () => {
-        cancelAnimationFrame(rafId);
-      };
-    }
-  }, [currentView, insets.top]);
 
   // Modal state for new event (showModal/showEditModal/draft declared above)
   const [editingId, setEditingId] = useState(null);
@@ -1656,7 +1603,7 @@ function CalendarContent() {
               const todayDate = new Date();
               todayDate.setHours(0, 0, 0, 0);
               setSelectedDate(todayDate);
-              if (currentView === 'Month' || currentView === 'Year') {
+              if (currentView === 'Month') {
                 setViewMonth(monthStart(todayDate));
               }
             }}
@@ -1750,17 +1697,6 @@ function CalendarContent() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                       <span>Month</span>
-                    </div>
-                  </button>
-                  <button
-                    className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${currentView === 'Year' ? 'bg-white/30 text-gray-900 font-medium' : 'text-gray-900 hover:bg-white/20'}`}
-                    onClick={() => { setCurrentView('Year'); setShowSideMenu(false); }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      <span>Year</span>
                     </div>
                   </button>
                 </div>
@@ -3250,119 +3186,6 @@ function CalendarContent() {
               </div>
             </div>
           </div>
-        </div>
-      ) : currentView === 'Year' ? (
-        /* Year view - continuous scrolling of 24 months */
-        <div ref={yearViewRef} className="flex-1 overflow-y-auto px-4 scroll-smooth" style={{ paddingTop: `${Math.max(insets.top, 44) + 80}px` }}>
-          {(() => {
-            if (!selectedDate) return null;
-            
-            // Calculate 24 months: 12 months back from today, current month (today), 12 months forward
-            // Use today to ensure we always show the current month in the list
-            const todayMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-            const months = [];
-            
-            // Add 12 months before today
-            for (let i = 12; i > 0; i--) {
-              const month = new Date(todayMonth);
-              month.setMonth(todayMonth.getMonth() - i);
-              months.push(month);
-            }
-            
-            // Add current month (today) - this is index 12
-            months.push(new Date(todayMonth));
-            
-            // Add 12 months after today
-            for (let i = 1; i <= 12; i++) {
-              const month = new Date(todayMonth);
-              month.setMonth(todayMonth.getMonth() + i);
-              months.push(month);
-            }
-            
-            return (
-              <div className="space-y-6 pb-6">
-                {months.map((monthDate, monthIndex) => {
-                  const monthGrid = buildMonthGrid(monthDate);
-                  const isCurrentMonth = monthDate.getMonth() === today.getMonth() && monthDate.getFullYear() === today.getFullYear();
-                  
-                  return (
-                    <div 
-                      key={monthIndex} 
-                      ref={isCurrentMonth ? currentMonthRef : null}
-                      className="w-full"
-                    >
-                      {/* Month header */}
-                      <div className="mb-3">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                        </h3>
-                      </div>
-                      
-                      {/* Calendar grid container with glassmorphic styling */}
-                      <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl p-4">
-                        {/* Days of week header */}
-                        <div className="grid grid-cols-7 gap-1 mb-2">
-                          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-                            <div key={i} className="text-center text-xs font-semibold text-gray-900 py-2">
-                              {day}
-                            </div>
-                          ))}
-                        </div>
-
-                        {/* Calendar grid */}
-                        <div className="grid grid-cols-7 gap-1">
-                          {monthGrid.map((date, idx) => {
-                            const inMonth = date.getMonth() === monthDate.getMonth();
-                            const isToday = sameDay(date, today);
-                            const dayEvents = getEventsForDate(date);
-                            
-                            return (
-                              <div
-                                key={idx}
-                                className={`h-[80px] p-1 rounded-md border flex flex-col ${inMonth ? 'bg-white/40 backdrop-blur-sm hover:bg-white/50 border-gray-300/60' : 'bg-white/20 border-gray-200/40'} ${isToday ? 'ring-2 ring-slate-500 border-slate-400' : ''} transition-all cursor-pointer`}
-                                onClick={() => {
-                                  setSelectedDate(new Date(date));
-                                  setCurrentView('Day');
-                                }}
-                              >
-                                <div className={`text-sm font-medium text-center flex-shrink-0 h-8 flex items-center justify-center ${inMonth ? 'text-gray-900' : 'text-gray-500'} ${isToday ? 'text-slate-600' : ''}`}>
-                                  {isToday ? (
-                                    <div className="w-8 h-8 rounded-full bg-slate-500 text-white flex items-center justify-center mx-auto">
-                                      {date.getDate()}
-                                    </div>
-                                  ) : (
-                                    date.getDate()
-                                  )}
-                                </div>
-                                <div className="flex flex-wrap items-center justify-center gap-1 px-1 flex-shrink-0 mt-auto">
-                                  {dayEvents.slice(0, 3).map((ev) => {
-                                    const evColor = getAreaColor(ev.area) || ev.color || COLORS[2];
-                                    return (
-                                      <div
-                                        key={ev.id}
-                                        className="w-2 h-2 rounded-full flex-shrink-0 pointer-events-none"
-                                        style={{ backgroundColor: evColor }}
-                                        title={ev.title}
-                                      />
-                                    );
-                                  })}
-                                  {dayEvents.length > 3 && (
-                                    <div className="w-2 h-2 rounded-full bg-gray-400 flex items-center justify-center flex-shrink-0 pointer-events-none">
-                                      <span className="text-[8px] text-white leading-none">+</span>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            );
-          })()}
         </div>
       ) : null}
 
