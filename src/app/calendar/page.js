@@ -1954,7 +1954,7 @@ function CalendarContent() {
                             {/* Top-left */}
                       <div
                               data-resize-handle
-                              className={`absolute top-0 left-0 w-6 h-6 cursor-ns-resize select-none bg-white/60 rounded-full border-2 border-white/80 hover:opacity-100 active:opacity-100 ${resizingId === ev.id && resizeHandle === 'top-left' ? 'opacity-100' : 'opacity-60'}`}
+                              className={`absolute top-0 left-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'top-left' ? 'opacity-0' : 'opacity-0'}`}
                         onMouseDown={(e) => {
                           e.stopPropagation();
                           e.preventDefault();
@@ -1971,7 +1971,7 @@ function CalendarContent() {
                             {/* Top-right */}
                             <div
                               data-resize-handle
-                              className={`absolute top-0 right-0 w-6 h-6 cursor-ns-resize select-none bg-white/60 rounded-full border-2 border-white/80 hover:opacity-100 active:opacity-100 ${resizingId === ev.id && resizeHandle === 'top-right' ? 'opacity-100' : 'opacity-60'}`}
+                              className={`absolute top-0 right-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'top-right' ? 'opacity-0' : 'opacity-0'}`}
                         onMouseDown={(e) => {
                           e.stopPropagation();
                           e.preventDefault();
@@ -1988,7 +1988,7 @@ function CalendarContent() {
                             {/* Bottom-left */}
                             <div
                               data-resize-handle
-                              className={`absolute bottom-0 left-0 w-6 h-6 cursor-ns-resize select-none bg-white/60 rounded-full border-2 border-white/80 hover:opacity-100 active:opacity-100 ${resizingId === ev.id && resizeHandle === 'bottom-left' ? 'opacity-100' : 'opacity-60'}`}
+                              className={`absolute bottom-0 left-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'bottom-left' ? 'opacity-0' : 'opacity-0'}`}
                         onMouseDown={(e) => {
                           e.stopPropagation();
                           e.preventDefault();
@@ -2005,7 +2005,7 @@ function CalendarContent() {
                             {/* Bottom-right */}
                             <div
                               data-resize-handle
-                              className={`absolute bottom-0 right-0 w-6 h-6 cursor-ns-resize select-none bg-white/60 rounded-full border-2 border-white/80 hover:opacity-100 active:opacity-100 ${resizingId === ev.id && resizeHandle === 'bottom-right' ? 'opacity-100' : 'opacity-60'}`}
+                              className={`absolute bottom-0 right-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'bottom-right' ? 'opacity-0' : 'opacity-0'}`}
                         onMouseDown={(e) => {
                           e.stopPropagation();
                           e.preventDefault();
@@ -2406,7 +2406,7 @@ function CalendarContent() {
                                     <>
                                       <div
                                         data-resize-handle
-                                        className={`absolute top-0 left-0 w-6 h-6 cursor-ns-resize select-none bg-white/60 rounded-full border-2 border-white/80 hover:opacity-100 active:opacity-100 ${resizingId === ev.id && resizeHandle === 'top-left' ? 'opacity-100' : 'opacity-60'}`}
+                                        className={`absolute top-0 left-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'top-left' ? 'opacity-0' : 'opacity-0'}`}
                                         onMouseDown={(e) => {
                                           e.stopPropagation();
                                           e.preventDefault();
@@ -2422,7 +2422,7 @@ function CalendarContent() {
                                       />
                                       <div
                                         data-resize-handle
-                                        className={`absolute top-0 right-0 w-6 h-6 cursor-ns-resize select-none bg-white/60 rounded-full border-2 border-white/80 hover:opacity-100 active:opacity-100 ${resizingId === ev.id && resizeHandle === 'top-right' ? 'opacity-100' : 'opacity-60'}`}
+                                        className={`absolute top-0 right-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'top-right' ? 'opacity-0' : 'opacity-0'}`}
                                         onMouseDown={(e) => {
                                           e.stopPropagation();
                                           e.preventDefault();
@@ -2438,7 +2438,7 @@ function CalendarContent() {
                                       />
                                       <div
                                         data-resize-handle
-                                        className={`absolute bottom-0 left-0 w-6 h-6 cursor-ns-resize select-none bg-white/60 rounded-full border-2 border-white/80 hover:opacity-100 active:opacity-100 ${resizingId === ev.id && resizeHandle === 'bottom-left' ? 'opacity-100' : 'opacity-60'}`}
+                                        className={`absolute bottom-0 left-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'bottom-left' ? 'opacity-0' : 'opacity-0'}`}
                                         onMouseDown={(e) => {
                                           e.stopPropagation();
                                           e.preventDefault();
@@ -2454,7 +2454,7 @@ function CalendarContent() {
                                       />
                                       <div
                                         data-resize-handle
-                                        className={`absolute bottom-0 right-0 w-6 h-6 cursor-ns-resize select-none bg-white/60 rounded-full border-2 border-white/80 hover:opacity-100 active:opacity-100 ${resizingId === ev.id && resizeHandle === 'bottom-right' ? 'opacity-100' : 'opacity-60'}`}
+                                        className={`absolute bottom-0 right-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'bottom-right' ? 'opacity-0' : 'opacity-0'}`}
                                         onMouseDown={(e) => {
                                           e.stopPropagation();
                                           e.preventDefault();
@@ -2857,7 +2857,7 @@ function CalendarContent() {
                                     <>
                                       <div
                                         data-resize-handle
-                                        className={`absolute top-0 left-0 w-6 h-6 cursor-ns-resize select-none bg-white/60 rounded-full border-2 border-white/80 hover:opacity-100 active:opacity-100 ${resizingId === ev.id && resizeHandle === 'top-left' ? 'opacity-100' : 'opacity-60'}`}
+                                        className={`absolute top-0 left-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'top-left' ? 'opacity-0' : 'opacity-0'}`}
                                         onMouseDown={(e) => {
                                           e.stopPropagation();
                                           e.preventDefault();
@@ -2873,7 +2873,7 @@ function CalendarContent() {
                                       />
                                       <div
                                         data-resize-handle
-                                        className={`absolute top-0 right-0 w-6 h-6 cursor-ns-resize select-none bg-white/60 rounded-full border-2 border-white/80 hover:opacity-100 active:opacity-100 ${resizingId === ev.id && resizeHandle === 'top-right' ? 'opacity-100' : 'opacity-60'}`}
+                                        className={`absolute top-0 right-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'top-right' ? 'opacity-0' : 'opacity-0'}`}
                                         onMouseDown={(e) => {
                                           e.stopPropagation();
                                           e.preventDefault();
@@ -2889,7 +2889,7 @@ function CalendarContent() {
                                       />
                                       <div
                                         data-resize-handle
-                                        className={`absolute bottom-0 left-0 w-6 h-6 cursor-ns-resize select-none bg-white/60 rounded-full border-2 border-white/80 hover:opacity-100 active:opacity-100 ${resizingId === ev.id && resizeHandle === 'bottom-left' ? 'opacity-100' : 'opacity-60'}`}
+                                        className={`absolute bottom-0 left-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'bottom-left' ? 'opacity-0' : 'opacity-0'}`}
                                         onMouseDown={(e) => {
                                           e.stopPropagation();
                                           e.preventDefault();
@@ -2905,7 +2905,7 @@ function CalendarContent() {
                                       />
                                       <div
                                         data-resize-handle
-                                        className={`absolute bottom-0 right-0 w-6 h-6 cursor-ns-resize select-none bg-white/60 rounded-full border-2 border-white/80 hover:opacity-100 active:opacity-100 ${resizingId === ev.id && resizeHandle === 'bottom-right' ? 'opacity-100' : 'opacity-60'}`}
+                                        className={`absolute bottom-0 right-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'bottom-right' ? 'opacity-0' : 'opacity-0'}`}
                                         onMouseDown={(e) => {
                                           e.stopPropagation();
                                           e.preventDefault();
