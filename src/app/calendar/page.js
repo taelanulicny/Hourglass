@@ -2095,6 +2095,15 @@ function CalendarContent() {
                     {/* Pie Chart */}
                     <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '260px', height: '260px' }}>
                       <svg width="260" height="260" viewBox="0 0 260 260">
+                        {/* Base circle with dark stroke for separation */}
+                        <circle
+                          cx={centerX}
+                          cy={centerY}
+                          r={radius}
+                          fill="none"
+                          stroke="rgba(0,0,0,0.2)"
+                          strokeWidth="21"
+                        />
                         {pieData.map((area, index) => {
                           const dashLength = (area.percentage / 100) * circumference;
                           const dashOffset = -currentOffset;
@@ -2533,6 +2542,15 @@ function CalendarContent() {
                         <div className="flex items-center justify-center gap-4 -mt-4 min-h-[260px] pl-4 pr-6">
                           <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '260px', height: '260px' }}>
                             <svg width="260" height="260" viewBox="0 0 260 260">
+                              {/* Base circle with dark stroke for separation */}
+                              <circle
+                                cx={centerX}
+                                cy={centerY}
+                                r={radius}
+                                fill="none"
+                                stroke="rgba(0,0,0,0.2)"
+                                strokeWidth="21"
+                              />
                               {pieData.map((area, index) => {
                                 const dashLength = (area.percentage / 100) * circumference;
                                 const dashOffset = -currentOffset;
@@ -2971,6 +2989,15 @@ function CalendarContent() {
                         <div className="flex items-center justify-center gap-4 -mt-4 min-h-[260px] pl-4 pr-6">
                           <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '260px', height: '260px' }}>
                             <svg width="260" height="260" viewBox="0 0 260 260">
+                              {/* Base circle with dark stroke for separation */}
+                              <circle
+                                cx={centerX}
+                                cy={centerY}
+                                r={radius}
+                                fill="none"
+                                stroke="rgba(0,0,0,0.2)"
+                                strokeWidth="21"
+                              />
                               {pieData.map((area, index) => {
                                 const dashLength = (area.percentage / 100) * circumference;
                                 const dashOffset = -currentOffset;
@@ -3221,6 +3248,15 @@ function CalendarContent() {
                  {/* Pie Chart */}
                  <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '260px', height: '260px' }}>
                    <svg width="260" height="260" viewBox="0 0 260 260">
+                     {/* Base circle with dark stroke for separation */}
+                     <circle
+                       cx={centerX}
+                       cy={centerY}
+                       r={radius}
+                       fill="none"
+                       stroke="rgba(0,0,0,0.2)"
+                       strokeWidth="21"
+                     />
                      {pieData.map((area, index) => {
                        const dashLength = (area.percentage / 100) * circumference;
                        const dashOffset = -currentOffset;
