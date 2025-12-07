@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request) {
   try {
     const clientId = process.env.GOOGLE_CLIENT_ID;

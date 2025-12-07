@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { cookies } from 'next/headers';
 
+export const dynamic = 'force-dynamic';
+
 // Simple encryption/decryption for cookie storage
 // In production, consider using a more robust solution
 function encrypt(text) {

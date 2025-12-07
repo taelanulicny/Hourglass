@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { cookies } from 'next/headers';
 
+export const dynamic = 'force-dynamic';
+
 function decrypt(encrypted) {
   try {
     return Buffer.from(encrypted, 'base64').toString('utf-8');
