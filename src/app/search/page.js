@@ -58,6 +58,115 @@ function normalizeLabel(s) {
   return (s || "").toString().trim().toLowerCase().replace(/[-_]+/g, " ");
 }
 
+// Safe JSON parse with fallback
+function safeJsonParse(jsonString, fallback = []) {
+  try {
+    if (!jsonString) return fallback;
+    const parsed = JSON.parse(jsonString);
+    return parsed || fallback;
+  } catch (error) {
+    console.warn('Failed to parse JSON:', error);
+    return fallback;
+  }
+}
+
+// Load all events including Google Calendar events with focus areas
+function loadAllEventsWithGoogle() {
+  try {
+    // Load local events
+    const keys = ["hourglassEvents:v1", "calendarEvents", "calendar-items", "events"];
+    const localEvents = [];
+    const seen = new Set();
+    
+    for (const key of keys) {
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+      try {
+        const arr = safeJsonParse(raw, []);
+        if (Array.isArray(arr)) {
+          for (const ev of arr) {
+            const id = ev?.id || `${ev.title || ""}-${ev.start || ""}`;
+            if (id && !seen.has(id)) {
+              seen.add(id);
+              localEvents.push(ev);
+            }
+          }
+        }
+      } catch {}
+    }
+    
+    // Load Google events (stored by calendar page)
+    const googleEventsRaw = localStorage.getItem("googleEvents:v1");
+    const googleEvents = googleEventsRaw ? safeJsonParse(googleEventsRaw, []) : [];
+    
+    // Load Google event customizations
+    const customizationsRaw = localStorage.getItem("googleEventCustomizations:v1");
+    const customizations = customizationsRaw ? safeJsonParse(customizationsRaw, {}) : {};
+    
+    // Load focus areas to get colors
+    const focusAreasRaw = localStorage.getItem("focusCategories");
+    const focusAreas = focusAreasRaw ? safeJsonParse(focusAreasRaw, []) : [];
+    
+    // Apply customizations to Google events and only include those with focus areas
+    const googleEventsWithAreas = googleEvents
+      .map(ev => {
+        const customization = customizations[ev.id];
+        if (customization && customization.area) {
+          const areaObj = focusAreas.find(a => normalizeLabel(a.label) === normalizeLabel(customization.area));
+          
+          return {
+            ...ev,
+            area: customization.area,
+            color: areaObj?.color || ev.color,
+            source: 'google', // Keep source marker
+          };
+        }
+        return null;
+      })
+      .filter(ev => ev !== null && ev.area); // Only include events with focus areas
+    
+    // Combine and deduplicate by ID
+    const allEvents = [...localEvents];
+    const localEventIds = new Set(localEvents.map(e => e.id));
+    
+    for (const googleEv of googleEventsWithAreas) {
+      if (!localEventIds.has(googleEv.id)) {
+        allEvents.push(googleEv);
+      }
+    }
+    
+    return allEvents;
+  } catch (e) {
+    console.warn('Failed to load all events:', e);
+    // Fallback to just local events
+    try {
+      const keys = ["hourglassEvents:v1", "calendarEvents", "calendar-items", "events"];
+      const allEvents = [];
+      const seen = new Set();
+      
+      for (const key of keys) {
+        const raw = localStorage.getItem(key);
+        if (!raw) continue;
+        try {
+          const arr = safeJsonParse(raw, []);
+          if (Array.isArray(arr)) {
+            for (const ev of arr) {
+              const id = ev?.id || `${ev.title || ""}-${ev.start || ""}`;
+              if (id && !seen.has(id)) {
+                seen.add(id);
+                allEvents.push(ev);
+              }
+            }
+          }
+        } catch {}
+      }
+      return allEvents;
+    } catch {
+      return [];
+    }
+  }
+}
+
 // Get color for a focus area
 function getAreaColor(label, focusAreas) {
   if (!label) return COLORS[2];
@@ -103,33 +212,13 @@ export default function SearchPage() {
     setFocusAreas(areas);
   }, []);
 
-  // Load events
+  // Load events (including Google events with focus areas)
   useEffect(() => {
     if (!isClient) return;
     
     const loadEvents = () => {
       try {
-        const keys = ["hourglassEvents:v1", "calendarEvents", "calendar-items", "events"];
-        const allEvents = [];
-        const seen = new Set();
-        
-        for (const key of keys) {
-          const raw = localStorage.getItem(key);
-          if (!raw) continue;
-          try {
-            const arr = JSON.parse(raw) || [];
-            if (Array.isArray(arr)) {
-              for (const ev of arr) {
-                const id = ev?.id || `${ev.title || ""}-${ev.start || ""}`;
-                if (id && !seen.has(id)) {
-                  seen.add(id);
-                  allEvents.push(ev);
-                }
-              }
-            }
-          } catch {}
-        }
-        
+        const allEvents = loadAllEventsWithGoogle();
         setEvents(allEvents);
       } catch (e) {
         console.warn("Failed to load events", e);

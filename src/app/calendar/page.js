@@ -458,6 +458,10 @@ function CalendarContent() {
   useEffect(() => {
     try {
       localStorage.setItem(GOOGLE_EVENT_CUSTOMIZATIONS_KEY, JSON.stringify(googleEventCustomizations));
+      // Trigger event update so other pages can refresh
+      try {
+        window.dispatchEvent(new Event('calendarEventsUpdated'));
+      } catch {}
     } catch (e) {
       console.warn('Failed to save Google event customizations:', e);
     }
@@ -642,6 +646,13 @@ function CalendarContent() {
       const data = await response.json();
       console.log('Google Calendar events received:', data.events?.length || 0, 'events');
       setGoogleEvents(data.events || []);
+      
+      // Also store in localStorage for other pages to access
+      try {
+        localStorage.setItem('googleEvents:v1', JSON.stringify(data.events || []));
+      } catch (e) {
+        console.warn('Failed to store Google events in localStorage:', e);
+      }
     } catch (error) {
       console.error('Error fetching Google Calendar events:', error);
       setGoogleError(error.message);

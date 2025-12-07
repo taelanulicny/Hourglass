@@ -50,6 +50,65 @@ function normalizeLabel(s){
   return (s || "").toString().trim().toLowerCase().replace(/[-_]+/g, " ");
 }
 
+// Load all events including Google Calendar events with focus areas
+function loadAllEventsWithGoogle() {
+  try {
+    // Load local events
+    const localEventsRaw = localStorage.getItem("hourglassEvents:v1") || localStorage.getItem("calendarEvents");
+    const localEvents = localEventsRaw ? safeJsonParse(localEventsRaw, []) : [];
+    
+    // Load Google events (stored by calendar page)
+    const googleEventsRaw = localStorage.getItem("googleEvents:v1");
+    const googleEvents = googleEventsRaw ? safeJsonParse(googleEventsRaw, []) : [];
+    
+    // Load Google event customizations
+    const customizationsRaw = localStorage.getItem("googleEventCustomizations:v1");
+    const customizations = customizationsRaw ? safeJsonParse(customizationsRaw, {}) : {};
+    
+    // Apply customizations to Google events and only include those with focus areas
+    const googleEventsWithAreas = googleEvents
+      .map(ev => {
+        const customization = customizations[ev.id];
+        if (customization && customization.area) {
+          // Get focus areas to determine color
+          const focusAreasRaw = localStorage.getItem("focusCategories");
+          const focusAreas = focusAreasRaw ? safeJsonParse(focusAreasRaw, []) : [];
+          const areaObj = focusAreas.find(a => normalizeLabel(a.label) === normalizeLabel(customization.area));
+          
+          return {
+            ...ev,
+            area: customization.area,
+            color: areaObj?.color || ev.color,
+            source: 'google', // Keep source marker
+          };
+        }
+        return null;
+      })
+      .filter(ev => ev !== null && ev.area); // Only include events with focus areas
+    
+    // Combine and deduplicate by ID
+    const allEvents = [...localEvents];
+    const localEventIds = new Set(localEvents.map(e => e.id));
+    
+    for (const googleEv of googleEventsWithAreas) {
+      if (!localEventIds.has(googleEv.id)) {
+        allEvents.push(googleEv);
+      }
+    }
+    
+    return allEvents;
+  } catch (e) {
+    console.warn('Failed to load all events:', e);
+    // Fallback to just local events
+    try {
+      const raw = localStorage.getItem("hourglassEvents:v1") || localStorage.getItem("calendarEvents");
+      return raw ? safeJsonParse(raw, []) : [];
+    } catch {
+      return [];
+    }
+  }
+}
+
 // Convert a hex color like "#7D7ACF" to an rgba string with given alpha
 function hexToRGBA(hex, alpha = 0.55) {
   if (!hex) return `rgba(140, 164, 175, ${alpha})`; // fallback brand color
@@ -417,6 +476,7 @@ function HomeContent() {
   
   const [isNextWeek, setIsNextWeek] = useState(false);
   const [selectedFocusArea, setSelectedFocusArea] = useState(null);
+  const [eventsUpdateTrigger, setEventsUpdateTrigger] = useState(0); // Trigger re-render when events update
   const MAX_WEEKS_BACK = 52;
   const MIN_OFFSET = -MAX_WEEKS_BACK * 7; // in days
   const MAX_FUTURE_DAYS = 7; // allow exactly one week forward
@@ -1205,15 +1265,9 @@ function HomeContent() {
 
     // --- Timeline state and handlers ---
 
-    // Load events from localStorage
-    const allEvents = (() => {
-      try {
-        const raw = localStorage.getItem("hourglassEvents:v1") || localStorage.getItem("calendarEvents");
-        return raw ? safeJsonParse(raw, []) : [];
-      } catch {
-        return [];
-      }
-    })();
+    // Load events from localStorage (including Google events with focus areas)
+    // Use eventsUpdateTrigger to force recalculation when events are updated
+    const allEvents = loadAllEventsWithGoogle();
 
     // Filter for current focus area & month
     const filteredEvents = allEvents.filter(ev => {
