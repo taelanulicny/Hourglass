@@ -606,8 +606,12 @@ function CalendarContent() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.error('Google Calendar API error:', errorData);
-        throw new Error(errorData.error || 'Failed to fetch Google Calendar events');
+        console.error('Google Calendar API error:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData
+        });
+        throw new Error(errorData.error || errorData.details || 'Failed to fetch Google Calendar events');
       }
 
       const data = await response.json();
