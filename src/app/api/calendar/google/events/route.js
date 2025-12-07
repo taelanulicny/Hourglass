@@ -85,7 +85,10 @@ export async function GET(request) {
     const timeMin = searchParams.get('timeMin'); // ISO 8601 string
     const timeMax = searchParams.get('timeMax'); // ISO 8601 string
 
+    console.log('Google Calendar events API called with:', { timeMin, timeMax });
+
     if (!timeMin || !timeMax) {
+      console.error('Missing timeMin or timeMax parameters');
       return NextResponse.json(
         { error: 'timeMin and timeMax parameters are required' },
         { status: 400 }
@@ -95,11 +98,14 @@ export async function GET(request) {
     const accessToken = await getValidAccessToken();
     
     if (!accessToken) {
+      console.error('No valid access token found');
       return NextResponse.json(
         { error: 'Not authenticated. Please connect Google Calendar.' },
         { status: 401 }
       );
     }
+
+    console.log('Access token retrieved, creating OAuth client');
 
     const oauth2Client = new google.auth.OAuth2();
     oauth2Client.setCredentials({ access_token: accessToken });
@@ -165,17 +171,27 @@ export async function GET(request) {
 
     return NextResponse.json({ events: convertedEvents });
   } catch (error) {
-    console.error('Error fetching Google Calendar events:', error);
+    console.error('Error fetching Google Calendar events:', {
+      message: error.message,
+      code: error.code,
+      response: error.response?.data,
+      stack: error.stack
+    });
     
-    if (error.code === 401) {
+    if (error.code === 401 || error.response?.status === 401) {
       return NextResponse.json(
         { error: 'Authentication failed. Please reconnect Google Calendar.' },
         { status: 401 }
       );
     }
 
+    // Return more detailed error information for debugging
     return NextResponse.json(
-      { error: 'Failed to fetch Google Calendar events' },
+      { 
+        error: 'Failed to fetch Google Calendar events',
+        details: error.message,
+        code: error.code
+      },
       { status: 500 }
     );
   }
