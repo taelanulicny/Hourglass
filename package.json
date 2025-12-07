@@ -6,10 +6,10 @@
     "dev": "next dev",
     "dev:mobile": "next dev -H 0.0.0.0",
     "build": "next build",
-    "build:ios": "npm run build && npx cap sync ios",
+    "build:ios": "BUILD_FOR_CAPACITOR=true npm run build && npx cap sync ios",
     "ios": "npx cap open ios",
     "ios:sync": "npx cap sync ios",
-    "ios:build": "npm run build && npx cap sync ios && npx cap open ios",
+    "ios:build": "BUILD_FOR_CAPACITOR=true npm run build && npx cap sync ios && npx cap open ios",
     "start": "next start",
     "lint": "next lint"
   },
