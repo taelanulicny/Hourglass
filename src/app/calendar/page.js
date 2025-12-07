@@ -432,6 +432,12 @@ function CalendarContent() {
   const [events, setEvents] = useState([]);
   const [eventsLoaded, setEventsLoaded] = useState(false);
 
+  // Google Calendar integration state
+  const [googleConnected, setGoogleConnected] = useState(false);
+  const [googleEvents, setGoogleEvents] = useState([]);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleError, setGoogleError] = useState(null);
+
   // Load once on mount (avoid clobbering existing storage with empty array). Merge from any legacy key.
   useEffect(() => {
     try {
@@ -547,6 +553,111 @@ function CalendarContent() {
       return exists ? prev : { ...prev, area: "" };
     });
   }, [selectedDate]);
+
+  // Check Google Calendar connection status
+  const checkGoogleConnection = useCallback(async () => {
+    try {
+      const response = await fetch('/api/auth/google/status');
+      const data = await response.json();
+      setGoogleConnected(data.connected || false);
+      return data.connected || false;
+    } catch (error) {
+      console.error('Error checking Google connection:', error);
+      setGoogleConnected(false);
+      return false;
+    }
+  }, []);
+
+  // Fetch Google Calendar events
+  const fetchGoogleEvents = useCallback(async (startDate, endDate) => {
+    if (!googleConnected) {
+      setGoogleEvents([]);
+      return;
+    }
+
+    setGoogleLoading(true);
+    setGoogleError(null);
+
+    try {
+      // Calculate date range based on view
+      const timeMin = new Date(startDate);
+      timeMin.setHours(0, 0, 0, 0);
+      
+      const timeMax = new Date(endDate);
+      timeMax.setHours(23, 59, 59, 999);
+
+      const response = await fetch(
+        `/api/calendar/google/events?timeMin=${timeMin.toISOString()}&timeMax=${timeMax.toISOString()}`
+      );
+
+      if (response.status === 401) {
+        // Not authenticated, disconnect
+        setGoogleConnected(false);
+        setGoogleEvents([]);
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch Google Calendar events');
+      }
+
+      const data = await response.json();
+      setGoogleEvents(data.events || []);
+    } catch (error) {
+      console.error('Error fetching Google Calendar events:', error);
+      setGoogleError(error.message);
+      setGoogleEvents([]);
+    } finally {
+      setGoogleLoading(false);
+    }
+  }, [googleConnected]);
+
+  // Check connection status on mount
+  useEffect(() => {
+    if (!isClient) return;
+    checkGoogleConnection();
+  }, [isClient, checkGoogleConnection]);
+
+  // Fetch Google events when connected and date range changes
+  useEffect(() => {
+    if (!isClient || !googleConnected || !viewMonth) return;
+
+    // Calculate date range for current view
+    let startDate, endDate;
+    
+    if (currentView === 'Day' && selectedDate) {
+      startDate = new Date(selectedDate);
+      endDate = new Date(selectedDate);
+    } else if (currentView === '3 Day' && selectedDate) {
+      startDate = new Date(selectedDate);
+      endDate = new Date(selectedDate);
+      endDate.setDate(endDate.getDate() + 2);
+    } else if (currentView === 'Week' && selectedDate) {
+      const weekStart = startOfWeek(selectedDate);
+      startDate = new Date(weekStart);
+      endDate = new Date(weekStart);
+      endDate.setDate(endDate.getDate() + 6);
+    } else if (currentView === 'Month' && viewMonth) {
+      startDate = new Date(viewMonth);
+      const monthEnd = new Date(viewMonth);
+      monthEnd.setMonth(monthEnd.getMonth() + 1);
+      monthEnd.setDate(0); // Last day of month
+      endDate = monthEnd;
+    } else {
+      return;
+    }
+
+    fetchGoogleEvents(startDate, endDate);
+  }, [isClient, googleConnected, currentView, selectedDate, viewMonth, fetchGoogleEvents]);
+
+
+  // Merge local and Google events for display
+  const allEvents = useMemo(() => {
+    // Filter out Google events that might conflict with local events
+    const localEventIds = new Set(events.map(e => e.id));
+    const googleEventsFiltered = googleEvents.filter(e => !localEventIds.has(e.id));
+    return [...events, ...googleEventsFiltered];
+  }, [events, googleEvents]);
 
   // Auto-open Add modal when arriving with ?new=1 (prefill date & focus)
   useEffect(() => {
@@ -865,6 +976,10 @@ function CalendarContent() {
   };
 
   const openEdit = (ev) => {
+    // Don't allow editing Google Calendar events
+    if (ev.source === 'google') {
+      return;
+    }
     setEditingId(ev.id);
     setEditDurMs(Math.max(0, (ev.end || 0) - (ev.start || 0)) || 60 * 60 * 1000);
     setDraft({
@@ -913,6 +1028,11 @@ function CalendarContent() {
     
     const currentEvent = events.find(e => e.id === editingId);
     if (!currentEvent) return;
+    
+    // Don't allow deleting Google Calendar events
+    if (currentEvent.source === 'google') {
+      return;
+    }
     
     let next;
     if (deleteAllFuture && currentEvent.isRepeating) {
@@ -1363,10 +1483,10 @@ function CalendarContent() {
   const eventsForSelected = useMemo(() => {
     // include events that overlap the selected day window [dayStartMs, dayEndMs)
     if (!dayStartMs || !dayEndMs) return [];
-    const dayEvents = events.filter((ev) => ev.end > dayStartMs && ev.start < dayEndMs);
+    const dayEvents = allEvents.filter((ev) => ev.end > dayStartMs && ev.start < dayEndMs);
     // Filter by visible focus areas
     return filterEventsByVisibility(dayEvents);
-  }, [events, dayStartMs, dayEndMs, visibleFocusAreas]);
+  }, [allEvents, dayStartMs, dayEndMs, visibleFocusAreas, filterEventsByVisibility]);
 
   // Calculate overlapping event layout (columns, widths, positions)
   const eventLayouts = useMemo(() => {
@@ -1473,7 +1593,7 @@ function CalendarContent() {
     dateStart.setHours(0, 0, 0, 0);
     const dateEnd = new Date(date);
     dateEnd.setHours(23, 59, 59, 999);
-    const dayEvents = events.filter(ev => {
+    const dayEvents = allEvents.filter(ev => {
       const evStart = new Date(ev.start);
       const evEnd = new Date(ev.end);
       return evStart <= dateEnd && evEnd >= dateStart;
@@ -2205,7 +2325,7 @@ function CalendarContent() {
               const dayEndMs = dayEnd.getTime();
               
               // Get events for this day
-              const allDayEvents = events.filter(ev => ev.end > dayStartMs && ev.start < dayEndMs);
+              const allDayEvents = allEvents.filter(ev => ev.end > dayStartMs && ev.start < dayEndMs);
               // Filter by visible focus areas
               const dayEvents = filterEventsByVisibility(allDayEvents);
               
@@ -2653,7 +2773,7 @@ function CalendarContent() {
               const dayEndMs = dayEnd.getTime();
               
               // Get events for this day
-              const allDayEvents = events.filter(ev => ev.end > dayStartMs && ev.start < dayEndMs);
+              const allDayEvents = allEvents.filter(ev => ev.end > dayStartMs && ev.start < dayEndMs);
               // Filter by visible focus areas
               const dayEvents = filterEventsByVisibility(allDayEvents);
               
