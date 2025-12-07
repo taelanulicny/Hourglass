@@ -24,7 +24,7 @@ export async function GET(request) {
     );
 
     const scopes = [
-      'https://www.googleapis.com/auth/calendar.readonly'
+      'https://www.googleapis.com/auth/calendar' // Full read/write access
     ];
 
     const authUrl = oauth2Client.generateAuthUrl({

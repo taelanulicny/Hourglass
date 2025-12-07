@@ -1071,7 +1071,7 @@ function CalendarContent() {
     setShowEditModal(true);
   };
 
-  const updateEvent = () => {
+  const updateEvent = async () => {
     if (!editingId) return;
     
     // Check if this is a Google event
@@ -1079,16 +1079,65 @@ function CalendarContent() {
     const isGoogleEvent = currentEvent?.source === 'google';
     
     if (isGoogleEvent) {
-      // For Google events, only save the focus area customization
-      // (we can't modify the actual Google Calendar event)
-      setGoogleEventCustomizations(prev => ({
-        ...prev,
-        [editingId]: {
-          area: draft.area || '',
+      // For Google events, update both the Google Calendar event and local customizations
+      try {
+        const base = parseYMD(draft.dateYMD || ymd(selectedDate));
+        const mk = (hms) => {
+          const [h, m] = hms.split(':').map(Number);
+          const t = new Date(base);
+          t.setHours(h, m, 0, 0);
+          return t.getTime();
+        };
+        const startMs = mk(draft.start);
+        let endMs = mk(draft.end);
+        if (endMs <= startMs) endMs += 24 * 60 * 60 * 1000; // crosses midnight
+
+        // Update the Google Calendar event
+        const response = await fetch('/api/calendar/google/events/update', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            eventId: editingId,
+            title: draft.title || draft.area || currentEvent.title,
+            start: startMs,
+            end: endMs,
+            description: draft.notes || '',
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || 'Failed to update Google Calendar event');
         }
-      }));
-      setShowEditModal(false);
-      setEditingId(null);
+
+        // Save focus area customization locally
+        if (draft.area) {
+          setGoogleEventCustomizations(prev => ({
+            ...prev,
+            [editingId]: {
+              area: draft.area || '',
+            }
+          }));
+        }
+
+        // Refresh Google events to get the updated data
+        // Trigger a refetch by updating the date range
+        if (viewMonth) {
+          const startDate = new Date(viewMonth);
+          const monthEnd = new Date(viewMonth);
+          monthEnd.setMonth(monthEnd.getMonth() + 1);
+          monthEnd.setDate(0);
+          fetchGoogleEvents(startDate, monthEnd);
+        }
+
+        setShowEditModal(false);
+        setEditingId(null);
+      } catch (error) {
+        console.error('Error updating Google Calendar event:', error);
+        alert(`Failed to update Google Calendar event: ${error.message}`);
+      }
       return;
     }
     
@@ -3831,10 +3880,8 @@ function CalendarContent() {
             <input 
               value={draft.title} 
               onChange={(e) => setDraft({ ...draft, title: e.target.value })} 
-              className={`w-full border rounded px-3 py-2 mb-3 text-black ${isGoogleEvent ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+              className="w-full border rounded px-3 py-2 mb-3 text-black"
               placeholder="e.g., Product Development"
-              readOnly={isGoogleEvent}
-              disabled={isGoogleEvent}
             />
 
             <label className="text-sm text-black">Focus Area</label>
@@ -3847,70 +3894,66 @@ function CalendarContent() {
               <span className="text-xs text-black">Event color follows the Focus Area</span>
             </div>
 
-            {!isGoogleEvent && (
-              <>
-                <label className="text-sm text-black">Date</label>
-                <div className="relative mb-3">
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    className="w-full border rounded px-3 py-2 text-left bg-white cursor-pointer text-black"
-                    onClick={() => setShowEditDatePicker(prev => !prev)}
-                    onKeyPress={e => { if (e.key === 'Enter' || e.key === ' ') setShowEditDatePicker(prev => !prev); }}
-                  >
-                    {formatLongYMD(draft.dateYMD)}
-                  </div>
-                  {showEditDatePicker && (
-                    <div className="absolute left-0 z-50">
-                      <MiniMonthPicker
-                        valueYMD={draft.dateYMD}
-                        onChange={(val) => setDraft((prev) => ({ ...prev, dateYMD: val }))}
-                        onClose={() => setShowEditDatePicker(false)}
-                      />
-                    </div>
-                  )}
+            <label className="text-sm text-black">Date</label>
+            <div className="relative mb-3">
+              <div
+                role="button"
+                tabIndex={0}
+                className="w-full border rounded px-3 py-2 text-left bg-white cursor-pointer text-black"
+                onClick={() => setShowEditDatePicker(prev => !prev)}
+                onKeyPress={e => { if (e.key === 'Enter' || e.key === ' ') setShowEditDatePicker(prev => !prev); }}
+              >
+                {formatLongYMD(draft.dateYMD)}
+              </div>
+              {showEditDatePicker && (
+                <div className="absolute left-0 z-50">
+                  <MiniMonthPicker
+                    valueYMD={draft.dateYMD}
+                    onChange={(val) => setDraft((prev) => ({ ...prev, dateYMD: val }))}
+                    onClose={() => setShowEditDatePicker(false)}
+                  />
                 </div>
+              )}
+            </div>
 
-                <div className="grid grid-cols-2 gap-2 mb-3 items-start overflow-hidden">
-                  <div className="pr-1 min-w-0">
-                    <label className="text-sm text-black">Start</label>
-                    <input
-                      type="time"
-                      value={draft.start}
-                      onChange={(e) => {
-                        const newStart = e.target.value;
-                        const newEnd = endFromStartAndDur(newStart, editDurMs);
-                        setDraft((prev) => ({ ...prev, start: newStart, end: newEnd }));
-                      }}
-                      className="w-full min-w-0 border rounded px-3 py-2 sm:max-w-full max-w-[160px] text-black"
-                      min="00:00"
-                      max="23:59"
-                      style={{ width: '100%' }}
-                    />
-                  </div>
-                  <div className="pl-1 min-w-0">
-                    <label className="text-sm text-black">End</label>
-                    <input
-                      type="time"
-                      value={draft.end}
-                      onChange={(e) => {
-                        const newEnd = e.target.value;
-                        const dur = Math.max(0, hhmmToMsOfDay(newEnd) - hhmmToMsOfDay(draft.start));
-                        if (dur > 0) setEditDurMs(dur);
-                        setDraft((prev) => ({ ...prev, end: newEnd }));
-                      }}
-                      className="w-full min-w-0 border rounded px-3 py-2 sm:max-w-full max-w-[160px] text-black"
-                      min="00:00"
-                      max="23:59"
-                      style={{ width: '100%' }}
-                    />
-                  </div>
-                </div>
+            <div className="grid grid-cols-2 gap-2 mb-3 items-start overflow-hidden">
+              <div className="pr-1 min-w-0">
+                <label className="text-sm text-black">Start</label>
+                <input
+                  type="time"
+                  value={draft.start}
+                  onChange={(e) => {
+                    const newStart = e.target.value;
+                    const newEnd = endFromStartAndDur(newStart, editDurMs);
+                    setDraft((prev) => ({ ...prev, start: newStart, end: newEnd }));
+                  }}
+                  className="w-full min-w-0 border rounded px-3 py-2 sm:max-w-full max-w-[160px] text-black"
+                  min="00:00"
+                  max="23:59"
+                  style={{ width: '100%' }}
+                />
+              </div>
+              <div className="pl-1 min-w-0">
+                <label className="text-sm text-black">End</label>
+                <input
+                  type="time"
+                  value={draft.end}
+                  onChange={(e) => {
+                    const newEnd = e.target.value;
+                    const dur = Math.max(0, hhmmToMsOfDay(newEnd) - hhmmToMsOfDay(draft.start));
+                    if (dur > 0) setEditDurMs(dur);
+                    setDraft((prev) => ({ ...prev, end: newEnd }));
+                  }}
+                  className="w-full min-w-0 border rounded px-3 py-2 sm:max-w-full max-w-[160px] text-black"
+                  min="00:00"
+                  max="23:59"
+                  style={{ width: '100%' }}
+                />
+              </div>
+            </div>
 
-                <label className="text-sm text-black">Notes</label>
-                <textarea value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} className="w-full border rounded px-3 py-2 mb-4 text-black" rows={3} placeholder="What will you accomplish during this timeframe?" />
-              </>
-            )}
+            <label className="text-sm text-black">Notes</label>
+            <textarea value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} className="w-full border rounded px-3 py-2 mb-4 text-black" rows={3} placeholder="What will you accomplish during this timeframe?" />
 
             {!isGoogleEvent && (
               <div className="flex justify-between items-center">
