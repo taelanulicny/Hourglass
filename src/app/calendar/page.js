@@ -437,6 +437,31 @@ function CalendarContent() {
   const [googleEvents, setGoogleEvents] = useState([]);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [googleError, setGoogleError] = useState(null);
+  
+  // Store Google event customizations (focus areas, etc.) in localStorage
+  const GOOGLE_EVENT_CUSTOMIZATIONS_KEY = "googleEventCustomizations:v1";
+  const [googleEventCustomizations, setGoogleEventCustomizations] = useState({});
+  
+  // Load Google event customizations on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(GOOGLE_EVENT_CUSTOMIZATIONS_KEY);
+      if (saved) {
+        setGoogleEventCustomizations(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.warn('Failed to load Google event customizations:', e);
+    }
+  }, []);
+  
+  // Save Google event customizations when they change
+  useEffect(() => {
+    try {
+      localStorage.setItem(GOOGLE_EVENT_CUSTOMIZATIONS_KEY, JSON.stringify(googleEventCustomizations));
+    } catch (e) {
+      console.warn('Failed to save Google event customizations:', e);
+    }
+  }, [googleEventCustomizations]);
 
   // Load once on mount (avoid clobbering existing storage with empty array). Merge from any legacy key.
   useEffect(() => {
@@ -681,13 +706,24 @@ function CalendarContent() {
   }, [isClient, googleConnected, currentView, selectedDate, viewMonth, fetchGoogleEvents]);
 
 
-  // Merge local and Google events for display
+  // Merge local and Google events for display, applying customizations
   const allEvents = useMemo(() => {
     // Filter out Google events that might conflict with local events
     const localEventIds = new Set(events.map(e => e.id));
-    const googleEventsFiltered = googleEvents.filter(e => !localEventIds.has(e.id));
+    const googleEventsFiltered = googleEvents.map(ev => {
+      // Apply customizations (focus area, color) if they exist
+      const customization = googleEventCustomizations[ev.id];
+      if (customization) {
+        return {
+          ...ev,
+          area: customization.area || ev.area,
+          color: customization.area ? getAreaColor(customization.area) : ev.color,
+        };
+      }
+      return ev;
+    }).filter(e => !localEventIds.has(e.id));
     return [...events, ...googleEventsFiltered];
-  }, [events, googleEvents]);
+  }, [events, googleEvents, googleEventCustomizations]);
 
   // Auto-open Add modal when arriving with ?new=1 (prefill date & focus)
   useEffect(() => {
@@ -1006,15 +1042,16 @@ function CalendarContent() {
   };
 
   const openEdit = (ev) => {
-    // Don't allow editing Google Calendar events
-    if (ev.source === 'google') {
-      return;
-    }
     setEditingId(ev.id);
+    const isGoogleEvent = ev.source === 'google';
+    
+    // For Google events, get customization if it exists
+    const customization = isGoogleEvent ? googleEventCustomizations[ev.id] : null;
+    
     setEditDurMs(Math.max(0, (ev.end || 0) - (ev.start || 0)) || 60 * 60 * 1000);
     setDraft({
       title: ev.title || '',
-      area: ev.area || '',
+      area: customization?.area || ev.area || '',
       dateYMD: ymd(new Date(ev.start)),
       start: msToHHMM(ev.start),
       end: msToHHMM(ev.end),
@@ -1025,6 +1062,26 @@ function CalendarContent() {
 
   const updateEvent = () => {
     if (!editingId) return;
+    
+    // Check if this is a Google event
+    const currentEvent = allEvents.find(e => e.id === editingId);
+    const isGoogleEvent = currentEvent?.source === 'google';
+    
+    if (isGoogleEvent) {
+      // For Google events, only save the focus area customization
+      // (we can't modify the actual Google Calendar event)
+      setGoogleEventCustomizations(prev => ({
+        ...prev,
+        [editingId]: {
+          area: draft.area || '',
+        }
+      }));
+      setShowEditModal(false);
+      setEditingId(null);
+      return;
+    }
+    
+    // For local events, update normally
     const base = parseYMD(draft.dateYMD || ymd(selectedDate));
     const mk = (hms) => {
       const [h, m] = hms.split(':').map(Number);
@@ -3741,16 +3798,33 @@ function CalendarContent() {
         </div>
       )}
 
-      {showEditModal && (
+      {showEditModal && (() => {
+        const currentEvent = allEvents.find(e => e.id === editingId);
+        const isGoogleEvent = currentEvent?.source === 'google';
+        
+        return (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 pb-20">
           <div className="bg-white/95 backdrop-blur-xl rounded-xl shadow-2xl border-2 border-white/60 p-4 w-[92%] max-w-md">
             <div className="flex justify-between items-center mb-2">
-              <h3 className="font-semibold text-black">Edit Event</h3>
+              <h3 className="font-semibold text-black">{isGoogleEvent ? 'Edit Google Calendar Event' : 'Edit Event'}</h3>
               <button className="text-sm text-black" onClick={() => { setShowEditModal(false); setEditingId(null); }}>Cancel</button>
             </div>
 
+            {isGoogleEvent && (
+              <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-800">
+                This is a Google Calendar event. You can only change the focus area. Title, date, and time are managed in Google Calendar.
+              </div>
+            )}
+
             <label className="text-sm text-black">Title</label>
-            <input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} className="w-full border rounded px-3 py-2 mb-3 text-black" placeholder="e.g., Product Development" />
+            <input 
+              value={draft.title} 
+              onChange={(e) => setDraft({ ...draft, title: e.target.value })} 
+              className={`w-full border rounded px-3 py-2 mb-3 text-black ${isGoogleEvent ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+              placeholder="e.g., Product Development"
+              readOnly={isGoogleEvent}
+              disabled={isGoogleEvent}
+            />
 
             <label className="text-sm text-black">Focus Area</label>
             <select value={draft.area} onChange={(e) => setDraft({ ...draft, area: e.target.value })} className="w-full border rounded px-3 py-2 mb-3 text-black">
@@ -3762,98 +3836,111 @@ function CalendarContent() {
               <span className="text-xs text-black">Event color follows the Focus Area</span>
             </div>
 
-            <label className="text-sm text-black">Date</label>
-            <div className="relative mb-3">
-              <div
-                role="button"
-                tabIndex={0}
-                className="w-full border rounded px-3 py-2 text-left bg-white cursor-pointer text-black"
-                onClick={() => setShowEditDatePicker(prev => !prev)}
-                onKeyPress={e => { if (e.key === 'Enter' || e.key === ' ') setShowEditDatePicker(prev => !prev); }}
-              >
-                {formatLongYMD(draft.dateYMD)}
-              </div>
-              {showEditDatePicker && (
-                <div className="absolute left-0 z-50">
-                  <MiniMonthPicker
-                    valueYMD={draft.dateYMD}
-                    onChange={(val) => setDraft((prev) => ({ ...prev, dateYMD: val }))}
-                    onClose={() => setShowEditDatePicker(false)}
-                  />
+            {!isGoogleEvent && (
+              <>
+                <label className="text-sm text-black">Date</label>
+                <div className="relative mb-3">
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    className="w-full border rounded px-3 py-2 text-left bg-white cursor-pointer text-black"
+                    onClick={() => setShowEditDatePicker(prev => !prev)}
+                    onKeyPress={e => { if (e.key === 'Enter' || e.key === ' ') setShowEditDatePicker(prev => !prev); }}
+                  >
+                    {formatLongYMD(draft.dateYMD)}
+                  </div>
+                  {showEditDatePicker && (
+                    <div className="absolute left-0 z-50">
+                      <MiniMonthPicker
+                        valueYMD={draft.dateYMD}
+                        onChange={(val) => setDraft((prev) => ({ ...prev, dateYMD: val }))}
+                        onClose={() => setShowEditDatePicker(false)}
+                      />
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            <div className="grid grid-cols-2 gap-2 mb-3 items-start overflow-hidden">
-              <div className="pr-1 min-w-0">
-                <label className="text-sm text-black">Start</label>
-                <input
-                  type="time"
-                  value={draft.start}
-                  onChange={(e) => {
-                    const newStart = e.target.value;
-                    const newEnd = endFromStartAndDur(newStart, editDurMs);
-                    setDraft((prev) => ({ ...prev, start: newStart, end: newEnd }));
-                  }}
-                  className="w-full min-w-0 border rounded px-3 py-2 sm:max-w-full max-w-[160px] text-black"
-                  min="00:00"
-                  max="23:59"
-                  style={{ width: '100%' }}
-                />
-              </div>
-              <div className="pl-1 min-w-0">
-                <label className="text-sm text-black">End</label>
-                <input
-                  type="time"
-                  value={draft.end}
-                  onChange={(e) => {
-                    const newEnd = e.target.value;
-                    const dur = Math.max(0, hhmmToMsOfDay(newEnd) - hhmmToMsOfDay(draft.start));
-                    if (dur > 0) setEditDurMs(dur);
-                    setDraft((prev) => ({ ...prev, end: newEnd }));
-                  }}
-                  className="w-full min-w-0 border rounded px-3 py-2 sm:max-w-full max-w-[160px] text-black"
-                  min="00:00"
-                  max="23:59"
-                  style={{ width: '100%' }}
-                />
-              </div>
-            </div>
+                <div className="grid grid-cols-2 gap-2 mb-3 items-start overflow-hidden">
+                  <div className="pr-1 min-w-0">
+                    <label className="text-sm text-black">Start</label>
+                    <input
+                      type="time"
+                      value={draft.start}
+                      onChange={(e) => {
+                        const newStart = e.target.value;
+                        const newEnd = endFromStartAndDur(newStart, editDurMs);
+                        setDraft((prev) => ({ ...prev, start: newStart, end: newEnd }));
+                      }}
+                      className="w-full min-w-0 border rounded px-3 py-2 sm:max-w-full max-w-[160px] text-black"
+                      min="00:00"
+                      max="23:59"
+                      style={{ width: '100%' }}
+                    />
+                  </div>
+                  <div className="pl-1 min-w-0">
+                    <label className="text-sm text-black">End</label>
+                    <input
+                      type="time"
+                      value={draft.end}
+                      onChange={(e) => {
+                        const newEnd = e.target.value;
+                        const dur = Math.max(0, hhmmToMsOfDay(newEnd) - hhmmToMsOfDay(draft.start));
+                        if (dur > 0) setEditDurMs(dur);
+                        setDraft((prev) => ({ ...prev, end: newEnd }));
+                      }}
+                      className="w-full min-w-0 border rounded px-3 py-2 sm:max-w-full max-w-[160px] text-black"
+                      min="00:00"
+                      max="23:59"
+                      style={{ width: '100%' }}
+                    />
+                  </div>
+                </div>
 
-            <label className="text-sm text-black">Notes</label>
-            <textarea value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} className="w-full border rounded px-3 py-2 mb-4 text-black" rows={3} placeholder="What will you accomplish during this timeframe?" />
+                <label className="text-sm text-black">Notes</label>
+                <textarea value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} className="w-full border rounded px-3 py-2 mb-4 text-black" rows={3} placeholder="What will you accomplish during this timeframe?" />
+              </>
+            )}
 
-            <div className="flex justify-between items-center">
-              <div className="flex gap-2">
-                {(() => {
-                  const currentEvent = events.find(e => e.id === editingId);
-                  if (currentEvent && currentEvent.isRepeating) {
-                    return (
-                      <>
-                        <button className="px-4 py-2 bg-red-500 text-white rounded text-xs leading-tight" onClick={() => deleteEvent(false)}>
-                          Delete This<br />Event
-                        </button>
-                        <button className="px-4 py-2 bg-red-600 text-white rounded text-xs leading-tight" onClick={() => deleteEvent(true)}>
-                          Delete Future<br />Events
-                        </button>
-                      </>
-                    );
-                  } else {
-                    return (
-                      <button className="px-4 py-2 bg-red-500 text-white rounded" onClick={deleteEvent}>Delete</button>
-                    );
-                  }
-                })()}
-                <button className="px-4 py-2 bg-gray-200 rounded text-black" onClick={duplicateEvent}>Duplicate</button>
+            {!isGoogleEvent && (
+              <div className="flex justify-between items-center">
+                <div className="flex gap-2">
+                  {(() => {
+                    const currentEvent = events.find(e => e.id === editingId);
+                    if (currentEvent && currentEvent.isRepeating) {
+                      return (
+                        <>
+                          <button className="px-4 py-2 bg-red-500 text-white rounded text-xs leading-tight" onClick={() => deleteEvent(false)}>
+                            Delete This<br />Event
+                          </button>
+                          <button className="px-4 py-2 bg-red-600 text-white rounded text-xs leading-tight" onClick={() => deleteEvent(true)}>
+                            Delete Future<br />Events
+                          </button>
+                        </>
+                      );
+                    } else {
+                      return (
+                        <button className="px-4 py-2 bg-red-500 text-white rounded" onClick={deleteEvent}>Delete</button>
+                      );
+                    }
+                  })()}
+                  <button className="px-4 py-2 bg-gray-200 rounded text-black" onClick={duplicateEvent}>Duplicate</button>
+                </div>
+                <div className="flex gap-2">
+                  <button className="px-4 py-2 bg-gray-200 rounded text-black" onClick={() => { setShowEditModal(false); setEditingId(null); }}>Cancel</button>
+                  <button className="px-4 py-2 bg-[#6B7280] text-white rounded" onClick={updateEvent}>Save</button>
+                </div>
               </div>
-              <div className="flex gap-2">
+            )}
+            {isGoogleEvent && (
+              <div className="flex justify-end gap-2">
                 <button className="px-4 py-2 bg-gray-200 rounded text-black" onClick={() => { setShowEditModal(false); setEditingId(null); }}>Cancel</button>
                 <button className="px-4 py-2 bg-[#6B7280] text-white rounded" onClick={updateEvent}>Save</button>
               </div>
-            </div>
+            )}
           </div>
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
