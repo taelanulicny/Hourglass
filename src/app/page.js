@@ -2016,10 +2016,10 @@ function HomeContent() {
               Calendar
             </button>
             <button
-              onClick={() => router.push('/connect')}
+              onClick={() => router.push('/search')}
               className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-medium border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
             >
-              Discover
+              Search
             </button>
           </div>
         </div>
