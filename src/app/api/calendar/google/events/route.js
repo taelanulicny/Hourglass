@@ -106,6 +106,12 @@ export async function GET(request) {
 
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 
+    console.log('Fetching events from Google Calendar API:', {
+      timeMin,
+      timeMax,
+      calendarId: 'primary'
+    });
+
     const response = await calendar.events.list({
       calendarId: 'primary',
       timeMin: timeMin,
@@ -116,6 +122,7 @@ export async function GET(request) {
     });
 
     const googleEvents = response.data.items || [];
+    console.log('Google Calendar API returned', googleEvents.length, 'events');
 
     // Convert Google Calendar events to your app's event format
     const convertedEvents = googleEvents.map((event) => {

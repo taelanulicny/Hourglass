@@ -586,9 +586,16 @@ function CalendarContent() {
       const timeMax = new Date(endDate);
       timeMax.setHours(23, 59, 59, 999);
 
+      console.log('Fetching Google Calendar events:', {
+        timeMin: timeMin.toISOString(),
+        timeMax: timeMax.toISOString()
+      });
+
       const response = await fetch(
         `/api/calendar/google/events?timeMin=${timeMin.toISOString()}&timeMax=${timeMax.toISOString()}`
       );
+
+      console.log('Google Calendar API response status:', response.status);
 
       if (response.status === 401) {
         // Not authenticated, disconnect
@@ -598,10 +605,13 @@ function CalendarContent() {
       }
 
       if (!response.ok) {
-        throw new Error('Failed to fetch Google Calendar events');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Google Calendar API error:', errorData);
+        throw new Error(errorData.error || 'Failed to fetch Google Calendar events');
       }
 
       const data = await response.json();
+      console.log('Google Calendar events received:', data.events?.length || 0, 'events');
       setGoogleEvents(data.events || []);
     } catch (error) {
       console.error('Error fetching Google Calendar events:', error);
@@ -620,7 +630,7 @@ function CalendarContent() {
 
   // Fetch Google events when connected and date range changes
   useEffect(() => {
-    if (!isClient || !googleConnected || !viewMonth) return;
+    if (!isClient || !googleConnected) return;
 
     // Calculate date range for current view
     let startDate, endDate;
@@ -637,15 +647,31 @@ function CalendarContent() {
       startDate = new Date(weekStart);
       endDate = new Date(weekStart);
       endDate.setDate(endDate.getDate() + 6);
-    } else if (currentView === 'Month' && viewMonth) {
-      startDate = new Date(viewMonth);
-      const monthEnd = new Date(viewMonth);
+    } else if (currentView === 'Month') {
+      // For month view, use viewMonth if available, otherwise use selectedDate
+      const monthStartDate = viewMonth || (selectedDate ? monthStart(selectedDate) : monthStart(new Date()));
+      startDate = new Date(monthStartDate);
+      const monthEnd = new Date(monthStartDate);
       monthEnd.setMonth(monthEnd.getMonth() + 1);
       monthEnd.setDate(0); // Last day of month
       endDate = monthEnd;
     } else {
-      return;
+      // Default to current month if nothing else is set
+      const today = new Date();
+      startDate = monthStart(today);
+      const monthEnd = new Date(startDate);
+      monthEnd.setMonth(monthEnd.getMonth() + 1);
+      monthEnd.setDate(0);
+      endDate = monthEnd;
     }
+
+    console.log('Triggering Google Calendar fetch for view:', currentView, {
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      googleConnected,
+      viewMonth: viewMonth?.toISOString(),
+      selectedDate: selectedDate?.toISOString()
+    });
 
     fetchGoogleEvents(startDate, endDate);
   }, [isClient, googleConnected, currentView, selectedDate, viewMonth, fetchGoogleEvents]);
