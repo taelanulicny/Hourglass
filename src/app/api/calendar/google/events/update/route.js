@@ -128,9 +128,17 @@ export async function PUT(request) {
       if (existingEvent.data.start.date) {
         // Keep as all-day event
         updatedEvent.start = { date: startDate.toISOString().split('T')[0] };
+        // Remove timezone if it was there
+        if (updatedEvent.start.timeZone) {
+          delete updatedEvent.start.timeZone;
+        }
       } else {
-        // Timed event
-        updatedEvent.start = { dateTime: startDate.toISOString() };
+        // Timed event - preserve timezone from original event or use UTC
+        const timeZone = existingEvent.data.start.timeZone || 'UTC';
+        updatedEvent.start = { 
+          dateTime: startDate.toISOString(),
+          timeZone: timeZone
+        };
       }
     }
 
@@ -142,9 +150,17 @@ export async function PUT(request) {
         const endDateOnly = new Date(endDate);
         endDateOnly.setDate(endDateOnly.getDate() + 1);
         updatedEvent.end = { date: endDateOnly.toISOString().split('T')[0] };
+        // Remove timezone if it was there
+        if (updatedEvent.end.timeZone) {
+          delete updatedEvent.end.timeZone;
+        }
       } else {
-        // Timed event
-        updatedEvent.end = { dateTime: endDate.toISOString() };
+        // Timed event - preserve timezone from original event or use UTC
+        const timeZone = existingEvent.data.end.timeZone || 'UTC';
+        updatedEvent.end = { 
+          dateTime: endDate.toISOString(),
+          timeZone: timeZone
+        };
       }
     }
 
