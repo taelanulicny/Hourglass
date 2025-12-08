@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { syncData, uploadData } from '@/lib/sync';
+import { syncData } from '@/lib/sync';
 
 function SettingsContent() {
   const router = useRouter();
