@@ -3877,12 +3877,6 @@ function CalendarContent() {
               <button className="text-sm text-black" onClick={() => { setShowEditModal(false); setEditingId(null); }}>Cancel</button>
             </div>
 
-            {isGoogleEvent && (
-              <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-800">
-                This is a Google Calendar event. You can only change the focus area. Title, date, and time are managed in Google Calendar.
-              </div>
-            )}
-
             <label className="text-sm text-black">Title</label>
             <input 
               value={draft.title} 
