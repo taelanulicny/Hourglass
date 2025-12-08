@@ -179,13 +179,23 @@ export async function PUT(request) {
       );
     }
 
+    // Provide more specific error messages
+    let errorMessage = 'Failed to update Google Calendar event';
+    if (error.code === 403) {
+      errorMessage = 'Permission denied. The current token does not have write access. Please disconnect and reconnect Google Calendar.';
+    } else if (error.code === 404) {
+      errorMessage = 'Event not found. It may have been deleted from Google Calendar.';
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
     return NextResponse.json(
       { 
-        error: 'Failed to update Google Calendar event',
+        error: errorMessage,
         details: error.message,
         code: error.code
       },
-      { status: 500 }
+      { status: error.code || 500 }
     );
   }
 }

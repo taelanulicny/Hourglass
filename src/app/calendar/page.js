@@ -1109,7 +1109,14 @@ function CalendarContent() {
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || 'Failed to update Google Calendar event');
+          const errorMessage = errorData.details || errorData.error || `HTTP ${response.status}: ${response.statusText}`;
+          
+          // Check for permission errors
+          if (response.status === 403 || errorData.code === 403) {
+            throw new Error('Permission denied. Please disconnect and reconnect Google Calendar to grant write permissions.');
+          }
+          
+          throw new Error(errorMessage);
         }
 
         // Save focus area customization locally
