@@ -344,8 +344,8 @@ function SettingsContent() {
         </div>
       </header>
 
-      {/* Content with top padding to account for fixed header */}
-      <div className="pt-24 px-4 py-6 space-y-6">
+      {/* Content with top padding to account for fixed header and bottom padding for navigation */}
+      <div className="pt-24 pb-32 px-4 py-6 space-y-6">
         {/* Profile Section */}
         <section className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100">
@@ -771,6 +771,30 @@ function SettingsContent() {
             </div>
           </div>
         </section>
+      </div>
+
+      {/* Bottom navigation: Dashboard | Calendar | Search */}
+      <div className="fixed bottom-0 left-0 right-0 p-3 pb-7 z-[9999]">
+        <div className="max-w-md mx-auto grid grid-cols-3 gap-3">
+          <button
+            onClick={() => router.push('/')}
+            className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-medium border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
+          >
+            Dashboard
+          </button>
+          <button
+            onClick={() => router.push('/calendar')}
+            className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-medium border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
+          >
+            Calendar
+          </button>
+          <button
+            onClick={() => router.push('/search')}
+            className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-medium border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
+          >
+            Search
+          </button>
+        </div>
       </div>
 
       {/* Account Creation Modal */}
