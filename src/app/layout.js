@@ -7,6 +7,10 @@ const PWAInstallPrompt = dynamic(() => import("../components/PWAInstallPrompt"),
   loading: () => null
 });
 
+const SyncProvider = dynamic(() => import("../components/SyncProvider"), {
+  loading: () => null
+});
+
 
 const inter = Inter({
   variable: "--font-inter",
@@ -75,6 +79,7 @@ export default function RootLayout({ children }) {
       <body
         className={`${inter.variable} antialiased`}
       >
+        <SyncProvider />
         {children}
         <PWAInstallPrompt />
       </body>

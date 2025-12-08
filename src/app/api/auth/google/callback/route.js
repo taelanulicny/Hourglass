@@ -62,6 +62,18 @@ export async function GET(request) {
       );
     }
 
+    // Get user info to store Google user ID
+    oauth2Client.setCredentials({ access_token: tokens.access_token });
+    const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
+    let googleUserId = null;
+    try {
+      const userInfo = await oauth2.userinfo.get();
+      googleUserId = userInfo.data.id;
+    } catch (error) {
+      console.error('Error getting user info during OAuth:', error);
+      // Continue anyway - we can get it later
+    }
+
     // Store tokens in encrypted cookies
     const cookieStore = await cookies();
     
@@ -84,6 +96,10 @@ export async function GET(request) {
     
     if (tokens.expiry_date) {
       cookieStore.set('google_token_expiry', tokens.expiry_date.toString(), cookieOptions);
+    }
+    
+    if (googleUserId) {
+      cookieStore.set('google_user_id', encrypt(googleUserId), cookieOptions);
     }
 
     return NextResponse.redirect(`${baseUrl}/settings?google_connected=true`);

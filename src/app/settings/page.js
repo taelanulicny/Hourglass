@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { syncData, uploadData } from '@/lib/sync';
 
 function SettingsContent() {
   const router = useRouter();
@@ -28,6 +29,8 @@ function SettingsContent() {
   // Google Calendar integration state
   const [googleConnected, setGoogleConnected] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncStatus, setSyncStatus] = useState(null);
 
   // Check Google Calendar connection status
   const checkGoogleConnection = useCallback(async () => {
@@ -101,6 +104,31 @@ function SettingsContent() {
     checkGoogleConnection();
   }, [checkGoogleConnection]);
 
+  // Sync data when Google Calendar is connected
+  const handleSync = useCallback(async (mergeStrategy = 'server') => {
+    setSyncing(true);
+    setSyncStatus(null);
+    try {
+      const result = await syncData(mergeStrategy);
+      setSyncStatus({
+        type: 'success',
+        message: `Data ${result.action} successfully!`,
+      });
+      // Reload page to apply synced data
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    } catch (error) {
+      console.error('Sync error:', error);
+      setSyncStatus({
+        type: 'error',
+        message: error.message || 'Failed to sync data',
+      });
+    } finally {
+      setSyncing(false);
+    }
+  }, []);
+
   // Handle OAuth callback
   useEffect(() => {
     const googleConnected = searchParams?.get('google_connected');
@@ -108,6 +136,10 @@ function SettingsContent() {
     
     if (googleConnected === 'true') {
       setGoogleConnected(true);
+      // Sync data when first connecting
+      handleSync('server').catch(err => {
+        console.error('Initial sync failed:', err);
+      });
       // Clean URL
       router.replace('/settings', { scroll: false });
     } else if (error) {
@@ -115,7 +147,7 @@ function SettingsContent() {
       // Clean URL
       router.replace('/settings', { scroll: false });
     }
-  }, [searchParams, router]);
+  }, [searchParams, router, handleSync]);
 
 
   // Save sleep hours to local storage when it changes
@@ -543,6 +575,52 @@ function SettingsContent() {
                 </button>
               )}
             </div>
+            
+            {/* Data Sync Section */}
+            {googleConnected && (
+              <div className="mt-4 p-4 border border-gray-200 rounded-xl bg-gray-50">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <div className="font-medium text-gray-900">Cross-Device Sync</div>
+                    <div className="text-sm text-gray-600">
+                      Sync your data across all devices
+                    </div>
+                  </div>
+                </div>
+                {syncStatus && (
+                  <div className={`mb-3 p-2 rounded text-sm ${
+                    syncStatus.type === 'success' 
+                      ? 'bg-green-50 text-green-800 border border-green-200' 
+                      : 'bg-red-50 text-red-800 border border-red-200'
+                  }`}>
+                    {syncStatus.message}
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleSync('server')}
+                    disabled={syncing}
+                    className="flex-1 px-4 py-2 text-sm font-medium text-blue-600 border border-blue-200 rounded-xl hover:bg-blue-50 transition-colors disabled:opacity-50"
+                  >
+                    {syncing ? 'Syncing...' : 'Download from Cloud'}
+                  </button>
+                  <button
+                    onClick={() => uploadData().then(() => {
+                      setSyncStatus({ type: 'success', message: 'Data uploaded successfully!' });
+                    }).catch(err => {
+                      setSyncStatus({ type: 'error', message: err.message || 'Upload failed' });
+                    })}
+                    disabled={syncing}
+                    className="flex-1 px-4 py-2 text-sm font-medium text-green-600 border border-green-200 rounded-xl hover:bg-green-50 transition-colors disabled:opacity-50"
+                  >
+                    {syncing ? 'Syncing...' : 'Upload to Cloud'}
+                  </button>
+                </div>
+                <div className="mt-2 text-xs text-gray-500">
+                  When you connect on a new device, your data will automatically sync.
+                </div>
+              </div>
+            )}
           </div>
         </section>
 
