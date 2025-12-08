@@ -1093,6 +1093,10 @@ function CalendarContent() {
         if (endMs <= startMs) endMs += 24 * 60 * 60 * 1000; // crosses midnight
 
         // Update the Google Calendar event
+        // Convert milliseconds to ISO strings with timezone
+        const startDate = new Date(startMs);
+        const endDate = new Date(endMs);
+        
         const response = await fetch('/api/calendar/google/events/update', {
           method: 'PUT',
           headers: {
@@ -1101,8 +1105,8 @@ function CalendarContent() {
           body: JSON.stringify({
             eventId: editingId,
             title: draft.title || draft.area || currentEvent.title,
-            start: startMs,
-            end: endMs,
+            start: startDate.toISOString(),
+            end: endDate.toISOString(),
             description: draft.notes || '',
           }),
         });

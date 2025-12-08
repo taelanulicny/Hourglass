@@ -123,6 +123,7 @@ export async function PUT(request) {
 
     // Update start and end times
     if (start) {
+      // start is now an ISO string from the client
       const startDate = new Date(start);
       // Check if original event was all-day
       if (existingEvent.data.start.date) {
@@ -143,6 +144,7 @@ export async function PUT(request) {
     }
 
     if (end) {
+      // end is now an ISO string from the client
       const endDate = new Date(end);
       // Check if original event was all-day
       if (existingEvent.data.end.date) {
