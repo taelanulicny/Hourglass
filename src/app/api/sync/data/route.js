@@ -24,6 +24,17 @@ function decrypt(encrypted) {
 
 async function getGoogleUserId() {
   const cookieStore = await cookies();
+  
+  // First, try to get the stored Google user ID from cookie (set during OAuth callback)
+  const storedUserId = cookieStore.get('google_user_id')?.value;
+  if (storedUserId) {
+    const decryptedUserId = decrypt(storedUserId);
+    if (decryptedUserId) {
+      return decryptedUserId;
+    }
+  }
+
+  // Fallback: Get user ID from Google API if not stored
   const accessToken = cookieStore.get('google_access_token')?.value;
   const refreshToken = cookieStore.get('google_refresh_token')?.value;
   const expiryStr = cookieStore.get('google_token_expiry')?.value;
@@ -38,6 +49,8 @@ async function getGoogleUserId() {
 
   // Check if token is expired (with 5 minute buffer)
   const now = Date.now();
+  let validAccessToken = decryptedAccessToken;
+  
   if (expiry && now >= expiry - 5 * 60 * 1000) {
     // Token expired or about to expire, refresh it
     try {
@@ -68,31 +81,40 @@ async function getGoogleUserId() {
       };
 
       if (credentials.access_token) {
+        validAccessToken = credentials.access_token;
         cookieStore.set('google_access_token', Buffer.from(credentials.access_token).toString('base64'), cookieOptions);
       }
 
       if (credentials.expiry_date) {
         cookieStore.set('google_token_expiry', credentials.expiry_date.toString(), cookieOptions);
       }
-
-      // Get user info with refreshed token
-      oauth2Client.setCredentials({ access_token: credentials.access_token });
-      const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
-      const userInfo = await oauth2.userinfo.get();
-      return userInfo.data.id;
     } catch (error) {
       console.error('Error refreshing token:', error);
       return null;
     }
   }
 
-  // Get user info with current token
+  // Get user info with valid token
   try {
     const oauth2Client = new google.auth.OAuth2();
-    oauth2Client.setCredentials({ access_token: decryptedAccessToken });
+    oauth2Client.setCredentials({ access_token: validAccessToken });
     const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
     const userInfo = await oauth2.userinfo.get();
-    return userInfo.data.id;
+    const userId = userInfo.data.id;
+    
+    // Store the user ID in a cookie for future use
+    if (userId) {
+      const cookieOptions = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+        path: '/',
+      };
+      cookieStore.set('google_user_id', Buffer.from(userId).toString('base64'), cookieOptions);
+    }
+    
+    return userId;
   } catch (error) {
     console.error('Error getting user info:', error);
     return null;
