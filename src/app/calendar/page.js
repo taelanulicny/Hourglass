@@ -2415,7 +2415,7 @@ function CalendarContent() {
                           strokeWidth="22"
                           strokeOpacity="0.5"
                         />
-                        {/* Render left part of largest segment first (stays behind) */}
+                        {/* Render left part of largest segment first (stays behind purple) */}
                         {largestSegment && largestPos && leftPartLength > 0 && (
                           <g key={`${largestSegment.label}-left`}>
                             <circle
