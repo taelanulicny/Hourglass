@@ -2369,9 +2369,9 @@ function CalendarContent() {
                 const centerY = 130;
                 const strokeWidth = 20;
                 
-                // Helper function to create arc path for a segment with tucking effect
+                // Helper function to create arc path for a segment with flat trailing edge
+                // The rounded leading edge is added separately as a circle cap
                 // startAngle and endAngle in degrees, with 0 at top (12 o'clock)
-                // Creates a segment with flat trailing edge (start) and rounded leading edge (end)
                 const createArcPath = (startAngle, endAngle, innerRadius, outerRadius) => {
                   const startRad = ((startAngle - 90) * Math.PI) / 180;
                   const endRad = ((endAngle - 90) * Math.PI) / 180;
@@ -2382,7 +2382,7 @@ function CalendarContent() {
                   const startXOuter = centerX + Math.cos(startRad) * outerRadius;
                   const startYOuter = centerY + Math.sin(startRad) * outerRadius;
                   
-                  // Rounded leading edge points
+                  // Leading edge points (will have rounded cap added separately)
                   const endXInner = centerX + Math.cos(endRad) * innerRadius;
                   const endYInner = centerY + Math.sin(endRad) * innerRadius;
                   const endXOuter = centerX + Math.cos(endRad) * outerRadius;
@@ -2393,11 +2393,9 @@ function CalendarContent() {
                   // Path: 
                   // 1. Start at inner radius (flat trailing edge)
                   // 2. Straight line to outer radius (flat edge - no curve)
-                  // 3. Arc along outer edge to end (this creates the rounded leading edge appearance)
+                  // 3. Arc along outer edge to end (straight cut, rounded cap added separately)
                   // 4. Straight line from outer to inner at end
                   // 5. Arc back along inner edge to start (completes the segment)
-                  // The rounded appearance comes from the arc ending, and the flat appearance 
-                  // comes from the straight line at the start
                   return `M ${startXInner} ${startYInner} L ${startXOuter} ${startYOuter} A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${endXOuter} ${endYOuter} L ${endXInner} ${endYInner} A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${startXInner} ${startYInner} Z`;
                 };
                 
@@ -2452,8 +2450,17 @@ function CalendarContent() {
                           
                           return (
                             <g key={area.label}>
+                              {/* Main segment path with flat trailing edge */}
                               <path
                                 d={createArcPath(pos.startAngle, pos.endAngle, innerRadius, outerRadius)}
+                                fill={area.color}
+                                stroke="none"
+                              />
+                              {/* Add rounded cap at leading edge using stroke */}
+                              <circle
+                                cx={centerX + Math.cos(((pos.endAngle - 90) * Math.PI) / 180) * radius}
+                                cy={centerY + Math.sin(((pos.endAngle - 90) * Math.PI) / 180) * radius}
+                                r={strokeWidth / 2}
                                 fill={area.color}
                                 stroke="none"
                               />
