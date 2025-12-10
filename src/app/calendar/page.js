@@ -2382,7 +2382,7 @@ function CalendarContent() {
                   const startXOuter = centerX + Math.cos(startRad) * outerRadius;
                   const startYOuter = centerY + Math.sin(startRad) * outerRadius;
                   
-                  // Leading edge points (will have rounded cap added separately)
+                  // Leading edge points (flat edge, no rounding)
                   const endXInner = centerX + Math.cos(endRad) * innerRadius;
                   const endYInner = centerY + Math.sin(endRad) * innerRadius;
                   const endXOuter = centerX + Math.cos(endRad) * outerRadius;
@@ -2393,7 +2393,7 @@ function CalendarContent() {
                   // Path: 
                   // 1. Start at inner radius (flat trailing edge)
                   // 2. Straight line to outer radius (flat edge - no curve)
-                  // 3. Arc along outer edge to end (straight cut, rounded cap added separately)
+                  // 3. Arc along outer edge to end (straight cut, flat edge)
                   // 4. Straight line from outer to inner at end
                   // 5. Arc back along inner edge to start (completes the segment)
                   return `M ${startXInner} ${startYInner} L ${startXOuter} ${startYOuter} A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${endXOuter} ${endYOuter} L ${endXInner} ${endYInner} A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${startXInner} ${startYInner} Z`;
@@ -2452,17 +2452,9 @@ function CalendarContent() {
                           
                           return (
                             <g key={area.label}>
-                              {/* Main segment path with flat trailing edge */}
+                              {/* Main segment path with flat edges on both sides */}
                               <path
                                 d={createArcPath(pos.startAngle, pos.endAngle, innerRadius, outerRadius)}
-                                fill={area.color}
-                                stroke="none"
-                              />
-                              {/* Add rounded cap at leading edge using stroke */}
-                              <circle
-                                cx={centerX + Math.cos(((pos.endAngle - 90) * Math.PI) / 180) * radius}
-                                cy={centerY + Math.sin(((pos.endAngle - 90) * Math.PI) / 180) * radius}
-                                r={strokeWidth / 2}
                                 fill={area.color}
                                 stroke="none"
                               />
@@ -2911,7 +2903,7 @@ function CalendarContent() {
                                       strokeWidth="20"
                                       strokeDasharray={`${dashLength} ${circumference}`}
                                       strokeDashoffset={dashOffset}
-                                      strokeLinecap="round"
+                                      strokeLinecap="butt"
                                     />
                                     <text
                                       x={labelX}
@@ -3359,7 +3351,7 @@ function CalendarContent() {
                                       strokeWidth="20"
                                       strokeDasharray={`${dashLength} ${circumference}`}
                                       strokeDashoffset={dashOffset}
-                                      strokeLinecap="round"
+                                      strokeLinecap="butt"
                                     />
                                     <text
                                       x={labelX}
@@ -3620,7 +3612,7 @@ function CalendarContent() {
                              strokeWidth="20"
                              strokeDasharray={`${dashLength} ${circumference}`}
                              strokeDashoffset={dashOffset}
-                  strokeLinecap="round"
+                  strokeLinecap="butt"
                            />
                            {/* Percentage label - outside the ring, always horizontal */}
                            <text
