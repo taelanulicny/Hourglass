@@ -2433,14 +2433,16 @@ function CalendarContent() {
                           strokeWidth="22"
                           strokeOpacity="0.5"
                         />
-                        {/* Render all segments with consistent tucking style */}
-                        {segmentPositions.map((pos, index) => {
+                        {/* Render all segments with consistent tucking style - reverse order so smaller segments appear behind larger ones */}
+                        {[...segmentPositions].reverse().map((pos, index) => {
                           const area = pos.area;
                           const innerRadius = radius - strokeWidth / 2;
                           const outerRadius = radius + strokeWidth / 2;
                           
                           // Alternate label distance (closer/further) to prevent overlap
-                          const isEven = index % 2 === 0;
+                          // Use original index for label positioning
+                          const originalIndex = segmentPositions.length - 1 - index;
+                          const isEven = originalIndex % 2 === 0;
                           const labelRadius = radius + (isEven ? 30 : 50);
                           
                           // Adjust angle for 12 o'clock start (same as createArcPath)
