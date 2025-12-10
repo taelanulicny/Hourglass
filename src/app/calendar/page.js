@@ -2368,6 +2368,38 @@ function CalendarContent() {
                 const centerX = 130;
                 const centerY = 130;
                 
+                // Find the largest segment (first in sorted array) and prepare to split it
+                const largestSegment = pieData.length > 0 ? pieData[0] : null;
+                const otherSegments = pieData.slice(1);
+                
+                // Calculate positions for all segments to determine split point
+                let tempOffset = 0;
+                const segmentPositions = pieData.map((area) => {
+                  const dashLength = (area.percentage / 100) * circumference;
+                  const startAngle = (tempOffset / circumference) * 360;
+                  const endAngle = ((tempOffset + dashLength) / circumference) * 360;
+                  const midAngle = (startAngle + endAngle) / 2;
+                  const result = {
+                    area,
+                    dashLength,
+                    startAngle,
+                    endAngle,
+                    midAngle,
+                    offset: tempOffset
+                  };
+                  tempOffset += dashLength;
+                  return result;
+                });
+                
+                // Find where the largest segment ends (where it meets the green segment on the right)
+                // Split the largest segment: left part (most of it) and right part (small overlap area)
+                // Use ~20% of the largest segment as the right part to ensure good overlap with the green segment
+                const largestPos = segmentPositions[0];
+                const rightPartPercentage = 0.20; // 20% of the largest segment will be the right part
+                const rightPartLength = largestPos ? largestPos.dashLength * rightPartPercentage : 0;
+                const leftPartLength = largestPos ? largestPos.dashLength - rightPartLength : 0;
+                const splitOffset = largestPos ? largestPos.offset + leftPartLength : 0;
+                
                 return (
                   <div className="flex items-center justify-center gap-4 -mt-4 min-h-[260px] pl-4 pr-6">
                     {/* Pie Chart */}
@@ -2383,22 +2415,34 @@ function CalendarContent() {
                           strokeWidth="22"
                           strokeOpacity="0.5"
                         />
-                        {pieData.map((area, index) => {
-                          const dashLength = (area.percentage / 100) * circumference;
-                          const dashOffset = -currentOffset;
-                          const startAngle = (currentOffset / circumference) * 360;
-                          const endAngle = ((currentOffset + dashLength) / circumference) * 360;
-                          const midAngle = (startAngle + endAngle) / 2;
+                        {/* Render left part of largest segment first (stays behind) */}
+                        {largestSegment && largestPos && leftPartLength > 0 && (
+                          <g key={`${largestSegment.label}-left`}>
+                            <circle
+                              cx={centerX}
+                              cy={centerY}
+                              r={radius}
+                              fill="none"
+                              stroke={largestSegment.color}
+                              strokeWidth="20"
+                              strokeDasharray={`${leftPartLength} ${circumference}`}
+                              strokeDashoffset={-largestPos.offset}
+                              strokeLinecap="round"
+                            />
+                          </g>
+                        )}
+                        {/* Render all other segments (they will overlay on top of left part) */}
+                        {otherSegments.map((area, index) => {
+                          const pos = segmentPositions[index + 1];
+                          if (!pos) return null;
                           
                           // Alternate label distance (closer/further) to prevent overlap
-                          const isEven = index % 2 === 0;
+                          const isEven = (index + 1) % 2 === 0;
                           const labelRadius = radius + (isEven ? 30 : 50);
                           
-                          const labelAngleRad = (midAngle * Math.PI) / 180;
+                          const labelAngleRad = (pos.midAngle * Math.PI) / 180;
                           const labelX = centerX + Math.cos(labelAngleRad) * labelRadius;
                           const labelY = centerY + Math.sin(labelAngleRad) * labelRadius;
-                          
-                          currentOffset += dashLength;
                           
                           return (
                             <g key={area.label}>
@@ -2409,8 +2453,8 @@ function CalendarContent() {
                                 fill="none"
                                 stroke={area.color}
                                 strokeWidth="20"
-                                strokeDasharray={`${dashLength} ${circumference}`}
-                                strokeDashoffset={dashOffset}
+                                strokeDasharray={`${pos.dashLength} ${circumference}`}
+                                strokeDashoffset={-pos.offset}
                                 strokeLinecap="round"
                               />
                               {/* Percentage label - outside the ring, always horizontal */}
@@ -2427,6 +2471,41 @@ function CalendarContent() {
                             </g>
                           );
                         })}
+                        {/* Render right part of largest segment last (appears on top of green) */}
+                        {largestSegment && largestPos && rightPartLength > 0 && (
+                          <g key={`${largestSegment.label}-right`}>
+                            <circle
+                              cx={centerX}
+                              cy={centerY}
+                              r={radius}
+                              fill="none"
+                              stroke={largestSegment.color}
+                              strokeWidth="20"
+                              strokeDasharray={`${rightPartLength} ${circumference}`}
+                              strokeDashoffset={-splitOffset}
+                              strokeLinecap="round"
+                            />
+                            {/* Percentage label for largest segment */}
+                            {(() => {
+                              const labelAngleRad = (largestPos.midAngle * Math.PI) / 180;
+                              const labelRadius = radius + 30;
+                              const labelX = centerX + Math.cos(labelAngleRad) * labelRadius;
+                              const labelY = centerY + Math.sin(labelAngleRad) * labelRadius;
+                              return (
+                                <text
+                                  x={labelX}
+                                  y={labelY}
+                                  textAnchor="middle"
+                                  dominantBaseline="middle"
+                                  className="text-xs font-semibold"
+                                  style={{ fill: largestSegment.color }}
+                                >
+                                  {largestSegment.percentage.toFixed(1)}%
+                                </text>
+                              );
+                            })()}
+                          </g>
+                        )}
                       </svg>
                       </div>
 
