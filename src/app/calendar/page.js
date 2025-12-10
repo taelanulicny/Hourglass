@@ -2367,12 +2367,41 @@ function CalendarContent() {
                 const circumference = 2 * Math.PI * radius;
                 const centerX = 130;
                 const centerY = 130;
+                const strokeWidth = 20;
                 
-                // Find the largest segment (first in sorted array) and prepare to split it
-                const largestSegment = pieData.length > 0 ? pieData[0] : null;
-                const otherSegments = pieData.slice(1);
+                // Helper function to create arc path for a segment with tucking effect
+                // startAngle and endAngle in degrees, with 0 at top (12 o'clock)
+                // Creates a segment with flat trailing edge (start) and rounded leading edge (end)
+                const createArcPath = (startAngle, endAngle, innerRadius, outerRadius) => {
+                  const startRad = ((startAngle - 90) * Math.PI) / 180;
+                  const endRad = ((endAngle - 90) * Math.PI) / 180;
+                  
+                  // Flat trailing edge points (straight radial line - no rounding)
+                  const startXInner = centerX + Math.cos(startRad) * innerRadius;
+                  const startYInner = centerY + Math.sin(startRad) * innerRadius;
+                  const startXOuter = centerX + Math.cos(startRad) * outerRadius;
+                  const startYOuter = centerY + Math.sin(startRad) * outerRadius;
+                  
+                  // Rounded leading edge points
+                  const endXInner = centerX + Math.cos(endRad) * innerRadius;
+                  const endYInner = centerY + Math.sin(endRad) * innerRadius;
+                  const endXOuter = centerX + Math.cos(endRad) * outerRadius;
+                  const endYOuter = centerY + Math.sin(endRad) * outerRadius;
+                  
+                  const largeArcFlag = (endAngle - startAngle) > 180 ? 1 : 0;
+                  
+                  // Path: 
+                  // 1. Start at inner radius (flat trailing edge)
+                  // 2. Straight line to outer radius (flat edge - no curve)
+                  // 3. Arc along outer edge to end (this creates the rounded leading edge appearance)
+                  // 4. Straight line from outer to inner at end
+                  // 5. Arc back along inner edge to start (completes the segment)
+                  // The rounded appearance comes from the arc ending, and the flat appearance 
+                  // comes from the straight line at the start
+                  return `M ${startXInner} ${startYInner} L ${startXOuter} ${startYOuter} A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${endXOuter} ${endYOuter} L ${endXInner} ${endYInner} A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${startXInner} ${startYInner} Z`;
+                };
                 
-                // Calculate positions for all segments to determine split point
+                // Calculate positions for all segments
                 let tempOffset = 0;
                 const segmentPositions = pieData.map((area) => {
                   const dashLength = (area.percentage / 100) * circumference;
@@ -2391,15 +2420,6 @@ function CalendarContent() {
                   return result;
                 });
                 
-                // Find where the largest segment ends (where it meets the green segment on the right)
-                // Split the largest segment: left part (most of it) and right part (small overlap area)
-                // Use ~20% of the largest segment as the right part to ensure good overlap with the green segment
-                const largestPos = segmentPositions[0];
-                const rightPartPercentage = 0.20; // 20% of the largest segment will be the right part
-                const rightPartLength = largestPos ? largestPos.dashLength * rightPartPercentage : 0;
-                const leftPartLength = largestPos ? largestPos.dashLength - rightPartLength : 0;
-                const splitOffset = largestPos ? largestPos.offset + leftPartLength : 0;
-                
                 return (
                   <div className="flex items-center justify-center gap-4 -mt-4 min-h-[260px] pl-4 pr-6">
                     {/* Pie Chart */}
@@ -2415,47 +2435,27 @@ function CalendarContent() {
                           strokeWidth="22"
                           strokeOpacity="0.5"
                         />
-                        {/* Render left part of largest segment first (stays behind purple) */}
-                        {largestSegment && largestPos && leftPartLength > 0 && (
-                          <g key={`${largestSegment.label}-left`}>
-                            <circle
-                              cx={centerX}
-                              cy={centerY}
-                              r={radius}
-                              fill="none"
-                              stroke={largestSegment.color}
-                              strokeWidth="20"
-                              strokeDasharray={`${leftPartLength} ${circumference}`}
-                              strokeDashoffset={-largestPos.offset}
-                              strokeLinecap="round"
-                            />
-                          </g>
-                        )}
-                        {/* Render all other segments (they will overlay on top of left part) */}
-                        {otherSegments.map((area, index) => {
-                          const pos = segmentPositions[index + 1];
-                          if (!pos) return null;
+                        {/* Render all segments with consistent tucking style */}
+                        {segmentPositions.map((pos, index) => {
+                          const area = pos.area;
+                          const innerRadius = radius - strokeWidth / 2;
+                          const outerRadius = radius + strokeWidth / 2;
                           
                           // Alternate label distance (closer/further) to prevent overlap
-                          const isEven = (index + 1) % 2 === 0;
+                          const isEven = index % 2 === 0;
                           const labelRadius = radius + (isEven ? 30 : 50);
                           
-                          const labelAngleRad = (pos.midAngle * Math.PI) / 180;
+                          // Adjust angle for 12 o'clock start (same as createArcPath)
+                          const labelAngleRad = ((pos.midAngle - 90) * Math.PI) / 180;
                           const labelX = centerX + Math.cos(labelAngleRad) * labelRadius;
                           const labelY = centerY + Math.sin(labelAngleRad) * labelRadius;
                           
                           return (
                             <g key={area.label}>
-                              <circle
-                                cx={centerX}
-                                cy={centerY}
-                                r={radius}
-                                fill="none"
-                                stroke={area.color}
-                                strokeWidth="20"
-                                strokeDasharray={`${pos.dashLength} ${circumference}`}
-                                strokeDashoffset={-pos.offset}
-                                strokeLinecap="round"
+                              <path
+                                d={createArcPath(pos.startAngle, pos.endAngle, innerRadius, outerRadius)}
+                                fill={area.color}
+                                stroke="none"
                               />
                               {/* Percentage label - outside the ring, always horizontal */}
                               <text
@@ -2471,41 +2471,6 @@ function CalendarContent() {
                             </g>
                           );
                         })}
-                        {/* Render right part of largest segment last (appears on top of green) */}
-                        {largestSegment && largestPos && rightPartLength > 0 && (
-                          <g key={`${largestSegment.label}-right`}>
-                            <circle
-                              cx={centerX}
-                              cy={centerY}
-                              r={radius}
-                              fill="none"
-                              stroke={largestSegment.color}
-                              strokeWidth="20"
-                              strokeDasharray={`${rightPartLength} ${circumference}`}
-                              strokeDashoffset={-splitOffset}
-                              strokeLinecap="round"
-                            />
-                            {/* Percentage label for largest segment */}
-                            {(() => {
-                              const labelAngleRad = (largestPos.midAngle * Math.PI) / 180;
-                              const labelRadius = radius + 30;
-                              const labelX = centerX + Math.cos(labelAngleRad) * labelRadius;
-                              const labelY = centerY + Math.sin(labelAngleRad) * labelRadius;
-                              return (
-                                <text
-                                  x={labelX}
-                                  y={labelY}
-                                  textAnchor="middle"
-                                  dominantBaseline="middle"
-                                  className="text-xs font-semibold"
-                                  style={{ fill: largestSegment.color }}
-                                >
-                                  {largestSegment.percentage.toFixed(1)}%
-                                </text>
-                              );
-                            })()}
-                          </g>
-                        )}
                       </svg>
                       </div>
 
