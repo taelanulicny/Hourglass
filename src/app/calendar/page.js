@@ -2430,7 +2430,7 @@ function CalendarContent() {
                           r={radius}
                           fill="none"
                           stroke="#000000"
-                          strokeWidth="22"
+                          strokeWidth="16"
                           strokeOpacity="0.5"
                         />
                         {/* Render all segments with consistent tucking style - reverse order so smaller segments appear behind larger ones */}
@@ -2881,7 +2881,7 @@ function CalendarContent() {
                                 r={radius}
                                 fill="none"
                                 stroke="#000000"
-                                strokeWidth="22"
+                                strokeWidth="16"
                                 strokeOpacity="0.5"
                               />
                               {pieData.map((area, index) => {
@@ -3329,7 +3329,7 @@ function CalendarContent() {
                                 r={radius}
                                 fill="none"
                                 stroke="#000000"
-                                strokeWidth="22"
+                                strokeWidth="16"
                                 strokeOpacity="0.5"
                               />
                               {pieData.map((area, index) => {
@@ -3589,7 +3589,7 @@ function CalendarContent() {
                        r={radius}
                        fill="none"
                        stroke="#000000"
-                       strokeWidth="22"
+                       strokeWidth="16"
                        strokeOpacity="0.5"
                      />
                      {pieData.map((area, index) => {
