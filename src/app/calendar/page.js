@@ -2418,85 +2418,100 @@ function CalendarContent() {
                   return result;
                 });
                 
+                // Get sleep and misc hours from localStorage for unlogged time calculation
+                const sleepHours = Number(typeof window !== 'undefined' ? (localStorage.getItem('sleepHours') || 8) : 8);
+                const miscHours = Number(typeof window !== 'undefined' ? (localStorage.getItem('miscHours') || 0) : 0);
+                const productiveTime = 24 - sleepHours - miscHours;
+                const unloggedTime = Math.max(0, productiveTime - totalActual);
+                
                 return (
-                  <div className="flex items-center justify-center gap-4 -mt-4 min-h-[260px] pl-4 pr-6">
-                    {/* Pie Chart */}
-                    <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '260px', height: '260px' }}>
-                      <svg width="260" height="260" viewBox="0 0 260 260">
-                        {/* Base circle with black stroke for separation */}
-                        <circle
-                          cx={centerX}
-                          cy={centerY}
-                          r={radius}
-                          fill="none"
-                          stroke="#000000"
-                          strokeWidth="16"
-                          strokeOpacity="0.5"
-                        />
-                        {/* Render all segments with consistent tucking style - reverse order so smaller segments appear behind larger ones */}
-                        {[...segmentPositions].reverse().map((pos, index) => {
-                          const area = pos.area;
-                          const innerRadius = radius - strokeWidth / 2;
-                          const outerRadius = radius + strokeWidth / 2;
-                          
-                          // Alternate label distance (closer/further) to prevent overlap
-                          // Use original index for label positioning
-                          const originalIndex = segmentPositions.length - 1 - index;
-                          const isEven = originalIndex % 2 === 0;
-                          const labelRadius = radius + (isEven ? 30 : 50);
-                          
-                          // Adjust angle for 12 o'clock start (same as createArcPath)
-                          const labelAngleRad = ((pos.midAngle - 90) * Math.PI) / 180;
-                          const labelX = centerX + Math.cos(labelAngleRad) * labelRadius;
-                          const labelY = centerY + Math.sin(labelAngleRad) * labelRadius;
-                          
-                          return (
-                            <g key={area.label}>
-                              {/* Main segment path with flat edges on both sides */}
-                              <path
-                                d={createArcPath(pos.startAngle, pos.endAngle, innerRadius, outerRadius)}
-                                fill={area.color}
-                                stroke="none"
-                              />
-                              {/* Percentage label - outside the ring, always horizontal */}
-                              <text
-                                x={labelX}
-                                y={labelY}
-                                textAnchor="middle"
-                                dominantBaseline="middle"
-                                className="text-xs font-semibold"
-                                style={{ fill: area.color }}
-                              >
-                                {area.percentage.toFixed(1)}%
-                              </text>
-                            </g>
-                          );
-                        })}
-                      </svg>
+                  <div className="flex flex-col">
+                    <div className="flex items-center justify-center gap-4 -mt-4 min-h-[260px] pl-4 pr-6">
+                      {/* Pie Chart */}
+                      <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '260px', height: '260px' }}>
+                        <svg width="260" height="260" viewBox="0 0 260 260">
+                          {/* Base circle with black stroke for separation */}
+                          <circle
+                            cx={centerX}
+                            cy={centerY}
+                            r={radius}
+                            fill="none"
+                            stroke="#000000"
+                            strokeWidth="16"
+                            strokeOpacity="0.5"
+                          />
+                          {/* Render all segments with consistent tucking style - reverse order so smaller segments appear behind larger ones */}
+                          {[...segmentPositions].reverse().map((pos, index) => {
+                            const area = pos.area;
+                            const innerRadius = radius - strokeWidth / 2;
+                            const outerRadius = radius + strokeWidth / 2;
+                            
+                            // Alternate label distance (closer/further) to prevent overlap
+                            // Use original index for label positioning
+                            const originalIndex = segmentPositions.length - 1 - index;
+                            const isEven = originalIndex % 2 === 0;
+                            const labelRadius = radius + (isEven ? 30 : 50);
+                            
+                            // Adjust angle for 12 o'clock start (same as createArcPath)
+                            const labelAngleRad = ((pos.midAngle - 90) * Math.PI) / 180;
+                            const labelX = centerX + Math.cos(labelAngleRad) * labelRadius;
+                            const labelY = centerY + Math.sin(labelAngleRad) * labelRadius;
+                            
+                            return (
+                              <g key={area.label}>
+                                {/* Main segment path with flat edges on both sides */}
+                                <path
+                                  d={createArcPath(pos.startAngle, pos.endAngle, innerRadius, outerRadius)}
+                                  fill={area.color}
+                                  stroke="none"
+                                />
+                                {/* Percentage label - outside the ring, always horizontal */}
+                                <text
+                                  x={labelX}
+                                  y={labelY}
+                                  textAnchor="middle"
+                                  dominantBaseline="middle"
+                                  className="text-xs font-semibold"
+                                  style={{ fill: area.color }}
+                                >
+                                  {area.percentage.toFixed(1)}%
+                                </text>
+                              </g>
+                            );
+                          })}
+                        </svg>
                       </div>
 
-                    {/* Focus Areas List */}
-                    <div className="flex-1 flex items-center">
-                      <div className="space-y-2 w-full">
-                        {pieData.length > 0 ? (
-                          pieData.map((area) => (
-                            <div key={area.label} className="flex items-center gap-2">
-                              <div 
-                                className="w-3 h-3 rounded-full flex-shrink-0" 
-                                style={{ backgroundColor: area.color }}
-                              />
-                              <span className="text-xs text-gray-900">{area.label}</span>
-                              <span className="text-xs text-gray-600 ml-auto">
-                                {Math.round(area.actualTimeLogged * 10) / 10}/{Math.round(area.dailyPlanned)}
-                              </span>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="text-xs text-gray-600">No focus areas yet. Add them from the dashboard.</div>
-                        )}
+                      {/* Focus Areas List */}
+                      <div className="flex-1 flex items-center">
+                        <div className="space-y-2 w-full">
+                          {pieData.length > 0 ? (
+                            pieData.map((area) => (
+                              <div key={area.label} className="flex items-center gap-2">
+                                <div 
+                                  className="w-3 h-3 rounded-full flex-shrink-0" 
+                                  style={{ backgroundColor: area.color }}
+                                />
+                                <span className="text-xs text-gray-900">{area.label}</span>
+                                <span className="text-xs text-gray-600 ml-auto">
+                                  {Math.round(area.actualTimeLogged * 10) / 10}/{Math.round(area.dailyPlanned)}
+                                </span>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="text-xs text-gray-600">No focus areas yet. Add them from the dashboard.</div>
+                          )}
+                        </div>
                       </div>
                     </div>
-                </div>
+                    
+                    {/* Unlogged Time Display */}
+                    <div className="text-center mt-2 px-4">
+                      <span className="text-sm text-gray-700">
+                        Unlogged time: {Math.round(unloggedTime * 10) / 10}/{Math.round(productiveTime * 10) / 10} hours
+                      </span>
+                    </div>
+                  </div>
               );
               })()}
           </div>
@@ -2856,6 +2871,13 @@ function CalendarContent() {
                         }))
                         .sort((a, b) => b.percentage - a.percentage);
                       
+                      // Get sleep and misc hours from localStorage for unlogged time calculation (3 days)
+                      const sleepHours = Number(typeof window !== 'undefined' ? (localStorage.getItem('sleepHours') || 8) : 8);
+                      const miscHours = Number(typeof window !== 'undefined' ? (localStorage.getItem('miscHours') || 0) : 0);
+                      const productiveTimePerDay = 24 - sleepHours - miscHours;
+                      const productiveTime = productiveTimePerDay * 3; // 3 days
+                      const unloggedTime = Math.max(0, productiveTime - totalActual);
+                      
                       let currentOffset = 0;
                       const radius = 50;
                       const circumference = 2 * Math.PI * radius;
@@ -2863,83 +2885,92 @@ function CalendarContent() {
                       const centerY = 130;
                       
                       return (
-                        <div className="flex items-center justify-center gap-4 -mt-4 min-h-[260px] pl-4 pr-6">
-                          <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '260px', height: '260px' }}>
-                            <svg width="260" height="260" viewBox="0 0 260 260">
-                              {/* Base circle with black stroke for separation */}
-                              <circle
-                                cx={centerX}
-                                cy={centerY}
-                                r={radius}
-                                fill="none"
-                                stroke="#000000"
-                                strokeWidth="16"
-                                strokeOpacity="0.5"
-                              />
-                              {pieData.map((area, index) => {
-                                const dashLength = (area.percentage / 100) * circumference;
-                                const dashOffset = -currentOffset;
-                                const startAngle = (currentOffset / circumference) * 360;
-                                const endAngle = ((currentOffset + dashLength) / circumference) * 360;
-                                const midAngle = (startAngle + endAngle) / 2;
-                                
-                                const isEven = index % 2 === 0;
-                                const labelRadius = radius + (isEven ? 30 : 50);
-                                
-                                const labelAngleRad = (midAngle * Math.PI) / 180;
-                                const labelX = centerX + Math.cos(labelAngleRad) * labelRadius;
-                                const labelY = centerY + Math.sin(labelAngleRad) * labelRadius;
-                                
-                                currentOffset += dashLength;
-                                
-                                return (
-                                  <g key={area.label}>
-                                    <circle
-                                      cx={centerX}
-                                      cy={centerY}
-                                      r={radius}
-                                      fill="none"
-                                      stroke={area.color}
-                                      strokeWidth="20"
-                                      strokeDasharray={`${dashLength} ${circumference}`}
-                                      strokeDashoffset={dashOffset}
-                                      strokeLinecap="butt"
-                                    />
-                                    <text
-                                      x={labelX}
-                                      y={labelY}
-                                      textAnchor="middle"
-                                      dominantBaseline="middle"
-                                      className="text-xs font-semibold"
-                                      style={{ fill: area.color }}
-                                    >
-                                      {area.percentage.toFixed(1)}%
-                                    </text>
-                                  </g>
-                                );
-                              })}
-                            </svg>
-                          </div>
-
-                          <div className="flex-1 flex items-center">
-                            <div className="space-y-2 w-full">
-                              {pieData.length > 0 ? (
-                                pieData.map((area) => (
-                                  <div key={area.label} className="flex items-center gap-2">
-                                    <div 
-                                      className="w-3 h-3 rounded-full flex-shrink-0" 
-                                      style={{ backgroundColor: area.color }}
-                                    />
-                                    <span className="text-xs text-gray-900">{area.label}</span>
-                                    <span className="text-xs text-gray-600 ml-auto">
-                                      {Math.round(area.actualTimeLogged * 10) / 10}/{Math.round(area.threeDayGoal)}
-                                    </span>
-                                  </div>
-                                ))
-                              ) : (
-                                <div className="text-xs text-gray-600">No focus areas yet. Add them from the dashboard.</div>
-                              )}
+                        <div className="flex flex-col">
+                          <div className="flex items-center justify-center gap-4 -mt-4 min-h-[260px] pl-4 pr-6">
+                            <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '260px', height: '260px' }}>
+                              <svg width="260" height="260" viewBox="0 0 260 260">
+                                {/* Base circle with black stroke for separation */}
+                                <circle
+                                  cx={centerX}
+                                  cy={centerY}
+                                  r={radius}
+                                  fill="none"
+                                  stroke="#000000"
+                                  strokeWidth="16"
+                                  strokeOpacity="0.5"
+                                />
+                                {pieData.map((area, index) => {
+                                  const dashLength = (area.percentage / 100) * circumference;
+                                  const dashOffset = -currentOffset;
+                                  const startAngle = (currentOffset / circumference) * 360;
+                                  const endAngle = ((currentOffset + dashLength) / circumference) * 360;
+                                  const midAngle = (startAngle + endAngle) / 2;
+                                  
+                                  const isEven = index % 2 === 0;
+                                  const labelRadius = radius + (isEven ? 30 : 50);
+                                  
+                                  const labelAngleRad = (midAngle * Math.PI) / 180;
+                                  const labelX = centerX + Math.cos(labelAngleRad) * labelRadius;
+                                  const labelY = centerY + Math.sin(labelAngleRad) * labelRadius;
+                                  
+                                  currentOffset += dashLength;
+                                  
+                                  return (
+                                    <g key={area.label}>
+                                      <circle
+                                        cx={centerX}
+                                        cy={centerY}
+                                        r={radius}
+                                        fill="none"
+                                        stroke={area.color}
+                                        strokeWidth="20"
+                                        strokeDasharray={`${dashLength} ${circumference}`}
+                                        strokeDashoffset={dashOffset}
+                                        strokeLinecap="butt"
+                                      />
+                                      <text
+                                        x={labelX}
+                                        y={labelY}
+                                        textAnchor="middle"
+                                        dominantBaseline="middle"
+                                        className="text-xs font-semibold"
+                                        style={{ fill: area.color }}
+                                      >
+                                        {area.percentage.toFixed(1)}%
+                                      </text>
+                                    </g>
+                                  );
+                                })}
+                              </svg>
                             </div>
+
+                            <div className="flex-1 flex items-center">
+                              <div className="space-y-2 w-full">
+                                {pieData.length > 0 ? (
+                                  pieData.map((area) => (
+                                    <div key={area.label} className="flex items-center gap-2">
+                                      <div 
+                                        className="w-3 h-3 rounded-full flex-shrink-0" 
+                                        style={{ backgroundColor: area.color }}
+                                      />
+                                      <span className="text-xs text-gray-900">{area.label}</span>
+                                      <span className="text-xs text-gray-600 ml-auto">
+                                        {Math.round(area.actualTimeLogged * 10) / 10}/{Math.round(area.threeDayGoal)}
+                                      </span>
+                                    </div>
+                                  ))
+                                ) : (
+                                  <div className="text-xs text-gray-600">No focus areas yet. Add them from the dashboard.</div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Unlogged Time Display */}
+                          <div className="text-center mt-2 px-4">
+                            <span className="text-sm text-gray-700">
+                              Unlogged time: {Math.round(unloggedTime * 10) / 10}/{Math.round(productiveTime * 10) / 10} hours
+                            </span>
                           </div>
                         </div>
                       );
@@ -3304,6 +3335,13 @@ function CalendarContent() {
                         }))
                         .sort((a, b) => b.percentage - a.percentage);
                       
+                      // Get sleep and misc hours from localStorage for unlogged time calculation (weekly)
+                      const sleepHours = Number(typeof window !== 'undefined' ? (localStorage.getItem('sleepHours') || 8) : 8);
+                      const miscHours = Number(typeof window !== 'undefined' ? (localStorage.getItem('miscHours') || 0) : 0);
+                      const productiveTimePerDay = 24 - sleepHours - miscHours;
+                      const productiveTime = productiveTimePerDay * 7; // 7 days
+                      const unloggedTime = Math.max(0, productiveTime - totalActual);
+                      
                       let currentOffset = 0;
                       const radius = 50;
                       const circumference = 2 * Math.PI * radius;
@@ -3311,83 +3349,92 @@ function CalendarContent() {
                       const centerY = 130;
                       
                       return (
-                        <div className="flex items-center justify-center gap-4 -mt-4 min-h-[260px] pl-4 pr-6">
-                          <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '260px', height: '260px' }}>
-                            <svg width="260" height="260" viewBox="0 0 260 260">
-                              {/* Base circle with black stroke for separation */}
-                              <circle
-                                cx={centerX}
-                                cy={centerY}
-                                r={radius}
-                                fill="none"
-                                stroke="#000000"
-                                strokeWidth="16"
-                                strokeOpacity="0.5"
-                              />
-                              {pieData.map((area, index) => {
-                                const dashLength = (area.percentage / 100) * circumference;
-                                const dashOffset = -currentOffset;
-                                const startAngle = (currentOffset / circumference) * 360;
-                                const endAngle = ((currentOffset + dashLength) / circumference) * 360;
-                                const midAngle = (startAngle + endAngle) / 2;
-                                
-                                const isEven = index % 2 === 0;
-                                const labelRadius = radius + (isEven ? 30 : 50);
-                                
-                                const labelAngleRad = (midAngle * Math.PI) / 180;
-                                const labelX = centerX + Math.cos(labelAngleRad) * labelRadius;
-                                const labelY = centerY + Math.sin(labelAngleRad) * labelRadius;
-                                
-                                currentOffset += dashLength;
-                                
-                                return (
-                                  <g key={area.label}>
-                                    <circle
-                                      cx={centerX}
-                                      cy={centerY}
-                                      r={radius}
-                                      fill="none"
-                                      stroke={area.color}
-                                      strokeWidth="20"
-                                      strokeDasharray={`${dashLength} ${circumference}`}
-                                      strokeDashoffset={dashOffset}
-                                      strokeLinecap="butt"
-                                    />
-                                    <text
-                                      x={labelX}
-                                      y={labelY}
-                                      textAnchor="middle"
-                                      dominantBaseline="middle"
-                                      className="text-xs font-semibold"
-                                      style={{ fill: area.color }}
-                                    >
-                                      {area.percentage.toFixed(1)}%
-                                    </text>
-                                  </g>
-                                );
-                              })}
-                            </svg>
-                          </div>
-
-                          <div className="flex-1 flex items-center">
-                            <div className="space-y-2 w-full">
-                              {pieData.length > 0 ? (
-                                pieData.map((area) => (
-                                  <div key={area.label} className="flex items-center gap-2">
-                                    <div 
-                                      className="w-3 h-3 rounded-full flex-shrink-0" 
-                                      style={{ backgroundColor: area.color }}
-                                    />
-                                    <span className="text-xs text-gray-900">{area.label}</span>
-                                    <span className="text-xs text-gray-600 ml-auto">
-                                      {Math.round(area.actualTimeLogged * 10) / 10}/{Math.round(area.weeklyGoal)}
-                                    </span>
-                                  </div>
-                                ))
-                              ) : (
-                                <div className="text-xs text-gray-600">No focus areas yet. Add them from the dashboard.</div>
-                              )}
+                        <div className="flex flex-col">
+                          <div className="flex items-center justify-center gap-4 -mt-4 min-h-[260px] pl-4 pr-6">
+                            <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '260px', height: '260px' }}>
+                              <svg width="260" height="260" viewBox="0 0 260 260">
+                                {/* Base circle with black stroke for separation */}
+                                <circle
+                                  cx={centerX}
+                                  cy={centerY}
+                                  r={radius}
+                                  fill="none"
+                                  stroke="#000000"
+                                  strokeWidth="16"
+                                  strokeOpacity="0.5"
+                                />
+                                {pieData.map((area, index) => {
+                                  const dashLength = (area.percentage / 100) * circumference;
+                                  const dashOffset = -currentOffset;
+                                  const startAngle = (currentOffset / circumference) * 360;
+                                  const endAngle = ((currentOffset + dashLength) / circumference) * 360;
+                                  const midAngle = (startAngle + endAngle) / 2;
+                                  
+                                  const isEven = index % 2 === 0;
+                                  const labelRadius = radius + (isEven ? 30 : 50);
+                                  
+                                  const labelAngleRad = (midAngle * Math.PI) / 180;
+                                  const labelX = centerX + Math.cos(labelAngleRad) * labelRadius;
+                                  const labelY = centerY + Math.sin(labelAngleRad) * labelRadius;
+                                  
+                                  currentOffset += dashLength;
+                                  
+                                  return (
+                                    <g key={area.label}>
+                                      <circle
+                                        cx={centerX}
+                                        cy={centerY}
+                                        r={radius}
+                                        fill="none"
+                                        stroke={area.color}
+                                        strokeWidth="20"
+                                        strokeDasharray={`${dashLength} ${circumference}`}
+                                        strokeDashoffset={dashOffset}
+                                        strokeLinecap="butt"
+                                      />
+                                      <text
+                                        x={labelX}
+                                        y={labelY}
+                                        textAnchor="middle"
+                                        dominantBaseline="middle"
+                                        className="text-xs font-semibold"
+                                        style={{ fill: area.color }}
+                                      >
+                                        {area.percentage.toFixed(1)}%
+                                      </text>
+                                    </g>
+                                  );
+                                })}
+                              </svg>
                             </div>
+
+                            <div className="flex-1 flex items-center">
+                              <div className="space-y-2 w-full">
+                                {pieData.length > 0 ? (
+                                  pieData.map((area) => (
+                                    <div key={area.label} className="flex items-center gap-2">
+                                      <div 
+                                        className="w-3 h-3 rounded-full flex-shrink-0" 
+                                        style={{ backgroundColor: area.color }}
+                                      />
+                                      <span className="text-xs text-gray-900">{area.label}</span>
+                                      <span className="text-xs text-gray-600 ml-auto">
+                                        {Math.round(area.actualTimeLogged * 10) / 10}/{Math.round(area.weeklyGoal)}
+                                      </span>
+                                    </div>
+                                  ))
+                                ) : (
+                                  <div className="text-xs text-gray-600">No focus areas yet. Add them from the dashboard.</div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Unlogged Time Display */}
+                          <div className="text-center mt-2 px-4">
+                            <span className="text-sm text-gray-700">
+                              Unlogged time: {Math.round(unloggedTime * 10) / 10}/{Math.round(productiveTime * 10) / 10} hours
+                            </span>
                           </div>
                         </div>
                       );
