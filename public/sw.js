@@ -11,7 +11,7 @@ if (!self.workbox) {
   // Fallback: basic caching without Workbox
   self.addEventListener('install', (event) => {
     event.waitUntil(
-      caches.open('time-macros-v1').then((cache) => {
+      caches.open('time-macros-v6-vercel').then((cache) => {
         return cache.addAll([
           '/',
           '/calendar',
@@ -19,6 +19,20 @@ if (!self.workbox) {
           '/connect',
           '/manifest.json'
         ]);
+      })
+    );
+  });
+
+  self.addEventListener('activate', (event) => {
+    event.waitUntil(
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => {
+            if (cacheName !== 'time-macros-v6-vercel') {
+              return caches.delete(cacheName);
+            }
+          })
+        );
       })
     );
   });
@@ -34,7 +48,7 @@ if (!self.workbox) {
   const { precaching, strategies, routing } = self.workbox;
 
   // Bump this when changing SW to force updates
-  const SW_VERSION = 'v5';
+  const SW_VERSION = 'v6-vercel';
 
   precaching.cleanupOutdatedCaches();
 

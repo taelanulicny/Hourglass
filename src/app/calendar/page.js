@@ -266,7 +266,7 @@ function buildMonthGrid(viewDate){
   const first = monthStart(viewDate);
   const start = new Date(first); start.setDate(1 - first.getDay());
   const days = [];
-  for(let i=0;i<42;i++){ const d = new Date(start); d.setDate(start.getDate()+i); days.push(d); }
+  for(let i=0;i<35;i++){ const d = new Date(start); d.setDate(start.getDate()+i); days.push(d); }
   return days;
 }
 function MiniMonthPicker({ valueYMD, onChange, onClose }){
@@ -317,10 +317,22 @@ function CalendarContent() {
     return d;
   }, []);
 
-  // Selected day (daily view)
-  const [selectedDate, setSelectedDate] = useState(null); // Start with null to prevent hydration mismatch
+  // Month view state
+  const [viewMonth, setViewMonth] = useState(null); // Start with null to prevent hydration mismatch
   useEffect(() => {
-    // Set initial date only on client
+    // Set initial month only on client
+    setViewMonth(monthStart(new Date()));
+  }, []);
+
+  // Side menu state
+  const [showSideMenu, setShowSideMenu] = useState(false);
+
+  // View mode state (Day, Week, Month)
+  const [currentView, setCurrentView] = useState('Month');
+
+  // Selected day (for modals/editing)
+  const [selectedDate, setSelectedDate] = useState(null);
+  useEffect(() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
     setSelectedDate(d);
@@ -328,6 +340,8 @@ function CalendarContent() {
 
   // Focus areas from Dashboard/localStorage (prefer weekly snapshot based on selectedDate)
   const [focusAreas, setFocusAreas] = useState([]);
+  const [visibleFocusAreas, setVisibleFocusAreas] = useState(new Set());
+  
   useEffect(() => {
     setFocusAreas(loadFocusAreasForDate(new Date())); // initial load (today)
   }, []);
@@ -342,6 +356,47 @@ function CalendarContent() {
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
   }, [selectedDate]);
+
+  // Load visible focus areas from localStorage (for calendar views)
+  useEffect(() => {
+    const areas = loadFocusAreasForDate(new Date());
+    const visible = new Set(areas.map(a => a.label));
+    setVisibleFocusAreas(visible);
+    
+    try {
+      const saved = localStorage.getItem('calendar:visibleFocusAreas');
+      if (saved) {
+        const savedSet = new Set(JSON.parse(saved));
+        setVisibleFocusAreas(savedSet);
+      }
+    } catch {}
+  }, [focusAreas]);
+
+  // Toggle focus area visibility
+  const toggleFocusAreaVisibility = (label) => {
+    setVisibleFocusAreas(prev => {
+      const next = new Set(prev);
+      if (next.has(label)) {
+        next.delete(label);
+      } else {
+        next.add(label);
+      }
+      try {
+        localStorage.setItem('calendar:visibleFocusAreas', JSON.stringify([...next]));
+      } catch {}
+      return next;
+    });
+  };
+
+  // Helper function to filter events by visible focus areas
+  const filterEventsByVisibility = useCallback((eventList) => {
+    return eventList.filter(ev => {
+      // If event has no focus area, show it
+      if (!ev.area) return true;
+      // If focus area is visible, show it
+      return visibleFocusAreas.has(ev.area);
+    });
+  }, [visibleFocusAreas]);
   
   // Modal state must be defined before the effects that use it
   const [showModal, setShowModal] = useState(false);
@@ -376,6 +431,41 @@ function CalendarContent() {
   const COMPAT_EVENT_KEYS = useMemo(() => ["hourglassEvents:v1", "calendarEvents", "calendar-items", "events"], []); // read from any, write to primary+legacy
   const [events, setEvents] = useState([]);
   const [eventsLoaded, setEventsLoaded] = useState(false);
+
+  // Google Calendar integration state
+  const [googleConnected, setGoogleConnected] = useState(false);
+  const [googleEvents, setGoogleEvents] = useState([]);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleError, setGoogleError] = useState(null);
+  
+  // Store Google event customizations (focus areas, etc.) in localStorage
+  const GOOGLE_EVENT_CUSTOMIZATIONS_KEY = "googleEventCustomizations:v1";
+  const [googleEventCustomizations, setGoogleEventCustomizations] = useState({});
+  
+  // Load Google event customizations on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(GOOGLE_EVENT_CUSTOMIZATIONS_KEY);
+      if (saved) {
+        setGoogleEventCustomizations(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.warn('Failed to load Google event customizations:', e);
+    }
+  }, []);
+  
+  // Save Google event customizations when they change
+  useEffect(() => {
+    try {
+      localStorage.setItem(GOOGLE_EVENT_CUSTOMIZATIONS_KEY, JSON.stringify(googleEventCustomizations));
+      // Trigger event update so other pages can refresh
+      try {
+        window.dispatchEvent(new Event('calendarEventsUpdated'));
+      } catch {}
+    } catch (e) {
+      console.warn('Failed to save Google event customizations:', e);
+    }
+  }, [googleEventCustomizations]);
 
   // Load once on mount (avoid clobbering existing storage with empty array). Merge from any legacy key.
   useEffect(() => {
@@ -493,6 +583,159 @@ function CalendarContent() {
     });
   }, [selectedDate]);
 
+  // Check Google Calendar connection status
+  const checkGoogleConnection = useCallback(async () => {
+    try {
+      const response = await fetch('/api/auth/google/status');
+      const data = await response.json();
+      setGoogleConnected(data.connected || false);
+      return data.connected || false;
+    } catch (error) {
+      console.error('Error checking Google connection:', error);
+      setGoogleConnected(false);
+      return false;
+    }
+  }, []);
+
+  // Fetch Google Calendar events
+  const fetchGoogleEvents = useCallback(async (startDate, endDate) => {
+    if (!googleConnected) {
+      setGoogleEvents([]);
+      return;
+    }
+
+    setGoogleLoading(true);
+    setGoogleError(null);
+
+    try {
+      // Calculate date range based on view
+      const timeMin = new Date(startDate);
+      timeMin.setHours(0, 0, 0, 0);
+      
+      const timeMax = new Date(endDate);
+      timeMax.setHours(23, 59, 59, 999);
+
+      console.log('Fetching Google Calendar events:', {
+        timeMin: timeMin.toISOString(),
+        timeMax: timeMax.toISOString()
+      });
+
+      const response = await fetch(
+        `/api/calendar/google/events?timeMin=${timeMin.toISOString()}&timeMax=${timeMax.toISOString()}`
+      );
+
+      console.log('Google Calendar API response status:', response.status);
+
+      if (response.status === 401) {
+        // Not authenticated, disconnect
+        setGoogleConnected(false);
+        setGoogleEvents([]);
+        return;
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Google Calendar API error:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData
+        });
+        throw new Error(errorData.error || errorData.details || 'Failed to fetch Google Calendar events');
+      }
+
+      const data = await response.json();
+      console.log('Google Calendar events received:', data.events?.length || 0, 'events');
+      setGoogleEvents(data.events || []);
+      
+      // Also store in localStorage for other pages to access
+      try {
+        localStorage.setItem('googleEvents:v1', JSON.stringify(data.events || []));
+      } catch (e) {
+        console.warn('Failed to store Google events in localStorage:', e);
+      }
+    } catch (error) {
+      console.error('Error fetching Google Calendar events:', error);
+      setGoogleError(error.message);
+      setGoogleEvents([]);
+    } finally {
+      setGoogleLoading(false);
+    }
+  }, [googleConnected]);
+
+  // Check connection status on mount
+  useEffect(() => {
+    if (!isClient) return;
+    checkGoogleConnection();
+  }, [isClient, checkGoogleConnection]);
+
+  // Fetch Google events when connected and date range changes
+  useEffect(() => {
+    if (!isClient || !googleConnected) return;
+
+    // Calculate date range for current view
+    let startDate, endDate;
+    
+    if (currentView === 'Day' && selectedDate) {
+      startDate = new Date(selectedDate);
+      endDate = new Date(selectedDate);
+    } else if (currentView === '3 Day' && selectedDate) {
+      startDate = new Date(selectedDate);
+      endDate = new Date(selectedDate);
+      endDate.setDate(endDate.getDate() + 2);
+    } else if (currentView === 'Week' && selectedDate) {
+      const weekStart = startOfWeek(selectedDate);
+      startDate = new Date(weekStart);
+      endDate = new Date(weekStart);
+      endDate.setDate(endDate.getDate() + 6);
+    } else if (currentView === 'Month') {
+      // For month view, use viewMonth if available, otherwise use selectedDate
+      const monthStartDate = viewMonth || (selectedDate ? monthStart(selectedDate) : monthStart(new Date()));
+      startDate = new Date(monthStartDate);
+      const monthEnd = new Date(monthStartDate);
+      monthEnd.setMonth(monthEnd.getMonth() + 1);
+      monthEnd.setDate(0); // Last day of month
+      endDate = monthEnd;
+    } else {
+      // Default to current month if nothing else is set
+      const today = new Date();
+      startDate = monthStart(today);
+      const monthEnd = new Date(startDate);
+      monthEnd.setMonth(monthEnd.getMonth() + 1);
+      monthEnd.setDate(0);
+      endDate = monthEnd;
+    }
+
+    console.log('Triggering Google Calendar fetch for view:', currentView, {
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      googleConnected,
+      viewMonth: viewMonth?.toISOString(),
+      selectedDate: selectedDate?.toISOString()
+    });
+
+    fetchGoogleEvents(startDate, endDate);
+  }, [isClient, googleConnected, currentView, selectedDate, viewMonth, fetchGoogleEvents]);
+
+
+  // Merge local and Google events for display, applying customizations
+  const allEvents = useMemo(() => {
+    // Filter out Google events that might conflict with local events
+    const localEventIds = new Set(events.map(e => e.id));
+    const googleEventsFiltered = googleEvents.map(ev => {
+      // Apply customizations (focus area, color) if they exist
+      const customization = googleEventCustomizations[ev.id];
+      if (customization) {
+        return {
+          ...ev,
+          area: customization.area || ev.area,
+          color: customization.area ? getAreaColor(customization.area) : ev.color,
+        };
+      }
+      return ev;
+    }).filter(e => !localEventIds.has(e.id));
+    return [...events, ...googleEventsFiltered];
+  }, [events, googleEvents, googleEventCustomizations]);
+
   // Auto-open Add modal when arriving with ?new=1 (prefill date & focus)
   useEffect(() => {
     if (!searchParams) return;
@@ -518,6 +761,53 @@ function CalendarContent() {
     // Clean the URL so refresh doesn't re-open the modal
     try { router.replace('/calendar', { scroll: false }); } catch {}
   }, [searchParams, router, selectedDate]);
+
+  // Auto-open Edit modal when arriving with ?edit=id&date=yyyy-mm-dd&view=Day
+  useEffect(() => {
+    if (!searchParams) return;
+    const editId = searchParams.get('edit');
+    if (!editId) return;
+
+    const dateParam = searchParams.get('date'); // yyyy-mm-dd
+    const viewParam = searchParams.get('view'); // Day, Week, Month
+
+    // Find the event
+    const event = events.find(ev => ev.id === editId);
+    if (!event) return;
+
+    // Set the date from URL or event date
+    if (dateParam) {
+      try {
+        const eventDate = parseYMD(dateParam);
+        setSelectedDate(eventDate);
+      } catch {}
+    } else {
+      const eventDate = new Date(event.start);
+      eventDate.setHours(0, 0, 0, 0);
+      setSelectedDate(eventDate);
+    }
+
+    // Switch to Day view if specified
+    if (viewParam === 'Day') {
+      setCurrentView('Day');
+    }
+
+    // Open edit modal
+    setEditingId(event.id);
+    setEditDurMs(Math.max(0, (event.end || 0) - (event.start || 0)) || 60 * 60 * 1000);
+    setDraft({
+      title: event.title || '',
+      area: event.area || '',
+      dateYMD: dateParam || ymd(new Date(event.start)),
+      start: msToHHMM(event.start),
+      end: msToHHMM(event.end),
+      notes: event.notes || '',
+    });
+    setShowEditModal(true);
+
+    // Clean the URL so refresh doesn't re-open the modal
+    try { router.replace('/calendar', { scroll: false }); } catch {}
+  }, [searchParams, router, events]);
 
   const headerLabel = useMemo(() => {
     if (!selectedDate) return "Loading...";
@@ -564,7 +854,7 @@ function CalendarContent() {
 
     // Nudge slightly to the RIGHT so there's a bit less left padding (back to -8).
     const left = targetEl.offsetLeft - 24;
-    stripRef.current.scrollTo({ left, top: 0, behavior: "auto" });
+    stripRef.current.scrollTo({ left, top: 0, behavior: "smooth" });
   }, [selectedDate, stripDays]);
 
   // Center focus rings when focus areas change
@@ -576,7 +866,7 @@ function CalendarContent() {
       const scrollLeft = Math.max(0, (contentWidth - containerWidth) / 2);
       
       // Center the rings
-      focusRingsRef.current.scrollTo({ left: scrollLeft, top: 0, behavior: "auto" });
+      focusRingsRef.current.scrollTo({ left: scrollLeft, top: 0, behavior: "smooth" });
       
       // Also try centering after a short delay to ensure DOM is fully rendered
       setTimeout(() => {
@@ -764,10 +1054,15 @@ function CalendarContent() {
 
   const openEdit = (ev) => {
     setEditingId(ev.id);
+    const isGoogleEvent = ev.source === 'google';
+    
+    // For Google events, get customization if it exists
+    const customization = isGoogleEvent ? googleEventCustomizations[ev.id] : null;
+    
     setEditDurMs(Math.max(0, (ev.end || 0) - (ev.start || 0)) || 60 * 60 * 1000);
     setDraft({
       title: ev.title || '',
-      area: ev.area || '',
+      area: customization?.area || ev.area || '',
       dateYMD: ymd(new Date(ev.start)),
       start: msToHHMM(ev.start),
       end: msToHHMM(ev.end),
@@ -776,8 +1071,88 @@ function CalendarContent() {
     setShowEditModal(true);
   };
 
-  const updateEvent = () => {
+  const updateEvent = async () => {
     if (!editingId) return;
+    
+    // Check if this is a Google event
+    const currentEvent = allEvents.find(e => e.id === editingId);
+    const isGoogleEvent = currentEvent?.source === 'google';
+    
+    if (isGoogleEvent) {
+      // For Google events, update both the Google Calendar event and local customizations
+      try {
+        const base = parseYMD(draft.dateYMD || ymd(selectedDate));
+        const mk = (hms) => {
+          const [h, m] = hms.split(':').map(Number);
+          const t = new Date(base);
+          t.setHours(h, m, 0, 0);
+          return t.getTime();
+        };
+        const startMs = mk(draft.start);
+        let endMs = mk(draft.end);
+        if (endMs <= startMs) endMs += 24 * 60 * 60 * 1000; // crosses midnight
+
+        // Update the Google Calendar event
+        // Convert milliseconds to ISO strings with timezone
+        const startDate = new Date(startMs);
+        const endDate = new Date(endMs);
+        
+        const response = await fetch('/api/calendar/google/events/update', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            eventId: editingId,
+            title: draft.title || draft.area || currentEvent.title,
+            start: startDate.toISOString(),
+            end: endDate.toISOString(),
+            description: draft.notes || '',
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          const errorMessage = errorData.details || errorData.error || `HTTP ${response.status}: ${response.statusText}`;
+          
+          // Check for permission errors
+          if (response.status === 403 || errorData.code === 403) {
+            throw new Error('Permission denied. Please disconnect and reconnect Google Calendar to grant write permissions.');
+          }
+          
+          throw new Error(errorMessage);
+        }
+
+        // Save focus area customization locally
+        if (draft.area) {
+          setGoogleEventCustomizations(prev => ({
+            ...prev,
+            [editingId]: {
+              area: draft.area || '',
+            }
+          }));
+        }
+
+        // Refresh Google events to get the updated data
+        // Trigger a refetch by updating the date range
+        if (viewMonth) {
+          const startDate = new Date(viewMonth);
+          const monthEnd = new Date(viewMonth);
+          monthEnd.setMonth(monthEnd.getMonth() + 1);
+          monthEnd.setDate(0);
+          fetchGoogleEvents(startDate, monthEnd);
+        }
+
+        setShowEditModal(false);
+        setEditingId(null);
+      } catch (error) {
+        console.error('Error updating Google Calendar event:', error);
+        alert(`Failed to update Google Calendar event: ${error.message}`);
+      }
+      return;
+    }
+    
+    // For local events, update normally
     const base = parseYMD(draft.dateYMD || ymd(selectedDate));
     const mk = (hms) => {
       const [h, m] = hms.split(':').map(Number);
@@ -812,6 +1187,11 @@ function CalendarContent() {
     const currentEvent = events.find(e => e.id === editingId);
     if (!currentEvent) return;
     
+    // Don't allow deleting Google Calendar events
+    if (currentEvent.source === 'google') {
+      return;
+    }
+    
     let next;
     if (deleteAllFuture && currentEvent.isRepeating) {
       // Delete all future occurrences of this repeating event
@@ -833,6 +1213,32 @@ function CalendarContent() {
     setEditingId(null);
   };
 
+  const duplicateEvent = () => {
+    if (!editingId) return;
+    
+    const currentEvent = events.find(e => e.id === editingId);
+    if (!currentEvent) return;
+    
+    // Get tomorrow's date
+    const tomorrow = new Date(currentEvent.start);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    // Pre-fill the draft with duplicated data
+    setDraft({
+      title: currentEvent.title || '',
+      area: currentEvent.area || '',
+      dateYMD: ymd(tomorrow),
+      start: msToHHMM(currentEvent.start),
+      end: msToHHMM(currentEvent.end),
+      notes: '', // Don't copy notes as requested
+    });
+    
+    // Close edit modal and open new event modal
+    setShowEditModal(false);
+    setEditingId(null);
+    setShowModal(true);
+  };
+
   // Layout helpers
 
   // ---- Now indicator (red line for current time) ---------------------------
@@ -842,7 +1248,6 @@ function CalendarContent() {
 
   // Track current time (updates every 30s)
   const [nowMs, setNowMs] = useState(0); // Start with 0 to prevent hydration mismatch
-  const [hasInitiallyScrolled, setHasInitiallyScrolled] = useState(false);
   useEffect(() => {
     // Set initial time only on client
     setNowMs(Date.now());
@@ -879,6 +1284,26 @@ function CalendarContent() {
     lastEndMs: null,
     moved: false,
   });
+
+  // Helper function to start resize from a handle
+  const startResize = (ev, handle, clientY) => {
+    if (dragDelayTimerRef.current) {
+      clearTimeout(dragDelayTimerRef.current);
+      dragDelayTimerRef.current = null;
+    }
+    setDragDelayActive(false);
+    setDragDelayEventId(null);
+    setResizingId(ev.id);
+    setResizeHandle(handle);
+    resizeRef.current = {
+      startY: clientY,
+      origStart: ev.start,
+      origEnd: ev.end,
+      lastStartMs: ev.start,
+      lastEndMs: ev.end,
+      moved: false,
+    };
+  };
   const dragDelayTimerRef = useRef(null); // timer for drag delay
   const startTouchRef = useRef(null);
   const unmountedRef = useRef(false);
@@ -913,16 +1338,20 @@ function CalendarContent() {
     return (minutes / 60) * pxPerHour; // hours -> px
   }, [nowMs, selectedDate, pxPerHour]);
 
-  // Reset scroll flag when selected date changes
-  useEffect(() => {
-    setHasInitiallyScrolled(false);
-  }, [selectedDate]);
-
-  // When viewing today, scroll the window so the now line is comfortably in view (only on initial load)
+  // When viewing today, scroll the window so the now line is comfortably in view (only once ever)
   useEffect(() => {
     if (nowTopPx == null) return;
     if (!dayColRef.current) return;
-    if (hasInitiallyScrolled) return; // Only scroll on initial load
+    
+    // Check if we've already done the initial scroll (persisted in localStorage)
+    const hasScrolledKey = 'calendar:hasInitiallyScrolled';
+    if (typeof window !== 'undefined' && localStorage.getItem(hasScrolledKey) === 'true') {
+      return; // Already scrolled once, don't do it again
+    }
+    
+    // Delay scroll to current time (wait 2 seconds before scrolling)
+    const scrollTimer = setTimeout(() => {
+      if (!dayColRef.current) return;
     
     // Where the day column starts relative to the page
     const rect = dayColRef.current.getBoundingClientRect();
@@ -931,9 +1360,14 @@ function CalendarContent() {
     const target = Math.max(0, pageTop + nowTopPx - 240);
     window.scrollTo({ top: target, behavior: 'smooth' });
     
-    // Mark that we've done the initial scroll
-    setHasInitiallyScrolled(true);
-  }, [nowTopPx, selectedDate, hasInitiallyScrolled]);
+      // Mark that we've done the initial scroll (persist in localStorage)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(hasScrolledKey, 'true');
+      }
+    }, 2000); // 2 second delay
+    
+    return () => clearTimeout(scrollTimer);
+  }, [nowTopPx]);
 
   useEffect(() => {
     if (!draggingId) return;
@@ -1207,15 +1641,96 @@ function CalendarContent() {
   const eventsForSelected = useMemo(() => {
     // include events that overlap the selected day window [dayStartMs, dayEndMs)
     if (!dayStartMs || !dayEndMs) return [];
-    return events.filter((ev) => ev.end > dayStartMs && ev.start < dayEndMs);
-  }, [events, dayStartMs, dayEndMs]);
+    const dayEvents = allEvents.filter((ev) => ev.end > dayStartMs && ev.start < dayEndMs);
+    // Filter by visible focus areas
+    return filterEventsByVisibility(dayEvents);
+  }, [allEvents, dayStartMs, dayEndMs, visibleFocusAreas, filterEventsByVisibility]);
+
+  // Calculate overlapping event layout (columns, widths, positions)
+  const eventLayouts = useMemo(() => {
+    if (!eventsForSelected.length) return new Map();
+    
+    const layouts = new Map();
+    const processed = new Set();
+    
+    // Helper to check if two events overlap
+    const eventsOverlap = (ev1, ev2) => {
+      return ev1.start < ev2.end && ev1.end > ev2.start;
+    };
+    
+    // For each event, find all events that overlap with it
+    eventsForSelected.forEach((ev) => {
+      if (processed.has(ev.id)) return;
+      
+      // Find all events that overlap with this one (including itself)
+      const overlappingGroup = eventsForSelected.filter((otherEv) => {
+        if (processed.has(otherEv.id)) return false;
+        return eventsOverlap(ev, otherEv);
+      });
+      
+      if (overlappingGroup.length === 1) {
+        // No overlaps, full width
+        layouts.set(ev.id, { column: 0, totalColumns: 1, width: 1, left: 0 });
+        processed.add(ev.id);
+      } else {
+        // Multiple overlapping events - assign columns
+        // Sort by start time, then by end time
+        overlappingGroup.sort((a, b) => {
+          if (a.start !== b.start) return a.start - b.start;
+          return a.end - b.end;
+        });
+        
+        // Assign columns using a greedy algorithm
+        const columns = new Array(overlappingGroup.length).fill(0);
+        overlappingGroup.forEach((currentEv, idx) => {
+          // Find the first available column
+          const usedColumns = new Set();
+          overlappingGroup.forEach((otherEv, otherIdx) => {
+            if (otherIdx < idx && eventsOverlap(currentEv, otherEv)) {
+              usedColumns.add(columns[otherIdx]);
+            }
+          });
+          
+          // Find first unused column
+          let column = 0;
+          while (usedColumns.has(column)) {
+            column++;
+          }
+          columns[idx] = column;
+        });
+        
+        const maxColumn = Math.max(...columns);
+        const totalColumns = maxColumn + 1;
+        
+        // Assign layout to each event in the group
+        // Add small gap between columns (2% of width per gap)
+        const gapPercent = 0.02;
+        const totalGapWidth = gapPercent * (totalColumns - 1);
+        const availableWidth = 1 - totalGapWidth;
+        const columnWidth = availableWidth / totalColumns;
+        
+        overlappingGroup.forEach((groupEv, idx) => {
+          const column = columns[idx];
+          layouts.set(groupEv.id, {
+            column,
+            totalColumns,
+            width: columnWidth,
+            left: (column * columnWidth) + (column * gapPercent)
+          });
+          processed.add(groupEv.id);
+        });
+      }
+    });
+    
+    return layouts;
+  }, [eventsForSelected]);
 
 
   // --- Get selected day abbrev for focus area rings ---
   const selectedDayAbbrev = selectedDate ? DAYS[selectedDate.getDay()] : null;
 
-  // Show loading state if no date is selected yet
-  if (!selectedDate) {
+  // Show loading state if month not loaded yet
+  if (!viewMonth) {
     return (
       <div className="min-h-screen bg-white text-[#374151] flex items-center justify-center">
         <div className="text-center">
@@ -1226,42 +1741,181 @@ function CalendarContent() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-white text-[#374151] pb-24">
-      {/* Fixed header and day selector - LOCKED */}
-      <div className="fixed top-0 left-0 right-0 z-50">
-        {/* Safe area background filler */}
-        <div className="absolute top-0 left-0 right-0 bg-[#F7F6F3]" style={{ height: `${insets.top}px` }} />
+  // Build month grid
+  const monthGrid = buildMonthGrid(viewMonth);
+  
+  // Get events for a specific date
+  const getEventsForDate = (date) => {
+    const dateStr = ymd(date);
+    const dateStart = new Date(date);
+    dateStart.setHours(0, 0, 0, 0);
+    const dateEnd = new Date(date);
+    dateEnd.setHours(23, 59, 59, 999);
+    const dayEvents = allEvents.filter(ev => {
+      const evStart = new Date(ev.start);
+      const evEnd = new Date(ev.end);
+      return evStart <= dateEnd && evEnd >= dateStart;
+    });
+    // Filter by visible focus areas
+    return filterEventsByVisibility(dayEvents);
+  };
+
+  // Helper function to calculate event layouts for a given day's events
+  const calculateEventLayouts = (dayEvents, dayStartMs, dayEndMs) => {
+    if (!dayEvents.length) return new Map();
+    
+    const layouts = new Map();
+    const processed = new Set();
+    
+    const eventsOverlap = (ev1, ev2) => {
+      return ev1.start < ev2.end && ev1.end > ev2.start;
+    };
+    
+    dayEvents.forEach((ev) => {
+      if (processed.has(ev.id)) return;
+      
+      const overlappingGroup = dayEvents.filter((otherEv) => {
+        if (processed.has(otherEv.id)) return false;
+        return eventsOverlap(ev, otherEv);
+      });
+      
+      if (overlappingGroup.length === 1) {
+        layouts.set(ev.id, { column: 0, totalColumns: 1, width: 1, left: 0 });
+        processed.add(ev.id);
+      } else {
+        overlappingGroup.sort((a, b) => {
+          if (a.start !== b.start) return a.start - b.start;
+          return a.end - b.end;
+        });
         
-        {/* Main header content */}
-        <div className="bg-[#F7F6F3]" style={{ marginTop: `${insets.top}px` }}>
+        const columns = new Array(overlappingGroup.length).fill(0);
+        overlappingGroup.forEach((currentEv, idx) => {
+          const usedColumns = new Set();
+          overlappingGroup.forEach((otherEv, otherIdx) => {
+            if (otherIdx < idx && eventsOverlap(currentEv, otherEv)) {
+              usedColumns.add(columns[otherIdx]);
+            }
+          });
+          
+          let column = 0;
+          while (usedColumns.has(column)) {
+            column++;
+          }
+          columns[idx] = column;
+        });
+        
+        const maxColumn = Math.max(...columns);
+        const totalColumns = maxColumn + 1;
+        const gapPercent = 0.02;
+        const totalGapWidth = gapPercent * (totalColumns - 1);
+        const availableWidth = 1 - totalGapWidth;
+        const columnWidth = availableWidth / totalColumns;
+        
+        overlappingGroup.forEach((groupEv, idx) => {
+          const column = columns[idx];
+          layouts.set(groupEv.id, {
+            column,
+            totalColumns,
+            width: columnWidth,
+            left: (column * columnWidth) + (column * gapPercent)
+          });
+          processed.add(groupEv.id);
+        });
+      }
+    });
+    
+    return layouts;
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-purple-50 to-pink-50 text-white pb-24">
+      {/* Fixed header */}
+      <div className="fixed top-0 left-0 right-0 z-50">
+        {/* Main header content with safe area padding */}
+        <div className="bg-white/70 backdrop-blur-xl border-b border-white/30 shadow-lg" style={{ paddingTop: `${Math.max(insets.top, 44)}px` }}>
           {/* Top bar */}
-          <header className="px-4 pt-16 pb-3 shadow-sm flex items-center justify-between">
+          <header className="px-4 pt-4 pb-4 flex items-center justify-between relative">
         <div className="flex items-center gap-2">
+          {/* Hamburger menu button */}
           <button 
-            className="text-lg px-2" 
+            onClick={() => setShowSideMenu(true)}
+            className="text-gray-900 hover:opacity-70 transition-all duration-200 p-2"
+            aria-label="Open menu"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        </div>
+        <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center gap-2">
+          {currentView === 'Day' ? (
+            <>
+              <button 
+                className="text-lg px-2 text-gray-900 hover:text-gray-700" 
             aria-label="Previous Day" 
             onClick={() => selectedDate && setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() - 1))}
             disabled={!selectedDate}
           >
             ‹
           </button>
-          <div className="font-semibold">{headerLabel}</div>
+              <div className="font-semibold text-base text-gray-900 whitespace-nowrap">
+                {selectedDate ? selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) : ''}
+              </div>
           <button 
-            className="text-lg px-2" 
+                className="text-lg px-2 text-gray-900 hover:text-gray-700" 
             aria-label="Next Day" 
             onClick={() => selectedDate && setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() + 1))}
             disabled={!selectedDate}
           >
             ›
           </button>
+            </>
+          ) : (
+            <>
+              <button 
+                className="text-lg px-2 text-gray-900 hover:text-gray-700" 
+                aria-label="Previous Month" 
+                onClick={() => viewMonth && setViewMonth(addMonths(viewMonth, -1))}
+                disabled={!viewMonth}
+              >
+                ‹
+              </button>
+              <div className="font-semibold text-lg text-gray-900">
+                {viewMonth ? viewMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : ''}
+              </div>
+              <button 
+                className="text-lg px-2 text-gray-900 hover:text-gray-700" 
+                aria-label="Next Month" 
+                onClick={() => viewMonth && setViewMonth(addMonths(viewMonth, 1))}
+                disabled={!viewMonth}
+              >
+                ›
+              </button>
+            </>
+          )}
         </div>
         <div className="flex items-center gap-2">
+          {/* Today button */}
+          <button
+            onClick={() => {
+              const todayDate = new Date();
+              todayDate.setHours(0, 0, 0, 0);
+              setSelectedDate(todayDate);
+              if (currentView === 'Month') {
+                setViewMonth(monthStart(todayDate));
+              }
+            }}
+            title="Go to today"
+            aria-label="Go to today"
+            className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white/20 backdrop-blur-lg border border-white/20 shadow-lg text-gray-900 hover:bg-white/30 transition-all duration-200 font-semibold text-sm"
+          >
+            {today.getDate()}
+          </button>
           <button
             onClick={() => router.push('/settings')}
             title="Settings"
             aria-label="Settings"
-            className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors duration-200"
+            className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white/20 backdrop-blur-lg border border-white/20 shadow-lg text-gray-900 hover:bg-white/30 transition-all duration-200"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -1279,42 +1933,150 @@ function CalendarContent() {
           </button>
         </div>
         </header>
+        </div>
+      </div>
+      
+      {/* Side Menu */}
+      {showSideMenu && (
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+            onClick={() => setShowSideMenu(false)}
+          />
+          {/* Side menu - positioned below header */}
+          <div 
+            className="fixed left-0 bottom-0 w-64 bg-white/95 backdrop-blur-xl border-r border-white/30 shadow-2xl z-50 overflow-y-auto scroll-smooth rounded-r-2xl"
+            style={{ top: `${Math.max(insets.top, 44) + 76}px` }}
+          >
+            <div className="p-4">
+              {/* View Options */}
+              <div className="mb-8">
+                <div className="space-y-1">
+                  <button
+                    className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${currentView === 'Day' ? 'bg-white/30 text-gray-900 font-medium' : 'text-gray-900 hover:bg-white/20'}`}
+                    onClick={() => { setCurrentView('Day'); setShowSideMenu(false); }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span>Day</span>
+                    </div>
+                  </button>
+                  <button
+                    className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${currentView === '3 Day' ? 'bg-white/30 text-gray-900 font-medium' : 'text-gray-900 hover:bg-white/20'}`}
+                    onClick={() => { setCurrentView('3 Day'); setShowSideMenu(false); }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span>3 Day</span>
+                    </div>
+                  </button>
+                  <button
+                    className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${currentView === 'Week' ? 'bg-white/30 text-gray-900 font-medium' : 'text-gray-900 hover:bg-white/20'}`}
+                    onClick={() => { setCurrentView('Week'); setShowSideMenu(false); }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span>Week</span>
+                    </div>
+                  </button>
+                  <button
+                    className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${currentView === 'Month' ? 'bg-white/30 text-gray-900 font-medium' : 'text-gray-900 hover:bg-white/20'}`}
+                    onClick={() => { setCurrentView('Month'); setShowSideMenu(false); }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span>Month</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
 
-        {/* Horizontal day strip (±14 days from today) - LOCKED */}
-        <div ref={stripRef} className="flex gap-2 overflow-x-hidden px-3 pt-2 pb-1 -mt-1">
-        {stripDays.map((d, i) => {
-          const isSel = selectedDate && d.toDateString() === selectedDate.toDateString();
-          const isToday = d.toDateString() === today.toDateString();
-          return (
-            <button
-              ref={(el) => (stripBtnRefs.current[i] = el)}
-              key={i}
-              onClick={() => setSelectedDate(new Date(d))}
-              className={`relative flex flex-col items-center w-14 flex-shrink-0 py-2 rounded-md border outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 focus-visible:ring-0 ${isSel ? "bg-[#6B7280] text-white border-transparent" : "text-[#374151] bg-transparent border-transparent"}`}
-              title={d.toDateString()}
-            >
-              <div className="text-[11px]">{DAYS[d.getDay()]}</div>
-              <div className="text-sm font-semibold">{d.getDate()}</div>
-              {/* Today dot (does not affect layout height) */}
-              <div className={`absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#6B7280] ${isToday && !isSel ? 'opacity-100' : 'opacity-0'}`} />
-            </button>
-          );
-        })}
+              {/* Focus Areas Section */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 mb-3 px-4">Focus Areas</h3>
+                <div className="space-y-2">
+                  {focusAreas.length > 0 ? (
+                    focusAreas.map((area) => {
+                      const areaColor = area.color || COLORS[0];
+                      const isVisible = visibleFocusAreas.has(area.label);
+                      return (
+                        <div
+                          key={area.label}
+                          className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-white/20 transition-colors"
+                        >
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleFocusAreaVisibility(area.label);
+                            }}
+                            className="flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors"
+                            style={{
+                              backgroundColor: isVisible ? areaColor : 'transparent',
+                              borderColor: areaColor
+                            }}
+                            aria-label={`${isVisible ? 'Hide' : 'Show'} ${area.label}`}
+                          >
+                            {isVisible && (
+                              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            )}
+                          </button>
+                          <div
+                            className="flex-1 flex items-center gap-3 cursor-pointer"
+                            onClick={() => {
+                              router.push(`/?focus=${encodeURIComponent(area.label)}`);
+                              setShowSideMenu(false);
+                            }}
+                          >
+                            <div 
+                              className="w-3 h-3 rounded-full flex-shrink-0" 
+                              style={{ backgroundColor: areaColor }}
+                            />
+                            <span className="text-sm text-gray-900 truncate">{area.label}</span>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="px-4 py-2 text-sm text-gray-600">No focus areas yet</div>
+                  )}
         </div>
         </div>
       </div>
+          </div>
+        </>
+      )}
 
-      {/* Scrollable calendar area */}
-      <div className="flex-1 overflow-y-auto" style={{ paddingTop: `${220}px` }}>
-        {/* Day view grid (hours gutter + single day column) */}
-        <div ref={gridRootRef} className="relative px-2">
+      {/* Calendar view area */}
+      {currentView === 'Day' ? (
+        /* Day view */
+        <div className="flex-1 overflow-y-auto px-4 scroll-smooth" style={{ paddingTop: `${Math.max(insets.top, 44) + 80}px` }}>
+          {/* Day info header */}
+          {selectedDate && eventsForSelected.length === 0 && (
+            <div className="mb-4">
+              <div className="text-gray-600 text-sm">Nothing planned</div>
+            </div>
+          )}
+          
+          <div ref={gridRootRef} className="relative">
+            <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl p-4">
         <div className="grid grid-cols-[56px_minmax(0,1fr)]">
           {/* Hours gutter */}
           <div className="flex flex-col items-end pr-2">
             {isClient && HOURS.map((h) => (
               <div
                 key={h}
-                className="text-xs text-gray-500 flex items-start"
+                      className="text-xs text-gray-700 flex items-start"
                 style={{ height: `${pxPerHour}px` }}
               >
                 <div className="-translate-y-1">{formatHour(h)}</div>
@@ -1322,26 +2084,27 @@ function CalendarContent() {
             ))}
           </div>
 
-          {/* One day column */}
+                {/* Day column */}
           <div
             ref={dayColRef}
-            className="relative border-l border-gray-200 overflow-visible"
+                  className="relative border-l border-gray-300/60 overflow-visible"
             style={{ touchAction: draggingId ? 'none' : undefined, userSelect: draggingId ? 'none' : undefined }}
           >
             {HOURS.map((h) => (
               <div
                 key={h}
-                className="h-16 border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
+                      className="h-16 border-b border-gray-200/50 hover:bg-white/10 cursor-pointer transition-colors"
                 onClick={() => openForSlot(h)}
               />
             ))}
 
+                  {/* Current time indicator */}
             {isClient && nowTopPx != null && (
               <div
                 className="pointer-events-none absolute inset-x-0 z-20"
                 style={{ top: Math.max(0, Math.min(nowTopPx, (24 * pxPerHour) - 1)) + 'px' }}
               >
-                {/* Hourglass marker at the left edge */}
+                      {/* Hourglass marker */}
                 <svg
                   width="14"
                   height="14"
@@ -1356,7 +2119,7 @@ function CalendarContent() {
                   <path d="M8 6c0 3.2 2.2 4.7 4 6-1.8 1.3-4 2.8-4 6" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   <path d="M16 6c0 3.2-2.2 4.7-4 6 1.8 1.3 4 2.8 4 6" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                {/* Time label at the far right, above the line */}
+                      {/* Time label */}
                 <div
                   className="absolute right-0 -translate-y-full mb-1 px-1.5 py-0.5 text-[10px] rounded bg-red-500 text-white shadow"
                   style={{ top: 0 }}
@@ -1369,25 +2132,33 @@ function CalendarContent() {
               </div>
             )}
 
-            {isClient && eventsForSelected.map(ev => {
-              // Use resize values if currently resizing this event
+                  {/* Events */}
+                  {isClient && eventsForSelected.map(ev => {
               const currentStart = resizingId === ev.id && resizeGhost ? resizeGhost.start : ev.start;
               const currentEnd = resizingId === ev.id && resizeGhost ? resizeGhost.end : ev.end;
               
               const visibleStart = Math.max(currentStart, dayStartMs);
-              const visibleEnd   = Math.min(currentEnd, dayEndMs);
+                    const visibleEnd = Math.min(currentEnd, dayEndMs);
               const vs = new Date(visibleStart);
               const topPx = (vs.getHours() + vs.getMinutes() / 60) * pxPerHour;
               const heightPx = ((visibleEnd - visibleStart) / (1000 * 60 * 60)) * pxPerHour;
               const renderColor = getAreaColor(ev.area) || ev.color || COLORS[2];
+              
+              // Get layout for overlapping events
+              const layout = eventLayouts.get(ev.id) || { column: 0, totalColumns: 1, width: 1, left: 0 };
+              const widthPercent = layout.width * 100;
+              const leftPercent = layout.left * 100;
+                    
               return (
                 <div
                   key={ev.id}
                   data-event-id={ev.id}
-                  className={`absolute left-1 right-1 rounded-md shadow calendar-event select-none ${draggingId === ev.id ? 'cursor-grabbing' : dragDelayActive && dragDelayEventId === ev.id ? 'cursor-wait' : resizingId === ev.id ? 'cursor-ns-resize' : 'cursor-grab'}`}
+                  className={`absolute rounded-md shadow calendar-event select-none ${draggingId === ev.id ? 'cursor-grabbing' : dragDelayActive && dragDelayEventId === ev.id ? 'cursor-wait' : resizingId === ev.id ? 'cursor-ns-resize' : 'cursor-grab'}`}
                   style={{
                     top: (draggingId === ev.id && dragGhostTop != null ? dragGhostTop : Math.max(0, topPx)) + 'px',
                     height: Math.max(24, heightPx) + 'px',
+                    left: `${leftPercent}%`,
+                    width: `${widthPercent}%`,
                     background: toRGBA(renderColor, dragDelayActive && dragDelayEventId === ev.id ? 0.2 : resizingId === ev.id ? 0.7 : 0.4),
                     borderLeft: `3px solid ${renderColor}`,
                     willChange: (draggingId === ev.id || resizingId === ev.id) ? 'top, height' : undefined,
@@ -1396,22 +2167,23 @@ function CalendarContent() {
                   }}
                   title={ev.title}
                   onMouseDown={(e) => {
-                    // Prevent text selection immediately
+                          // Don't start drag if clicking on resize handles
+                          if (e.target.closest('[data-resize-handle]')) {
+                            return;
+                          }
+                          
                     e.preventDefault();
                     e.stopPropagation();
                     
-                    // Clear any existing drag delay timer
                     if (dragDelayTimerRef.current) {
                       clearTimeout(dragDelayTimerRef.current);
                     }
                     
-                    // Start drag delay - user must hold for 500ms before dragging starts
                     setDragDelayActive(true);
                     setDragDelayEventId(ev.id);
                     
                     dragDelayTimerRef.current = setTimeout(() => {
                       if (unmountedRef.current) return;
-                      // After 500ms, allow dragging to begin
                       const dur = ev.end - ev.start;
                       setDraggingId(ev.id);
                       setDragDelayActive(false);
@@ -1424,14 +2196,12 @@ function CalendarContent() {
                         lastStartMs: null,
                         moved: false,
                       };
-                      // seed ghost top from current position
                       const vs = new Date(Math.max(ev.start, dayStartMs));
                       const topPxSeed = (vs.getHours() + vs.getMinutes() / 60) * pxPerHour;
                       setDragGhostTop(Math.max(0, topPxSeed));
                     }, 500);
                   }}
                   onMouseUp={(e) => {
-                    // Cancel drag delay if user releases before 500ms
                     if (dragDelayActive && dragDelayEventId === ev.id) {
                       if (dragDelayTimerRef.current) {
                         clearTimeout(dragDelayTimerRef.current);
@@ -1441,7 +2211,6 @@ function CalendarContent() {
                     }
                   }}
                   onMouseLeave={(e) => {
-                    // Cancel drag delay if mouse leaves the event before 500ms
                     if (dragDelayActive && dragDelayEventId === ev.id) {
                       if (dragDelayTimerRef.current) {
                         clearTimeout(dragDelayTimerRef.current);
@@ -1457,369 +2226,1561 @@ function CalendarContent() {
                     {ev.area && <div className="text-[10px] opacity-70 truncate">{ev.area}</div>}
                   </div>
                   
-                  {/* Resize handles - only show when not dragging */}
+                        {/* Resize handles - all four corners */}
                   {!draggingId && (
                     <>
-                      {/* Top-left resize handle (adjusts start time) */}
+                            {/* Top-left */}
                       <div
-                        className={`absolute top-0 left-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'top-left' ? 'opacity-100' : 'opacity-0'}`}
+                              data-resize-handle
+                              className={`absolute top-0 left-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'top-left' ? 'opacity-0' : 'opacity-0'}`}
                         onMouseDown={(e) => {
                           e.stopPropagation();
                           e.preventDefault();
-                          // Clear any drag delay timer since we're resizing
-                          if (dragDelayTimerRef.current) {
-                            clearTimeout(dragDelayTimerRef.current);
-                            dragDelayTimerRef.current = null;
-                          }
-                          setDragDelayActive(false);
-                          setDragDelayEventId(null);
-                          setResizingId(ev.id);
-                          setResizeHandle('top-left');
-                          resizeRef.current = {
-                            startY: e.clientY,
-                            origStart: ev.start,
-                            origEnd: ev.end,
-                            lastStartMs: ev.start,
-                            lastEndMs: ev.end,
-                            moved: false,
-                          };
+                          startResize(ev, 'top-left', e.clientY);
                         }}
                         onTouchStart={(e) => {
                           e.stopPropagation();
                           e.preventDefault();
-                          // Clear any drag delay timer since we're resizing
-                          if (dragDelayTimerRef.current) {
-                            clearTimeout(dragDelayTimerRef.current);
-                            dragDelayTimerRef.current = null;
+                          if (e.touches[0]) {
+                            startResize(ev, 'top-left', e.touches[0].clientY);
                           }
-                          setDragDelayActive(false);
-                          setDragDelayEventId(null);
-                          setResizingId(ev.id);
-                          setResizeHandle('top-left');
-                          resizeRef.current = {
-                            startY: e.touches[0].clientY,
-                            origStart: ev.start,
-                            origEnd: ev.end,
-                            lastStartMs: ev.start,
-                            lastEndMs: ev.end,
-                            moved: false,
-                          };
                         }}
-                      >
-                        {/* Invisible resize handle - no visual circle */}
-                      </div>
-
-                      {/* Top-right resize handle (adjusts start time) */}
-                      <div
-                        className={`absolute top-0 right-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'top-right' ? 'opacity-100' : 'opacity-0'}`}
+                            />
+                            {/* Top-right */}
+                            <div
+                              data-resize-handle
+                              className={`absolute top-0 right-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'top-right' ? 'opacity-0' : 'opacity-0'}`}
                         onMouseDown={(e) => {
                           e.stopPropagation();
                           e.preventDefault();
-                          // Clear any drag delay timer since we're resizing
-                          if (dragDelayTimerRef.current) {
-                            clearTimeout(dragDelayTimerRef.current);
-                            dragDelayTimerRef.current = null;
-                          }
-                          setDragDelayActive(false);
-                          setDragDelayEventId(null);
-                          setResizingId(ev.id);
-                          setResizeHandle('top-right');
-                          resizeRef.current = {
-                            startY: e.clientY,
-                            origStart: ev.start,
-                            origEnd: ev.end,
-                            lastStartMs: ev.start,
-                            lastEndMs: ev.end,
-                            moved: false,
-                          };
+                          startResize(ev, 'top-right', e.clientY);
                         }}
                         onTouchStart={(e) => {
                           e.stopPropagation();
                           e.preventDefault();
-                          // Clear any drag delay timer since we're resizing
-                          if (dragDelayTimerRef.current) {
-                            clearTimeout(dragDelayTimerRef.current);
-                            dragDelayTimerRef.current = null;
+                          if (e.touches[0]) {
+                            startResize(ev, 'top-right', e.touches[0].clientY);
                           }
-                          setDragDelayActive(false);
-                          setDragDelayEventId(null);
-                          setResizingId(ev.id);
-                          setResizeHandle('top-right');
-                          resizeRef.current = {
-                            startY: e.touches[0].clientY,
-                            origStart: ev.start,
-                            origEnd: ev.end,
-                            lastStartMs: ev.start,
-                            lastEndMs: ev.end,
-                            moved: false,
-                          };
                         }}
-                      >
-                        {/* Invisible resize handle - no visual circle */}
-                      </div>
-                      
-                      {/* Bottom resize handle */}
-                      <div
-                        className={`absolute bottom-0 left-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'bottom' ? 'opacity-100' : 'opacity-0'}`}
+                            />
+                            {/* Bottom-left */}
+                            <div
+                              data-resize-handle
+                              className={`absolute bottom-0 left-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'bottom-left' ? 'opacity-0' : 'opacity-0'}`}
                         onMouseDown={(e) => {
                           e.stopPropagation();
                           e.preventDefault();
-                          // Clear any drag delay timer since we're resizing
-                          if (dragDelayTimerRef.current) {
-                            clearTimeout(dragDelayTimerRef.current);
-                            dragDelayTimerRef.current = null;
-                          }
-                          setDragDelayActive(false);
-                          setDragDelayEventId(null);
-                          setResizingId(ev.id);
-                          setResizeHandle('bottom-left');
-                          resizeRef.current = {
-                            startY: e.clientY,
-                            origStart: ev.start,
-                            origEnd: ev.end,
-                            lastStartMs: ev.start,
-                            lastEndMs: ev.end,
-                            moved: false,
-                          };
+                          startResize(ev, 'bottom-left', e.clientY);
                         }}
                         onTouchStart={(e) => {
                           e.stopPropagation();
                           e.preventDefault();
-                          // Clear any drag delay timer since we're resizing
-                          if (dragDelayTimerRef.current) {
-                            clearTimeout(dragDelayTimerRef.current);
-                            dragDelayTimerRef.current = null;
+                          if (e.touches[0]) {
+                            startResize(ev, 'bottom-left', e.touches[0].clientY);
                           }
-                          setDragDelayActive(false);
-                          setDragDelayEventId(null);
-                          setResizingId(ev.id);
-                          setResizeHandle('bottom-left');
-                          resizeRef.current = {
-                            startY: e.touches[0].clientY,
-                            origStart: ev.start,
-                            origEnd: ev.end,
-                            lastStartMs: ev.start,
-                            lastEndMs: ev.end,
-                            moved: false,
-                          };
                         }}
-                      >
-                        {/* Invisible resize handle - no visual circle */}
-                      </div>
-
-                      {/* Bottom-right resize handle (adjusts end time) */}
-                      <div
-                        className={`absolute bottom-0 right-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'bottom-right' ? 'opacity-100' : 'opacity-0'}`}
+                            />
+                            {/* Bottom-right */}
+                            <div
+                              data-resize-handle
+                              className={`absolute bottom-0 right-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'bottom-right' ? 'opacity-0' : 'opacity-0'}`}
                         onMouseDown={(e) => {
                           e.stopPropagation();
                           e.preventDefault();
-                          // Clear any drag delay timer since we're resizing
-                          if (dragDelayTimerRef.current) {
-                            clearTimeout(dragDelayTimerRef.current);
-                            dragDelayTimerRef.current = null;
-                          }
-                          setDragDelayActive(false);
-                          setDragDelayEventId(null);
-                          setResizingId(ev.id);
-                          setResizeHandle('bottom-right');
-                          resizeRef.current = {
-                            startY: e.clientY,
-                            origStart: ev.start,
-                            origEnd: ev.end,
-                            lastStartMs: ev.start,
-                            lastEndMs: ev.end,
-                            moved: false,
-                          };
+                          startResize(ev, 'bottom-right', e.clientY);
                         }}
                         onTouchStart={(e) => {
                           e.stopPropagation();
                           e.preventDefault();
-                          // Clear any drag delay timer since we're resizing
-                          if (dragDelayTimerRef.current) {
-                            clearTimeout(dragDelayTimerRef.current);
-                            dragDelayTimerRef.current = null;
+                          if (e.touches[0]) {
+                            startResize(ev, 'bottom-right', e.touches[0].clientY);
                           }
-                          setDragDelayActive(false);
-                          setDragDelayEventId(null);
-                          setResizingId(ev.id);
-                          setResizeHandle('bottom-right');
-                          resizeRef.current = {
-                            startY: e.touches[0].clientY,
-                            origStart: ev.start,
-                            origEnd: ev.end,
-                            lastStartMs: ev.start,
-                            lastEndMs: ev.end,
-                            moved: false,
-                          };
                         }}
-                      >
-                        {/* Invisible resize handle - no visual circle */}
+                            />
+                          </>
+                        )}
                       </div>
-                    </>
-                  )}
+                    );
+                  })}
                 </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Focus Areas Data Block for Day view */}
+          <div className="mt-6 pb-6">
+            <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl p-4">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Daily Data Split</h2>
+              {(() => {
+                // Calculate daily planned hours for each focus area
+                const dailyGoal = 1; // For day view, we use daily goals
+                
+                // Calculate day start and end timestamps
+                const dayStart = selectedDate ? new Date(selectedDate) : new Date();
+                dayStart.setHours(0, 0, 0, 0);
+                const dayEnd = selectedDate ? new Date(selectedDate) : new Date();
+                dayEnd.setHours(23, 59, 59, 999);
+                const dayStartMs = dayStart.getTime();
+                const dayEndMs = dayEnd.getTime();
+                
+                // Helper function to normalize labels for comparison
+                const normalizeLabel = (label) => (label || '').trim().toLowerCase();
+                
+                const focusAreaData = focusAreas.map((area, index) => {
+                  const dailyGoalHours = Number(area.goal || 0);
+                  
+                  // Get actual time logged from dashboard (stored in days object)
+                  let actualTimeLogged = 0;
+                  if (selectedDate && area.days) {
+                    // Get day abbreviation (Su, M, Tu, W, Th, F, Sa)
+                    const dayAbbrev = DAYS[selectedDate.getDay()];
+                    // Get logged time for this specific day from the dashboard
+                    if (typeof area.days === 'object' && area.days[dayAbbrev] !== undefined) {
+                      actualTimeLogged = Number(area.days[dayAbbrev]) || 0;
+                    }
+                  }
+                  
+                  return {
+                    label: area.label,
+                    color: area.color || COLORS[index % COLORS.length],
+                    dailyGoal: dailyGoalHours,
+                    dailyPlanned: dailyGoalHours,
+                    actualTimeLogged
+                  };
+                });
+                
+                // Calculate total actual time logged (for percentages)
+                const totalActual = focusAreaData.reduce((sum, area) => sum + area.actualTimeLogged, 0);
+                
+                // Calculate percentages and build pie chart data based on actual time logged
+                const pieData = focusAreaData
+                  .filter(area => area.actualTimeLogged > 0)
+                  .map((area) => ({
+                    ...area,
+                    percentage: totalActual > 0 ? (area.actualTimeLogged / totalActual) * 100 : 0
+                  }))
+                  .sort((a, b) => b.percentage - a.percentage);
+                
+                // Build pie chart path data
+                let currentOffset = 0;
+                const radius = 50;
+                const circumference = 2 * Math.PI * radius;
+                const centerX = 130;
+                const centerY = 130;
+                const strokeWidth = 20;
+                
+                // Helper function to create arc path for a segment with flat trailing edge
+                // The rounded leading edge is added separately as a circle cap
+                // startAngle and endAngle in degrees, with 0 at top (12 o'clock)
+                const createArcPath = (startAngle, endAngle, innerRadius, outerRadius) => {
+                  const startRad = ((startAngle - 90) * Math.PI) / 180;
+                  const endRad = ((endAngle - 90) * Math.PI) / 180;
+                  
+                  // Flat trailing edge points (straight radial line - no rounding)
+                  const startXInner = centerX + Math.cos(startRad) * innerRadius;
+                  const startYInner = centerY + Math.sin(startRad) * innerRadius;
+                  const startXOuter = centerX + Math.cos(startRad) * outerRadius;
+                  const startYOuter = centerY + Math.sin(startRad) * outerRadius;
+                  
+                  // Leading edge points (flat edge, no rounding)
+                  const endXInner = centerX + Math.cos(endRad) * innerRadius;
+                  const endYInner = centerY + Math.sin(endRad) * innerRadius;
+                  const endXOuter = centerX + Math.cos(endRad) * outerRadius;
+                  const endYOuter = centerY + Math.sin(endRad) * outerRadius;
+                  
+                  const largeArcFlag = (endAngle - startAngle) > 180 ? 1 : 0;
+                  
+                  // Path: 
+                  // 1. Start at inner radius (flat trailing edge)
+                  // 2. Straight line to outer radius (flat edge - no curve)
+                  // 3. Arc along outer edge to end (straight cut, flat edge)
+                  // 4. Straight line from outer to inner at end
+                  // 5. Arc back along inner edge to start (completes the segment)
+                  return `M ${startXInner} ${startYInner} L ${startXOuter} ${startYOuter} A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${endXOuter} ${endYOuter} L ${endXInner} ${endYInner} A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${startXInner} ${startYInner} Z`;
+                };
+                
+                // Calculate positions for all segments
+                let tempOffset = 0;
+                const segmentPositions = pieData.map((area) => {
+                  const dashLength = (area.percentage / 100) * circumference;
+                  const startAngle = (tempOffset / circumference) * 360;
+                  const endAngle = ((tempOffset + dashLength) / circumference) * 360;
+                  const midAngle = (startAngle + endAngle) / 2;
+                  const result = {
+                    area,
+                    dashLength,
+                    startAngle,
+                    endAngle,
+                    midAngle,
+                    offset: tempOffset
+                  };
+                  tempOffset += dashLength;
+                  return result;
+                });
+                
+                // Get sleep and misc hours from localStorage for unlogged time calculation
+                const sleepHours = Number(typeof window !== 'undefined' ? (localStorage.getItem('sleepHours') || 8) : 8);
+                const miscHours = Number(typeof window !== 'undefined' ? (localStorage.getItem('miscHours') || 0) : 0);
+                const productiveTime = 24 - sleepHours - miscHours;
+                const unloggedTime = Math.max(0, productiveTime - totalActual);
+                
+                return (
+                  <div className="flex flex-col">
+                    <div className="flex items-center justify-center gap-4 -mt-4 min-h-[260px] pl-4 pr-6">
+                      {/* Pie Chart */}
+                      <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '260px', height: '260px' }}>
+                        <svg width="260" height="260" viewBox="0 0 260 260">
+                          {/* Base circle with black stroke for separation */}
+                          <circle
+                            cx={centerX}
+                            cy={centerY}
+                            r={radius}
+                            fill="none"
+                            stroke="#000000"
+                            strokeWidth="16"
+                            strokeOpacity="0.5"
+                          />
+                          {/* Render all segments with consistent tucking style - reverse order so smaller segments appear behind larger ones */}
+                          {[...segmentPositions].reverse().map((pos, index) => {
+                            const area = pos.area;
+                            const innerRadius = radius - strokeWidth / 2;
+                            const outerRadius = radius + strokeWidth / 2;
+                            
+                            // Alternate label distance (closer/further) to prevent overlap
+                            // Use original index for label positioning
+                            const originalIndex = segmentPositions.length - 1 - index;
+                            const isEven = originalIndex % 2 === 0;
+                            const labelRadius = radius + (isEven ? 30 : 50);
+                            
+                            // Adjust angle for 12 o'clock start (same as createArcPath)
+                            const labelAngleRad = ((pos.midAngle - 90) * Math.PI) / 180;
+                            const labelX = centerX + Math.cos(labelAngleRad) * labelRadius;
+                            const labelY = centerY + Math.sin(labelAngleRad) * labelRadius;
+                            
+                            return (
+                              <g key={area.label}>
+                                {/* Main segment path with flat edges on both sides */}
+                                <path
+                                  d={createArcPath(pos.startAngle, pos.endAngle, innerRadius, outerRadius)}
+                                  fill={area.color}
+                                  stroke="none"
+                                />
+                                {/* Percentage label - outside the ring, always horizontal */}
+                                <text
+                                  x={labelX}
+                                  y={labelY}
+                                  textAnchor="middle"
+                                  dominantBaseline="middle"
+                                  className="text-xs font-semibold"
+                                  style={{ fill: area.color }}
+                                >
+                                  {area.percentage.toFixed(1)}%
+                                </text>
+                              </g>
+                            );
+                          })}
+                        </svg>
+                      </div>
+
+                      {/* Focus Areas List */}
+                      <div className="flex-1 flex items-center">
+                        <div className="space-y-2 w-full">
+                          {pieData.length > 0 ? (
+                            pieData.map((area) => (
+                              <div key={area.label} className="flex items-center gap-2">
+                                <div 
+                                  className="w-3 h-3 rounded-full flex-shrink-0" 
+                                  style={{ backgroundColor: area.color }}
+                                />
+                                <span className="text-xs text-gray-900">{area.label}</span>
+                                <span className="text-xs text-gray-600 ml-auto">
+                                  {Math.round(area.actualTimeLogged * 10) / 10}/{Math.round(area.dailyPlanned)}
+                                </span>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="text-xs text-gray-600">No focus areas yet. Add them from the dashboard.</div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Unlogged Time Display */}
+                    <div className="text-center mt-2 px-4">
+                      <span className="text-sm text-gray-700">
+                        Unlogged time: {Math.round(unloggedTime * 10) / 10}/{Math.round(productiveTime * 10) / 10} hours
+                      </span>
+                    </div>
+                  </div>
               );
-            })}
+              })()}
           </div>
         </div>
         </div>
+      ) : currentView === '3 Day' ? (
+        /* 3 Day view */
+        <div className="flex-1 overflow-y-auto px-4 scroll-smooth" style={{ paddingTop: `${Math.max(insets.top, 44) + 80}px` }}>
+          {/* Calculate the 3 days */}
+          {(() => {
+            if (!selectedDate) return null;
+            
+            const day1 = new Date(selectedDate);
+            day1.setHours(0, 0, 0, 0);
+            const day2 = new Date(day1);
+            day2.setDate(day2.getDate() + 1);
+            const day3 = new Date(day1);
+            day3.setDate(day3.getDate() + 2);
+            
+            const threeDays = [day1, day2, day3];
+            
+            // Calculate day boundaries for each day
+            const daysData = threeDays.map(day => {
+              const dayStart = new Date(day);
+              dayStart.setHours(0, 0, 0, 0);
+              const dayEnd = new Date(day);
+              dayEnd.setHours(23, 59, 59, 999);
+              const dayStartMs = dayStart.getTime();
+              const dayEndMs = dayEnd.getTime();
+              
+              // Get events for this day
+              const allDayEvents = allEvents.filter(ev => ev.end > dayStartMs && ev.start < dayEndMs);
+              // Filter by visible focus areas
+              const dayEvents = filterEventsByVisibility(allDayEvents);
+              
+              // Calculate layouts for this day's events
+              const layouts = calculateEventLayouts(dayEvents, dayStartMs, dayEndMs);
+              
+              return {
+                date: day,
+                dayStartMs,
+                dayEndMs,
+                events: dayEvents,
+                layouts
+              };
+            });
+            
+            return (
+              <>
+                <div ref={gridRootRef} className="relative">
+                  <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl p-4">
+                    <div className="grid grid-cols-[56px_repeat(3,minmax(0,1fr))]">
+                      {/* Hours gutter */}
+                      <div className="flex flex-col items-end pr-2">
+                        {isClient && HOURS.map((h) => (
+                          <div
+                            key={h}
+                            className="text-xs text-gray-700 flex items-start"
+                            style={{ height: `${pxPerHour}px` }}
+                          >
+                            <div className="-translate-y-1">{formatHour(h)}</div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Three day columns */}
+                      {daysData.map((dayData, dayIndex) => {
+                        const isToday = sameDay(dayData.date, today);
+                        const showNowLine = isToday && isClient && nowTopPx != null;
+                        
+                        return (
+                          <div
+                            key={dayIndex}
+                            className="relative border-l border-gray-300/60 overflow-visible"
+                            style={{ touchAction: draggingId ? 'none' : undefined, userSelect: draggingId ? 'none' : undefined }}
+                          >
+                            {/* Day header */}
+                            <div className="sticky top-0 z-10 bg-white/30 backdrop-blur-sm border-b border-gray-300/60 px-2 py-1 mb-0">
+                              <div className="text-xs font-semibold text-gray-900">
+                                {dayData.date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                              </div>
+                            </div>
+                            
+                            {/* Hour slots */}
+                            {HOURS.map((h) => (
+                              <div
+                                key={h}
+                                className="h-16 border-b border-gray-200/50 hover:bg-white/10 cursor-pointer transition-colors"
+                                onClick={() => {
+                                  const clickedDate = new Date(dayData.date);
+                                  setSelectedDate(clickedDate);
+                                  // Use setTimeout to ensure state is updated before opening slot
+                                  setTimeout(() => {
+                                    setDraft({
+                                      ...DEFAULT_DRAFT,
+                                      dateYMD: ymd(clickedDate),
+                                      start: `${String(h).padStart(2, "0")}:00`,
+                                      end: h === 23 ? "23:59" : `${String(h + 1).padStart(2, "0")}:00`,
+                                    });
+                                    setShowModal(true);
+                                  }, 0);
+                                }}
+                              />
+                            ))}
+
+                            {/* Current time indicator - only for today */}
+                            {showNowLine && (
+                              <div
+                                className="pointer-events-none absolute inset-x-0 z-20"
+                                style={{ top: Math.max(0, Math.min(nowTopPx, (24 * pxPerHour) - 1)) + 32 + 'px' }}
+                              >
+                                <svg
+                                  width="14"
+                                  height="14"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  className="absolute -left-3 -translate-y-1/2"
+                                  style={{ top: 0 }}
+                                  aria-hidden="true"
+                                >
+                                  <rect x="6" y="2.5" width="12" height="3" rx="1.5" stroke="#ef4444" strokeWidth="2" />
+                                  <rect x="6" y="18.5" width="12" height="3" rx="1.5" stroke="#ef4444" strokeWidth="2" />
+                                  <path d="M8 6c0 3.2 2.2 4.7 4 6-1.8 1.3-4 2.8-4 6" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                  <path d="M16 6c0 3.2-2.2 4.7-4 6 1.8 1.3 4 2.8 4 6" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                                <div
+                                  className="absolute right-0 -translate-y-full mb-1 px-1.5 py-0.5 text-[10px] rounded bg-red-500 text-white shadow"
+                                  style={{ top: 0 }}
+                                  aria-hidden="true"
+                                >
+                                  {formatTime12(nowMs)}
+                                </div>
+                                <div className="h-[2px] bg-red-500 w-full" />
+                              </div>
+                            )}
+
+                            {/* Events for this day */}
+                            {isClient && dayData.events.map(ev => {
+                              const currentStart = resizingId === ev.id && resizeGhost ? resizeGhost.start : ev.start;
+                              const currentEnd = resizingId === ev.id && resizeGhost ? resizeGhost.end : ev.end;
+                              
+                              const visibleStart = Math.max(currentStart, dayData.dayStartMs);
+                              const visibleEnd = Math.min(currentEnd, dayData.dayEndMs);
+                              const vs = new Date(visibleStart);
+                              const topPx = (vs.getHours() + vs.getMinutes() / 60) * pxPerHour;
+                              const heightPx = ((visibleEnd - visibleStart) / (1000 * 60 * 60)) * pxPerHour;
+                              const renderColor = getAreaColor(ev.area) || ev.color || COLORS[2];
+                              
+                              const layout = dayData.layouts.get(ev.id) || { column: 0, totalColumns: 1, width: 1, left: 0 };
+                              const widthPercent = layout.width * 100;
+                              const leftPercent = layout.left * 100;
+                              
+                              return (
+                                <div
+                                  key={ev.id}
+                                  data-event-id={ev.id}
+                                  className={`absolute rounded-md shadow calendar-event select-none ${draggingId === ev.id ? 'cursor-grabbing' : dragDelayActive && dragDelayEventId === ev.id ? 'cursor-wait' : resizingId === ev.id ? 'cursor-ns-resize' : 'cursor-grab'}`}
+                                  style={{
+                                    top: (draggingId === ev.id && dragGhostTop != null ? dragGhostTop : Math.max(32, topPx + 32)) + 'px',
+                                    height: Math.max(24, heightPx) + 'px',
+                                    left: `${leftPercent}%`,
+                                    width: `${widthPercent}%`,
+                                    background: toRGBA(renderColor, dragDelayActive && dragDelayEventId === ev.id ? 0.2 : resizingId === ev.id ? 0.7 : 0.4),
+                                    borderLeft: `3px solid ${renderColor}`,
+                                    willChange: (draggingId === ev.id || resizingId === ev.id) ? 'top, height' : undefined,
+                                    opacity: dragDelayActive && dragDelayEventId === ev.id ? 0.7 : resizingId === ev.id ? 0.9 : 1,
+                                    touchAction: (draggingId === ev.id || resizingId === ev.id) ? 'none' : 'pan-y',
+                                  }}
+                                  title={ev.title}
+                                  onMouseDown={(e) => {
+                                    if (e.target.closest('[data-resize-handle]')) {
+                                      return;
+                                    }
+                                    
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    
+                                    if (dragDelayTimerRef.current) {
+                                      clearTimeout(dragDelayTimerRef.current);
+                                    }
+                                    
+                                    setDragDelayActive(true);
+                                    setDragDelayEventId(ev.id);
+                                    
+                                    dragDelayTimerRef.current = setTimeout(() => {
+                                      if (unmountedRef.current) return;
+                                      const dur = ev.end - ev.start;
+                                      setDraggingId(ev.id);
+                                      setDragDelayActive(false);
+                                      setDragDelayEventId(null);
+                                      dragRef.current = {
+                                        startY: e.clientY,
+                                        origStart: ev.start,
+                                        origEnd: ev.end,
+                                        duration: dur,
+                                        lastStartMs: null,
+                                        moved: false,
+                                      };
+                                      const vs = new Date(Math.max(ev.start, dayData.dayStartMs));
+                                      const topPxSeed = (vs.getHours() + vs.getMinutes() / 60) * pxPerHour;
+                                      setDragGhostTop(Math.max(32, topPxSeed + 32));
+                                    }, 500);
+                                  }}
+                                  onMouseUp={(e) => {
+                                    if (dragDelayActive && dragDelayEventId === ev.id) {
+                                      if (dragDelayTimerRef.current) {
+                                        clearTimeout(dragDelayTimerRef.current);
+                                      }
+                                      setDragDelayActive(false);
+                                      setDragDelayEventId(null);
+                                    }
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    if (dragDelayActive && dragDelayEventId === ev.id) {
+                                      if (dragDelayTimerRef.current) {
+                                        clearTimeout(dragDelayTimerRef.current);
+                                      }
+                                      setDragDelayActive(false);
+                                      setDragDelayEventId(null);
+                                    }
+                                  }}
+                                  onClick={(e) => { if (dragRef.current.moved || resizeRef.current.moved) { if (e.cancelable) e.preventDefault(); e.stopPropagation(); } else { openEdit(ev); } }}
+                                >
+                                  <div className="text-[11px] px-2 py-1 leading-tight">
+                                    <div className="font-semibold truncate">{ev.title}</div>
+                                    {ev.area && <div className="text-[10px] opacity-70 truncate">{ev.area}</div>}
+                                  </div>
+                                  
+                                  {!draggingId && (
+                                    <>
+                                      <div
+                                        data-resize-handle
+                                        className={`absolute top-0 left-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'top-left' ? 'opacity-0' : 'opacity-0'}`}
+                                        onMouseDown={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          startResize(ev, 'top-left', e.clientY);
+                                        }}
+                                        onTouchStart={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          if (e.touches[0]) {
+                                            startResize(ev, 'top-left', e.touches[0].clientY);
+                                          }
+                                        }}
+                                      />
+                                      <div
+                                        data-resize-handle
+                                        className={`absolute top-0 right-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'top-right' ? 'opacity-0' : 'opacity-0'}`}
+                                        onMouseDown={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          startResize(ev, 'top-right', e.clientY);
+                                        }}
+                                        onTouchStart={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          if (e.touches[0]) {
+                                            startResize(ev, 'top-right', e.touches[0].clientY);
+                                          }
+                                        }}
+                                      />
+                                      <div
+                                        data-resize-handle
+                                        className={`absolute bottom-0 left-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'bottom-left' ? 'opacity-0' : 'opacity-0'}`}
+                                        onMouseDown={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          startResize(ev, 'bottom-left', e.clientY);
+                                        }}
+                                        onTouchStart={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          if (e.touches[0]) {
+                                            startResize(ev, 'bottom-left', e.touches[0].clientY);
+                                          }
+                                        }}
+                                      />
+                                      <div
+                                        data-resize-handle
+                                        className={`absolute bottom-0 right-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'bottom-right' ? 'opacity-0' : 'opacity-0'}`}
+                                        onMouseDown={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          startResize(ev, 'bottom-right', e.clientY);
+                                        }}
+                                        onTouchStart={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          if (e.touches[0]) {
+                                            startResize(ev, 'bottom-right', e.touches[0].clientY);
+                                          }
+                                        }}
+                                      />
+                                    </>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Focus Areas Data Block for 3 Day view */}
+                <div className="mt-6 pb-6">
+                  <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl p-4">
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4">3 Day Data Split</h2>
+                    {(() => {
+                      // Calculate 3 day totals for the selected 3 days
+                      const day1 = selectedDate ? new Date(selectedDate) : new Date();
+                      day1.setHours(0, 0, 0, 0);
+                      const day2 = new Date(day1);
+                      day2.setDate(day2.getDate() + 1);
+                      const day3 = new Date(day1);
+                      day3.setDate(day3.getDate() + 2);
+                      const threeDays = [day1, day2, day3];
+                      
+                      const normalizeLabel = (label) => (label || '').trim().toLowerCase();
+                      
+                      const focusAreaData = focusAreas.map((area, index) => {
+                        const dailyGoalHours = Number(area.goal || 0);
+                        
+                        // Sum up actual time logged across all 3 days
+                        let actualTimeLogged = 0;
+                        if (area.days && typeof area.days === 'object') {
+                          for (let i = 0; i < 3; i++) {
+                            const day = threeDays[i];
+                            const dayAbbrev = DAYS[day.getDay()];
+                            if (area.days[dayAbbrev] !== undefined) {
+                              actualTimeLogged += Number(area.days[dayAbbrev]) || 0;
+                            }
+                          }
+                        }
+                        
+                        // Calculate 3 day goal (daily goal * 3)
+                        const threeDayGoal = dailyGoalHours * 3;
+                        
+                        return {
+                          label: area.label,
+                          color: area.color || COLORS[index % COLORS.length],
+                          dailyGoal: dailyGoalHours,
+                          threeDayGoal: threeDayGoal,
+                          actualTimeLogged
+                        };
+                      });
+                      
+                      const totalActual = focusAreaData.reduce((sum, area) => sum + area.actualTimeLogged, 0);
+                      
+                      const pieData = focusAreaData
+                        .filter(area => area.actualTimeLogged > 0)
+                        .map((area) => ({
+                          ...area,
+                          percentage: totalActual > 0 ? (area.actualTimeLogged / totalActual) * 100 : 0
+                        }))
+                        .sort((a, b) => b.percentage - a.percentage);
+                      
+                      // Get sleep and misc hours from localStorage for unlogged time calculation (3 days)
+                      const sleepHours = Number(typeof window !== 'undefined' ? (localStorage.getItem('sleepHours') || 8) : 8);
+                      const miscHours = Number(typeof window !== 'undefined' ? (localStorage.getItem('miscHours') || 0) : 0);
+                      const productiveTimePerDay = 24 - sleepHours - miscHours;
+                      const productiveTime = productiveTimePerDay * 3; // 3 days
+                      const unloggedTime = Math.max(0, productiveTime - totalActual);
+                      
+                      let currentOffset = 0;
+                      const radius = 50;
+                      const circumference = 2 * Math.PI * radius;
+                      const centerX = 130;
+                      const centerY = 130;
+                      
+                      return (
+                        <div className="flex flex-col">
+                          <div className="flex items-center justify-center gap-4 -mt-4 min-h-[260px] pl-4 pr-6">
+                            <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '260px', height: '260px' }}>
+                              <svg width="260" height="260" viewBox="0 0 260 260">
+                                {/* Base circle with black stroke for separation */}
+                                <circle
+                                  cx={centerX}
+                                  cy={centerY}
+                                  r={radius}
+                                  fill="none"
+                                  stroke="#000000"
+                                  strokeWidth="16"
+                                  strokeOpacity="0.5"
+                                />
+                                {pieData.map((area, index) => {
+                                  const dashLength = (area.percentage / 100) * circumference;
+                                  const dashOffset = -currentOffset;
+                                  const startAngle = (currentOffset / circumference) * 360;
+                                  const endAngle = ((currentOffset + dashLength) / circumference) * 360;
+                                  const midAngle = (startAngle + endAngle) / 2;
+                                  
+                                  const isEven = index % 2 === 0;
+                                  const labelRadius = radius + (isEven ? 30 : 50);
+                                  
+                                  const labelAngleRad = (midAngle * Math.PI) / 180;
+                                  const labelX = centerX + Math.cos(labelAngleRad) * labelRadius;
+                                  const labelY = centerY + Math.sin(labelAngleRad) * labelRadius;
+                                  
+                                  currentOffset += dashLength;
+                                  
+                                  return (
+                                    <g key={area.label}>
+                                      <circle
+                                        cx={centerX}
+                                        cy={centerY}
+                                        r={radius}
+                                        fill="none"
+                                        stroke={area.color}
+                                        strokeWidth="20"
+                                        strokeDasharray={`${dashLength} ${circumference}`}
+                                        strokeDashoffset={dashOffset}
+                                        strokeLinecap="butt"
+                                      />
+                                      <text
+                                        x={labelX}
+                                        y={labelY}
+                                        textAnchor="middle"
+                                        dominantBaseline="middle"
+                                        className="text-xs font-semibold"
+                                        style={{ fill: area.color }}
+                                      >
+                                        {area.percentage.toFixed(1)}%
+                                      </text>
+                                    </g>
+                                  );
+                                })}
+                              </svg>
+                            </div>
+
+                            <div className="flex-1 flex items-center">
+                              <div className="space-y-2 w-full">
+                                {pieData.length > 0 ? (
+                                  pieData.map((area) => (
+                                    <div key={area.label} className="flex items-center gap-2">
+                                      <div 
+                                        className="w-3 h-3 rounded-full flex-shrink-0" 
+                                        style={{ backgroundColor: area.color }}
+                                      />
+                                      <span className="text-xs text-gray-900">{area.label}</span>
+                                      <span className="text-xs text-gray-600 ml-auto">
+                                        {Math.round(area.actualTimeLogged * 10) / 10}/{Math.round(area.threeDayGoal)}
+                                      </span>
+                                    </div>
+                                  ))
+                                ) : (
+                                  <div className="text-xs text-gray-600">No focus areas yet. Add them from the dashboard.</div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Unlogged Time Display */}
+                          <div className="text-center mt-2 px-4">
+                            <span className="text-sm text-gray-700">
+                              Unlogged time: {Math.round(unloggedTime * 10) / 10}/{Math.round(productiveTime * 10) / 10} hours
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </div>
+              </>
+            );
+          })()}
+        </div>
+      ) : currentView === 'Week' ? (
+        /* Week view */
+        <div className="flex-1 overflow-y-auto px-4 scroll-smooth" style={{ paddingTop: `${Math.max(insets.top, 44) + 80}px` }}>
+          {/* Calculate the 7 days of the week */}
+          {(() => {
+            if (!selectedDate) return null;
+            
+            // Get the start of the week (Sunday)
+            const weekStart = startOfWeek(selectedDate);
+            const weekDays = Array.from({ length: 7 }, (_, i) => {
+              const day = new Date(weekStart);
+              day.setDate(weekStart.getDate() + i);
+              day.setHours(0, 0, 0, 0);
+              return day;
+            });
+            
+            // Calculate day boundaries for each day
+            const daysData = weekDays.map(day => {
+              const dayStart = new Date(day);
+              dayStart.setHours(0, 0, 0, 0);
+              const dayEnd = new Date(day);
+              dayEnd.setHours(23, 59, 59, 999);
+              const dayStartMs = dayStart.getTime();
+              const dayEndMs = dayEnd.getTime();
+              
+              // Get events for this day
+              const allDayEvents = allEvents.filter(ev => ev.end > dayStartMs && ev.start < dayEndMs);
+              // Filter by visible focus areas
+              const dayEvents = filterEventsByVisibility(allDayEvents);
+              
+              // Calculate layouts for this day's events
+              const layouts = calculateEventLayouts(dayEvents, dayStartMs, dayEndMs);
+              
+              return {
+                date: day,
+                dayStartMs,
+                dayEndMs,
+                events: dayEvents,
+                layouts
+              };
+            });
+            
+            return (
+              <>
+                <div ref={gridRootRef} className="relative">
+                  <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl p-4">
+                    <div className="grid grid-cols-[56px_repeat(7,minmax(0,1fr))]">
+                      {/* Hours gutter */}
+                      <div className="flex flex-col items-end pr-2">
+                        {isClient && HOURS.map((h) => (
+                          <div
+                            key={h}
+                            className="text-xs text-gray-700 flex items-start"
+                            style={{ height: `${pxPerHour}px` }}
+                          >
+                            <div className="-translate-y-1">{formatHour(h)}</div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Seven day columns */}
+                      {daysData.map((dayData, dayIndex) => {
+                        const isToday = sameDay(dayData.date, today);
+                        const showNowLine = isToday && isClient && nowTopPx != null;
+                        
+                        return (
+                          <div
+                            key={dayIndex}
+                            className="relative border-l border-gray-300/60 overflow-visible"
+                            style={{ touchAction: draggingId ? 'none' : undefined, userSelect: draggingId ? 'none' : undefined }}
+                          >
+                            {/* Day header */}
+                            <div className={`sticky top-0 z-10 backdrop-blur-sm border-b border-gray-300/60 px-2 py-1 mb-0 ${isToday ? 'bg-blue-100/50' : 'bg-white/30'}`}>
+                              <div className={`text-xs font-semibold ${isToday ? 'text-blue-700' : 'text-gray-900'}`}>
+                                {dayData.date.toLocaleDateString("en-US", { weekday: "short" })}
+                              </div>
+                              <div className={`text-xs ${isToday ? 'text-blue-600 font-medium' : 'text-gray-600'}`}>
+                                {dayData.date.getDate()}
+                              </div>
+                            </div>
+                            
+                            {/* Hour slots */}
+                            {HOURS.map((h) => (
+                              <div
+                                key={h}
+                                className="h-16 border-b border-gray-200/50 hover:bg-white/10 cursor-pointer transition-colors"
+                                onClick={() => {
+                                  const clickedDate = new Date(dayData.date);
+                                  setSelectedDate(clickedDate);
+                                  // Use setTimeout to ensure state is updated before opening slot
+                                  setTimeout(() => {
+                                    setDraft({
+                                      ...DEFAULT_DRAFT,
+                                      dateYMD: ymd(clickedDate),
+                                      start: `${String(h).padStart(2, "0")}:00`,
+                                      end: h === 23 ? "23:59" : `${String(h + 1).padStart(2, "0")}:00`,
+                                    });
+                                    setShowModal(true);
+                                  }, 0);
+                                }}
+                              />
+                            ))}
+
+                            {/* Current time indicator - only for today */}
+                            {showNowLine && (
+                              <div
+                                className="pointer-events-none absolute inset-x-0 z-20"
+                                style={{ top: Math.max(0, Math.min(nowTopPx, (24 * pxPerHour) - 1)) + 48 + 'px' }}
+                              >
+                                <svg
+                                  width="14"
+                                  height="14"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  className="absolute -left-3 -translate-y-1/2"
+                                  style={{ top: 0 }}
+                                  aria-hidden="true"
+                                >
+                                  <rect x="6" y="2.5" width="12" height="3" rx="1.5" stroke="#ef4444" strokeWidth="2" />
+                                  <rect x="6" y="18.5" width="12" height="3" rx="1.5" stroke="#ef4444" strokeWidth="2" />
+                                  <path d="M8 6c0 3.2 2.2 4.7 4 6-1.8 1.3-4 2.8-4 6" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                  <path d="M16 6c0 3.2-2.2 4.7-4 6 1.8 1.3 4 2.8 4 6" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                                <div
+                                  className="absolute right-0 -translate-y-full mb-1 px-1.5 py-0.5 text-[10px] rounded bg-red-500 text-white shadow"
+                                  style={{ top: 0 }}
+                                  aria-hidden="true"
+                                >
+                                  {formatTime12(nowMs)}
+                                </div>
+                                <div className="h-[2px] bg-red-500 w-full" />
+                              </div>
+                            )}
+
+                            {/* Events for this day */}
+                            {isClient && dayData.events.map(ev => {
+                              const currentStart = resizingId === ev.id && resizeGhost ? resizeGhost.start : ev.start;
+                              const currentEnd = resizingId === ev.id && resizeGhost ? resizeGhost.end : ev.end;
+                              
+                              const visibleStart = Math.max(currentStart, dayData.dayStartMs);
+                              const visibleEnd = Math.min(currentEnd, dayData.dayEndMs);
+                              const vs = new Date(visibleStart);
+                              const topPx = (vs.getHours() + vs.getMinutes() / 60) * pxPerHour;
+                              const heightPx = ((visibleEnd - visibleStart) / (1000 * 60 * 60)) * pxPerHour;
+                              const renderColor = getAreaColor(ev.area) || ev.color || COLORS[2];
+                              
+                              const layout = dayData.layouts.get(ev.id) || { column: 0, totalColumns: 1, width: 1, left: 0 };
+                              const widthPercent = layout.width * 100;
+                              const leftPercent = layout.left * 100;
+                              
+                              return (
+                                <div
+                                  key={ev.id}
+                                  data-event-id={ev.id}
+                                  className={`absolute rounded-md shadow calendar-event select-none ${draggingId === ev.id ? 'cursor-grabbing' : dragDelayActive && dragDelayEventId === ev.id ? 'cursor-wait' : resizingId === ev.id ? 'cursor-ns-resize' : 'cursor-grab'}`}
+                                  style={{
+                                    top: (draggingId === ev.id && dragGhostTop != null ? dragGhostTop : Math.max(48, topPx + 48)) + 'px',
+                                    height: Math.max(24, heightPx) + 'px',
+                                    left: `${leftPercent}%`,
+                                    width: `${widthPercent}%`,
+                                    background: toRGBA(renderColor, dragDelayActive && dragDelayEventId === ev.id ? 0.2 : resizingId === ev.id ? 0.7 : 0.4),
+                                    borderLeft: `3px solid ${renderColor}`,
+                                    willChange: (draggingId === ev.id || resizingId === ev.id) ? 'top, height' : undefined,
+                                    opacity: dragDelayActive && dragDelayEventId === ev.id ? 0.7 : resizingId === ev.id ? 0.9 : 1,
+                                    touchAction: (draggingId === ev.id || resizingId === ev.id) ? 'none' : 'pan-y',
+                                  }}
+                                  title={ev.title}
+                                  onMouseDown={(e) => {
+                                    if (e.target.closest('[data-resize-handle]')) {
+                                      return;
+                                    }
+                                    
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    
+                                    if (dragDelayTimerRef.current) {
+                                      clearTimeout(dragDelayTimerRef.current);
+                                    }
+                                    
+                                    setDragDelayActive(true);
+                                    setDragDelayEventId(ev.id);
+                                    
+                                    dragDelayTimerRef.current = setTimeout(() => {
+                                      if (unmountedRef.current) return;
+                                      const dur = ev.end - ev.start;
+                                      setDraggingId(ev.id);
+                                      setDragDelayActive(false);
+                                      setDragDelayEventId(null);
+                                      dragRef.current = {
+                                        startY: e.clientY,
+                                        origStart: ev.start,
+                                        origEnd: ev.end,
+                                        duration: dur,
+                                        lastStartMs: null,
+                                        moved: false,
+                                      };
+                                      const vs = new Date(Math.max(ev.start, dayData.dayStartMs));
+                                      const topPxSeed = (vs.getHours() + vs.getMinutes() / 60) * pxPerHour;
+                                      setDragGhostTop(Math.max(48, topPxSeed + 48));
+                                    }, 500);
+                                  }}
+                                  onMouseUp={(e) => {
+                                    if (dragDelayActive && dragDelayEventId === ev.id) {
+                                      if (dragDelayTimerRef.current) {
+                                        clearTimeout(dragDelayTimerRef.current);
+                                      }
+                                      setDragDelayActive(false);
+                                      setDragDelayEventId(null);
+                                    }
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    if (dragDelayActive && dragDelayEventId === ev.id) {
+                                      if (dragDelayTimerRef.current) {
+                                        clearTimeout(dragDelayTimerRef.current);
+                                      }
+                                      setDragDelayActive(false);
+                                      setDragDelayEventId(null);
+                                    }
+                                  }}
+                                  onClick={(e) => { if (dragRef.current.moved || resizeRef.current.moved) { if (e.cancelable) e.preventDefault(); e.stopPropagation(); } else { openEdit(ev); } }}
+                                >
+                                  <div className="text-[11px] px-2 py-1 leading-tight">
+                                    <div className="font-semibold truncate">{ev.title}</div>
+                                    {ev.area && <div className="text-[10px] opacity-70 truncate">{ev.area}</div>}
+                                  </div>
+                                  
+                                  {!draggingId && (
+                                    <>
+                                      <div
+                                        data-resize-handle
+                                        className={`absolute top-0 left-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'top-left' ? 'opacity-0' : 'opacity-0'}`}
+                                        onMouseDown={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          startResize(ev, 'top-left', e.clientY);
+                                        }}
+                                        onTouchStart={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          if (e.touches[0]) {
+                                            startResize(ev, 'top-left', e.touches[0].clientY);
+                                          }
+                                        }}
+                                      />
+                                      <div
+                                        data-resize-handle
+                                        className={`absolute top-0 right-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'top-right' ? 'opacity-0' : 'opacity-0'}`}
+                                        onMouseDown={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          startResize(ev, 'top-right', e.clientY);
+                                        }}
+                                        onTouchStart={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          if (e.touches[0]) {
+                                            startResize(ev, 'top-right', e.touches[0].clientY);
+                                          }
+                                        }}
+                                      />
+                                      <div
+                                        data-resize-handle
+                                        className={`absolute bottom-0 left-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'bottom-left' ? 'opacity-0' : 'opacity-0'}`}
+                                        onMouseDown={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          startResize(ev, 'bottom-left', e.clientY);
+                                        }}
+                                        onTouchStart={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          if (e.touches[0]) {
+                                            startResize(ev, 'bottom-left', e.touches[0].clientY);
+                                          }
+                                        }}
+                                      />
+                                      <div
+                                        data-resize-handle
+                                        className={`absolute bottom-0 right-0 w-6 h-6 cursor-ns-resize select-none ${resizingId === ev.id && resizeHandle === 'bottom-right' ? 'opacity-0' : 'opacity-0'}`}
+                                        onMouseDown={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          startResize(ev, 'bottom-right', e.clientY);
+                                        }}
+                                        onTouchStart={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          if (e.touches[0]) {
+                                            startResize(ev, 'bottom-right', e.touches[0].clientY);
+                                          }
+                                        }}
+                                      />
+                                    </>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Focus Areas Data Block for Week view */}
+                <div className="mt-6 pb-6">
+                  <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl p-4">
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Weekly Data Split</h2>
+                    {(() => {
+                      // Calculate weekly totals for the selected week
+                      const weekStartDate = startOfWeek(selectedDate);
+                      const weekEndDate = new Date(weekStartDate);
+                      weekEndDate.setDate(weekStartDate.getDate() + 6);
+                      weekEndDate.setHours(23, 59, 59, 999);
+                      
+                      const normalizeLabel = (label) => (label || '').trim().toLowerCase();
+                      
+                      const focusAreaData = focusAreas.map((area, index) => {
+                        // Sum up actual time logged across all days in the week
+                        let actualTimeLogged = 0;
+                        if (area.days && typeof area.days === 'object') {
+                          for (let i = 0; i < 7; i++) {
+                            const day = new Date(weekStartDate);
+                            day.setDate(weekStartDate.getDate() + i);
+                            const dayAbbrev = DAYS[day.getDay()];
+                            if (area.days[dayAbbrev] !== undefined) {
+                              actualTimeLogged += Number(area.days[dayAbbrev]) || 0;
+                            }
+                          }
+                        }
+                        
+                        // Calculate weekly goal (daily goal * 7)
+                        const dailyGoalHours = Number(area.goal || 0);
+                        const weeklyGoal = dailyGoalHours * 7;
+                        
+                        return {
+                          label: area.label,
+                          color: area.color || COLORS[index % COLORS.length],
+                          dailyGoal: dailyGoalHours,
+                          weeklyGoal: weeklyGoal,
+                          actualTimeLogged
+                        };
+                      });
+                      
+                      const totalActual = focusAreaData.reduce((sum, area) => sum + area.actualTimeLogged, 0);
+                      
+                      const pieData = focusAreaData
+                        .filter(area => area.actualTimeLogged > 0)
+                        .map((area) => ({
+                          ...area,
+                          percentage: totalActual > 0 ? (area.actualTimeLogged / totalActual) * 100 : 0
+                        }))
+                        .sort((a, b) => b.percentage - a.percentage);
+                      
+                      // Get sleep and misc hours from localStorage for unlogged time calculation (weekly)
+                      const sleepHours = Number(typeof window !== 'undefined' ? (localStorage.getItem('sleepHours') || 8) : 8);
+                      const miscHours = Number(typeof window !== 'undefined' ? (localStorage.getItem('miscHours') || 0) : 0);
+                      const productiveTimePerDay = 24 - sleepHours - miscHours;
+                      const productiveTime = productiveTimePerDay * 7; // 7 days
+                      const unloggedTime = Math.max(0, productiveTime - totalActual);
+                      
+                      let currentOffset = 0;
+                      const radius = 50;
+                      const circumference = 2 * Math.PI * radius;
+                      const centerX = 130;
+                      const centerY = 130;
+                      
+                      return (
+                        <div className="flex flex-col">
+                          <div className="flex items-center justify-center gap-4 -mt-4 min-h-[260px] pl-4 pr-6">
+                            <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '260px', height: '260px' }}>
+                              <svg width="260" height="260" viewBox="0 0 260 260">
+                                {/* Base circle with black stroke for separation */}
+                                <circle
+                                  cx={centerX}
+                                  cy={centerY}
+                                  r={radius}
+                                  fill="none"
+                                  stroke="#000000"
+                                  strokeWidth="16"
+                                  strokeOpacity="0.5"
+                                />
+                                {pieData.map((area, index) => {
+                                  const dashLength = (area.percentage / 100) * circumference;
+                                  const dashOffset = -currentOffset;
+                                  const startAngle = (currentOffset / circumference) * 360;
+                                  const endAngle = ((currentOffset + dashLength) / circumference) * 360;
+                                  const midAngle = (startAngle + endAngle) / 2;
+                                  
+                                  const isEven = index % 2 === 0;
+                                  const labelRadius = radius + (isEven ? 30 : 50);
+                                  
+                                  const labelAngleRad = (midAngle * Math.PI) / 180;
+                                  const labelX = centerX + Math.cos(labelAngleRad) * labelRadius;
+                                  const labelY = centerY + Math.sin(labelAngleRad) * labelRadius;
+                                  
+                                  currentOffset += dashLength;
+                                  
+                                  return (
+                                    <g key={area.label}>
+                                      <circle
+                                        cx={centerX}
+                                        cy={centerY}
+                                        r={radius}
+                                        fill="none"
+                                        stroke={area.color}
+                                        strokeWidth="20"
+                                        strokeDasharray={`${dashLength} ${circumference}`}
+                                        strokeDashoffset={dashOffset}
+                                        strokeLinecap="butt"
+                                      />
+                                      <text
+                                        x={labelX}
+                                        y={labelY}
+                                        textAnchor="middle"
+                                        dominantBaseline="middle"
+                                        className="text-xs font-semibold"
+                                        style={{ fill: area.color }}
+                                      >
+                                        {area.percentage.toFixed(1)}%
+                                      </text>
+                                    </g>
+                                  );
+                                })}
+                              </svg>
+                            </div>
+
+                            <div className="flex-1 flex items-center">
+                              <div className="space-y-2 w-full">
+                                {pieData.length > 0 ? (
+                                  pieData.map((area) => (
+                                    <div key={area.label} className="flex items-center gap-2">
+                                      <div 
+                                        className="w-3 h-3 rounded-full flex-shrink-0" 
+                                        style={{ backgroundColor: area.color }}
+                                      />
+                                      <span className="text-xs text-gray-900">{area.label}</span>
+                                      <span className="text-xs text-gray-600 ml-auto">
+                                        {Math.round(area.actualTimeLogged * 10) / 10}/{Math.round(area.weeklyGoal)}
+                                      </span>
+                                    </div>
+                                  ))
+                                ) : (
+                                  <div className="text-xs text-gray-600">No focus areas yet. Add them from the dashboard.</div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Unlogged Time Display */}
+                          <div className="text-center mt-2 px-4">
+                            <span className="text-sm text-gray-700">
+                              Unlogged time: {Math.round(unloggedTime * 10) / 10}/{Math.round(productiveTime * 10) / 10} hours
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </div>
+              </>
+            );
+          })()}
+        </div>
+      ) : currentView === 'Month' ? (
+        /* Month view */
+        <div className="flex-1 overflow-y-auto px-4 scroll-smooth" style={{ paddingTop: `${Math.max(insets.top, 44) + 80}px` }}>
+          {/* Month grid */}
+          <div className="w-full">
+            {/* Calendar grid container with glassmorphic styling */}
+            <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl p-4">
+              {/* Days of week header */}
+              <div className="grid grid-cols-7 gap-1 mb-2">
+                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                  <div key={i} className="text-center text-xs font-semibold text-gray-900 py-2">
+                    {day}
+                  </div>
+                ))}
       </div>
 
+              {/* Calendar grid */}
+              <div className="grid grid-cols-7 gap-1">
+                {monthGrid.map((date, idx) => {
+                  const inMonth = date.getMonth() === viewMonth.getMonth();
+                  const isToday = sameDay(date, today);
+                  const dayEvents = getEventsForDate(date);
+                  
+                  return (
+                    <div
+                      key={idx}
+                      className={`h-[80px] p-1 rounded-md border flex flex-col ${inMonth ? 'bg-white/40 backdrop-blur-sm hover:bg-white/50 border-gray-300/60' : 'bg-white/20 border-gray-200/40'} ${isToday ? 'ring-2 ring-slate-500 border-slate-400' : ''} transition-all cursor-pointer`}
+                      onClick={() => {
+                        setSelectedDate(new Date(date));
+                        setCurrentView('Day');
+                      }}
+                    >
+                      <div className={`text-sm font-medium text-center flex-shrink-0 h-8 flex items-center justify-center ${inMonth ? 'text-gray-900' : 'text-gray-500'} ${isToday ? 'text-slate-600' : ''}`}>
+                        {isToday ? (
+                          <div className="w-8 h-8 rounded-full bg-slate-500 text-white flex items-center justify-center mx-auto">
+                            {date.getDate()}
+                          </div>
+                        ) : (
+                          date.getDate()
+                        )}
+                      </div>
+                      <div className="flex flex-wrap items-center justify-center gap-1 px-1 flex-shrink-0 mt-auto">
+                        {dayEvents.slice(0, 3).map((ev) => {
+                          const evColor = getAreaColor(ev.area) || ev.color || COLORS[2];
+                          return (
+                            <div
+                              key={ev.id}
+                              className="w-2 h-2 rounded-full flex-shrink-0 pointer-events-none"
+                              style={{ backgroundColor: evColor }}
+                              title={ev.title}
+                            />
+                          );
+                        })}
+                        {dayEvents.length > 3 && (
+                          <div className="w-2 h-2 rounded-full bg-gray-400 flex items-center justify-center flex-shrink-0 pointer-events-none">
+                            <span className="text-[8px] text-white leading-none">+</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
-      {/* Bottom buttons: Dashboard | Calendar | Discover */}
+       {/* Focus Areas Data Block - Only show in Month view */}
+       {currentView === 'Month' && (
+       <div className="px-4 mt-6 pb-6">
+         <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl p-4">
+           <h2 className="text-lg font-semibold text-gray-900 mb-4">Monthly Data Split</h2>
+           {(() => {
+             // Calculate monthly planned hours for each focus area
+             const daysInMonth = viewMonth ? new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1, 0).getDate() : 30;
+             
+             // Calculate month start and end timestamps
+             const monthStart = viewMonth ? new Date(viewMonth.getFullYear(), viewMonth.getMonth(), 1) : new Date();
+             monthStart.setHours(0, 0, 0, 0);
+             const monthEnd = viewMonth ? new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1, 0) : new Date();
+             monthEnd.setHours(23, 59, 59, 999);
+             const monthStartMs = monthStart.getTime();
+             const monthEndMs = monthEnd.getTime();
+             
+             // Helper function to normalize labels for comparison
+             const normalizeLabel = (label) => (label || '').trim().toLowerCase();
+             
+             const focusAreaData = focusAreas.map((area, index) => {
+               const dailyGoal = Number(area.goal || 0);
+               const monthlyPlanned = dailyGoal * daysInMonth;
+               
+               // Calculate actual time logged from dashboard for this focus area in this month
+               // Sum up logged time from all days in the month by loading each week's data
+               let actualTimeLogged = 0;
+               const monthStartDate = new Date(monthStartMs);
+               const monthEndDate = new Date(monthEndMs);
+               
+               // Track which weeks we've already processed to avoid duplicate loading
+               const processedWeeks = new Map();
+               
+               // Iterate through each day in the month
+               for (let d = new Date(monthStartDate); d <= monthEndDate; d.setDate(d.getDate() + 1)) {
+                 // Get the Monday of the week this day belongs to
+                 const weekMonday = startOfWeekMon(d);
+                 const weekKey = ymd(weekMonday);
+                 
+                 // Get or load week data
+                 let weekArea = processedWeeks.get(weekKey);
+                 if (!weekArea) {
+                   // Load focus areas for this week
+                   const storageKey = `focusCategories:week:${weekKey}`;
+                   try {
+                     const weekRaw = localStorage.getItem(storageKey);
+                     if (weekRaw) {
+                       const weekAreas = JSON.parse(weekRaw);
+                       weekArea = weekAreas.find(a => normalizeLabel(a.label) === normalizeLabel(area.label));
+                       if (weekArea) {
+                         processedWeeks.set(weekKey, weekArea);
+                       }
+                     }
+                   } catch {}
+                 }
+                 
+                 // Add logged time for this day from the week's data
+                 if (weekArea && weekArea.days && typeof weekArea.days === 'object') {
+                   const dayAbbrev = DAYS[d.getDay()];
+                   if (weekArea.days[dayAbbrev] !== undefined) {
+                     actualTimeLogged += Number(weekArea.days[dayAbbrev]) || 0;
+                   }
+                 }
+               }
+               
+               // Fallback: if no weekly data found, use current week's days or timeSpent
+               if (actualTimeLogged === 0) {
+                 if (area.days && typeof area.days === 'object') {
+                   // Sum all days from current week as fallback
+                   actualTimeLogged = Object.values(area.days).reduce((sum, val) => sum + (Number(val) || 0), 0);
+                 } else if (area.timeSpent) {
+                   actualTimeLogged = Number(area.timeSpent) || 0;
+                 }
+               }
+               
+               return {
+                 label: area.label,
+                 color: area.color || COLORS[index % COLORS.length],
+                 dailyGoal,
+                 monthlyPlanned,
+                 actualTimeLogged
+               };
+             });
+             
+             // Calculate total actual time logged (for percentages)
+             const totalActual = focusAreaData.reduce((sum, area) => sum + area.actualTimeLogged, 0);
+             
+             // Calculate percentages and build pie chart data based on actual time logged
+             const pieData = focusAreaData
+               .filter(area => area.actualTimeLogged > 0)
+               .map((area) => ({
+                 ...area,
+                 percentage: totalActual > 0 ? (area.actualTimeLogged / totalActual) * 100 : 0
+               }))
+               .sort((a, b) => b.percentage - a.percentage);
+             
+             // Build pie chart path data
+             let currentOffset = 0;
+             const radius = 50;
+             const circumference = 2 * Math.PI * radius;
+             const centerX = 130;
+             const centerY = 130;
+             
+          return (
+               <div className="flex items-center justify-center gap-4 -mt-4 min-h-[260px] pl-4 pr-6">
+                 {/* Pie Chart */}
+                 <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: '260px', height: '260px' }}>
+                   <svg width="260" height="260" viewBox="0 0 260 260">
+                     {/* Base circle with black stroke for separation */}
+                     <circle
+                       cx={centerX}
+                       cy={centerY}
+                       r={radius}
+                       fill="none"
+                       stroke="#000000"
+                       strokeWidth="16"
+                       strokeOpacity="0.5"
+                     />
+                     {pieData.map((area, index) => {
+                       const dashLength = (area.percentage / 100) * circumference;
+                       const dashOffset = -currentOffset;
+                       const startAngle = (currentOffset / circumference) * 360;
+                       const endAngle = ((currentOffset + dashLength) / circumference) * 360;
+                       const midAngle = (startAngle + endAngle) / 2;
+                       
+                       // Alternate label distance (closer/further) to prevent overlap
+                       const isEven = index % 2 === 0;
+                       const labelRadius = radius + (isEven ? 30 : 50);
+                       
+                       const labelAngleRad = (midAngle * Math.PI) / 180;
+                       const labelX = centerX + Math.cos(labelAngleRad) * labelRadius;
+                       const labelY = centerY + Math.sin(labelAngleRad) * labelRadius;
+                       
+                       currentOffset += dashLength;
+                       
+                       return (
+                         <g key={area.label}>
+                           <circle
+                             cx={centerX}
+                             cy={centerY}
+                             r={radius}
+                  fill="none"
+                             stroke={area.color}
+                             strokeWidth="20"
+                             strokeDasharray={`${dashLength} ${circumference}`}
+                             strokeDashoffset={dashOffset}
+                  strokeLinecap="butt"
+                           />
+                           {/* Percentage label - outside the ring, always horizontal */}
+                           <text
+                             x={labelX}
+                             y={labelY}
+                             textAnchor="middle"
+                             dominantBaseline="middle"
+                             className="text-xs font-semibold"
+                             style={{ fill: area.color }}
+                           >
+                             {area.percentage.toFixed(1)}%
+                           </text>
+                         </g>
+                       );
+                     })}
+                   </svg>
+                    </div>
+
+                 {/* Focus Areas List */}
+                 <div className="flex-1 flex items-center">
+                   <div className="space-y-2 w-full">
+                     {pieData.length > 0 ? (
+                       pieData.map((area) => (
+                         <div key={area.label} className="flex items-center gap-2">
+                           <div 
+                             className="w-3 h-3 rounded-full flex-shrink-0" 
+                             style={{ backgroundColor: area.color }}
+                           />
+                           <span className="text-xs text-gray-900">{area.label}</span>
+                           <span className="text-xs text-gray-600 ml-auto">
+                             {Math.round(area.actualTimeLogged)}/{Math.round(area.monthlyPlanned)}
+                           </span>
+                    </div>
+                       ))
+                     ) : (
+                       <div className="text-xs text-gray-600">No focus areas yet. Add them from the dashboard.</div>
+                     )}
+                  </div>
+                 </div>
+            </div>
+          );
+           })()}
+      </div>
+       </div>
+       )}
+
+      {/* Floating action button for adding events */}
+      <button
+        onClick={() => {
+          setSelectedDate(new Date());
+          setDraft({
+            ...DEFAULT_DRAFT,
+            ...nextHourDefaults(new Date()),
+            dateYMD: ymd(new Date()),
+          });
+          setShowModal(true);
+        }}
+        className="fixed bottom-24 right-4 w-14 h-14 rounded-full bg-slate-500/80 backdrop-blur-lg text-white flex items-center justify-center shadow-xl border border-white/20 z-50 hover:bg-slate-600/80 transition-all"
+        aria-label="Add Event"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+        </svg>
+      </button>
+
+
+      {/* Bottom buttons: Dashboard | Calendar | Search */}
       <div className="fixed bottom-0 left-0 right-0 p-3 pb-7 z-[9999]">
         <div className="max-w-md mx-auto grid grid-cols-3 gap-3">
           <button
             onClick={() => router.push('/')}
-            className="h-12 w-full rounded-2xl bg-white text-gray-700 font-medium border-2 border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
+            className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-medium border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
           >
             Dashboard
           </button>
           <button
-            className="h-12 w-full rounded-2xl bg-gray-900 text-white font-semibold shadow-lg"
+            className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-semibold border-2 border-white/50 shadow-2xl"
             disabled
             aria-current="page"
           >
             Calendar
           </button>
           <button
-            onClick={() => router.push('/connect')}
-            className="h-12 w-full rounded-2xl bg-white text-gray-700 font-medium border-2 border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
+            onClick={() => router.push('/search')}
+            className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-medium border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
           >
-            Discover
+            Search
           </button>
         </div>
       </div>
 
-      {/* --- Focus Area Rings (Categories) --- */}
-      <div className="relative z-10">
-        {/* Subtle scroll indicators */}
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-6 h-6 bg-gradient-to-r from-white to-transparent pointer-events-none z-10" />
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-6 h-6 bg-gradient-to-l from-white to-transparent pointer-events-none z-10" />
-        
-        <div ref={focusRingsRef} className="flex flex-row gap-2 px-4 select-none mt-8 mb-6 overflow-x-auto scroll-smooth scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300">
-          <div className="flex flex-row gap-2 min-w-max px-2">
-        {[...focusAreas].reverse().map(({ label, timeSpent, goal, days, color }, index) => {
-          // Day-aware calculations using TODAY's logged time from `days`
-          const todayAbbrev = DAYS[new Date().getDay()];
-          const goalNum = Number(goal || 0);
-          const daySpent = Number((days && days[todayAbbrev]) || 0);
-          
-          // Calculate progress percentages
-          const isOverGoal = daySpent > goalNum;
-          const percentRaw = goalNum > 0 ? (daySpent / goalNum) * 100 : 0;
-          const percent = Math.min(percentRaw, 100).toFixed(0);
-          
-          // For over-amount, calculate how much over as a percentage
-          const overAmountRaw = goalNum > 0 ? ((daySpent - goalNum) / goalNum) * 100 : 0;
-          const overAmount = isOverGoal ? Math.min(overAmountRaw, 100).toFixed(0) : 0;
-
-          const category = { label, timeSpent, goal, days, color };
-          const areaColor = category?.color || "#6B7280";
-          
-          // Center label shows how much LEFT/OVER for today (day-aware)
-          const centerAmount = Math.abs((goalNum || 0) - (daySpent || 0));
-          return (
-            <div 
-              key={label} 
-              className="flex flex-col items-center pointer-events-auto cursor-pointer hover:opacity-80 transition-opacity"
-              onClick={() => {
-                // Navigate to main page with focus area selected and scroll to top
-                router.push(`/?focus=${encodeURIComponent(label)}&scroll=top`);
-              }}
-              title={`Click to view ${label} details`}
-            >
-              {/* SVG ring progress */}
-              <svg width={54} height={54} viewBox="0 0 36 36" className="block mb-1">
-                {/* Track */}
-                <path
-                  className="text-gray-300"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  fill="none"
-                  d="M18 2.0845
-                     a 15.9155 15.9155 0 0 1 0 31.831
-                     a 15.9155 15.9155 0 0 1 0 -31.831"
-                />
-                {/* Progress ring (up to goal) */}
-                <path
-                  stroke={areaColor}
-                  strokeOpacity={isOverGoal ? "0.3" : "0.55"}
-                  strokeWidth="3"
-                  strokeDasharray={`${percent}, 100`}
-                  strokeLinecap="round"
-                  fill="none"
-                  transform="rotate(-90 18 18)"
-                  d="M18 2.0845
-                     a 15.9155 15.9155 0 0 1 0 31.831
-                     a 15.9155 15.9155 0 0 1 0 -31.831"
-                />
-                {/* Over ring (scaled inside) - more prominent when over goal */}
-                {isOverGoal && overAmount > 0 && (
-                  <g transform="scale(0.88) translate(2.2 2.2)">
-                    <path
-                      stroke={areaColor}
-                      strokeOpacity="0.8"
-                      strokeWidth="2.5"
-                      strokeDasharray={`${overAmount}, 100`}
-                      strokeLinecap="round"
-                      fill="none"
-                      transform="rotate(-90 18 18)"
-                      d="M18 2.0845
-                         a 15.9155 15.9155 0 0 1 0 31.831
-                         a 15.9155 15.9155 0 0 1 0 -31.831"
-                    />
-                  </g>
-                )}
-                {/* Center label */}
-                <foreignObject x="8" y="8" width="20" height="20">
-                  <div xmlns="http://www.w3.org/1999/xhtml" className="w-full h-full flex flex-col items-center justify-center leading-tight">
-                    <div className={`text-[7px] font-bold ${isOverGoal ? 'text-red-600' : 'text-[#374151]'}`}>
-                      {formatCenterAmount(centerAmount)}
-                    </div>
-                    <div className={`text-[5px] uppercase -mt-0.5 ${isOverGoal ? 'text-red-500 font-semibold' : 'text-gray-500'}`}>
-                      {isOverGoal ? 'OVER' : 'LEFT'}
-                    </div>
-                  </div>
-                </foreignObject>
-              </svg>
-              <div className="text-xs font-medium text-[#374151] truncate max-w-[60px]">{label}</div>
-            </div>
-          );
-        })}
-      </div>
-        </div>
-      </div>
 
       {/* Add Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center z-50 pb-20">
-          <div className={`bg-white rounded-lg shadow-lg p-4 w-[92%] max-w-md ${showCustomRepeat ? 'max-h-[90vh] flex flex-col' : ''}`}>
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 pb-20">
+          <div className={`bg-white/95 backdrop-blur-xl rounded-xl shadow-2xl border-2 border-white/60 p-4 w-[92%] max-w-md ${showCustomRepeat ? 'max-h-[90vh] flex flex-col' : ''}`}>
             <div className="flex justify-between items-center mb-2">
-              <h3 className="font-semibold">New Event</h3>
-              <button className="text-sm" onClick={() => { setShowModal(false); setDraft(DEFAULT_DRAFT); }}>Cancel</button>
+              <h3 className="font-semibold text-black">New Event</h3>
+              <button className="text-sm text-black" onClick={() => { setShowModal(false); setDraft(DEFAULT_DRAFT); }}>Cancel</button>
             </div>
 
             <div className={showCustomRepeat ? 'flex-1 overflow-y-auto' : ''}>
-              <label className="text-sm">Title</label>
-            <input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} className="w-full border rounded px-3 py-2 mb-3" placeholder="e.g., Product Development" />
+              <label className="text-sm text-black">Title</label>
+            <input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} className="w-full border rounded px-3 py-2 mb-3 text-black" placeholder="e.g., Product Development" />
 
-            <label className="text-sm">Focus Area</label>
-            <select value={draft.area} onChange={(e) => setDraft({ ...draft, area: e.target.value })} className="w-full border rounded px-3 py-2 mb-3">
+            <label className="text-sm text-black">Focus Area</label>
+            <select value={draft.area} onChange={(e) => setDraft({ ...draft, area: e.target.value })} className="w-full border rounded px-3 py-2 mb-3 text-black">
               <option value="">(none)</option>
               {focusAreas.map(a => (<option key={a.label} value={a.label}>{a.label}</option>))}
             </select>
             <div className="flex items-center gap-2 mb-3">
               <div className="w-4 h-4 rounded-full border" style={{ background: getAreaColor(draft.area) }} />
-              <span className="text-xs text-gray-600">Event color follows the Focus Area</span>
+              <span className="text-xs text-black">Event color follows the Focus Area</span>
             </div>
 
-            <label className="text-sm">Date</label>
+            <label className="text-sm text-black">Date</label>
             <div className="relative mb-3">
               <div
                 role="button"
                 tabIndex={0}
-                className="w-full border rounded px-3 py-2 text-left bg-white cursor-pointer"
+                className="w-full border rounded px-3 py-2 text-left bg-white cursor-pointer text-black"
                 onClick={() => setShowAddDatePicker(prev => !prev)}
                 onKeyPress={e => { if (e.key === 'Enter' || e.key === ' ') setShowAddDatePicker(prev => !prev); }}
               >
@@ -1838,7 +3799,7 @@ function CalendarContent() {
 
             <div className="grid grid-cols-2 gap-2 mb-3 items-start overflow-hidden">
               <div className="pr-1 min-w-0">
-                <label className="text-sm">Start</label>
+                <label className="text-sm text-black">Start</label>
                 <input
                   type="time"
                   value={draft.start}
@@ -1847,19 +3808,19 @@ function CalendarContent() {
                     const newEnd = endFromStartAndDur(newStart, editDurMs);
                     setDraft((prev) => ({ ...prev, start: newStart, end: newEnd }));
                   }}
-                  className="w-full min-w-0 border rounded px-3 py-2 sm:max-w-full max-w-[160px]"
+                  className="w-full min-w-0 border rounded px-3 py-2 sm:max-w-full max-w-[160px] text-black"
                   min="00:00"
                   max="23:59"
                   style={{ width: '100%' }}
                 />
               </div>
               <div className="pl-1 min-w-0">
-                <label className="text-sm">End</label>
+                <label className="text-sm text-black">End</label>
                 <input
                   type="time"
                   value={draft.end}
                   onChange={(e) => setDraft({ ...draft, end: e.target.value })}
-                  className="w-full min-w-0 border rounded px-3 py-2 sm:max-w-full max-w-[160px]"
+                  className="w-full min-w-0 border rounded px-3 py-2 sm:max-w-full max-w-[160px] text-black"
                   min="00:00"
                   max="23:59"
                   style={{ width: '100%' }}
@@ -1867,11 +3828,11 @@ function CalendarContent() {
               </div>
             </div>
 
-            <label className="text-sm">Notes</label>
+            <label className="text-sm text-black">Notes</label>
             <textarea
               value={draft.notes}
               onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
-              className="w-full border rounded px-3 py-2 mb-4"
+              className="w-full border rounded px-3 py-2 mb-4 text-black"
               rows={3}
               placeholder="What will you accomplish during this timeframe?"
             />
@@ -1892,13 +3853,13 @@ function CalendarContent() {
                   }}
                   className="w-4 h-4"
                 />
-                <label htmlFor="isRepeating" className="text-sm font-medium">Do you want this to be a repeating event?</label>
+                <label htmlFor="isRepeating" className="text-sm font-medium text-black">Do you want this to be a repeating event?</label>
               </div>
 
               {isRepeating && (
                 <div className="ml-6 space-y-3">
                   <div>
-                    <label className="text-sm">Repeat</label>
+                    <label className="text-sm text-black">Repeat</label>
                     <select
                       value={repeatType}
                       onChange={(e) => {
@@ -1909,7 +3870,7 @@ function CalendarContent() {
                           setShowCustomRepeat(false);
                         }
                       }}
-                      className="w-full border rounded px-3 py-2 mt-1"
+                      className="w-full border rounded px-3 py-2 mt-1 text-black"
                     >
                       <option value="none">None</option>
                       <option value="daily">Daily</option>
@@ -1923,11 +3884,11 @@ function CalendarContent() {
                   {showCustomRepeat && (
                     <div className="bg-gray-50 p-3 rounded border">
                       <div className="mb-3">
-                        <label className="text-sm">Frequency</label>
+                        <label className="text-sm text-black">Frequency</label>
                         <select
                           value={customRepeat.frequency}
                           onChange={(e) => setCustomRepeat({ ...customRepeat, frequency: e.target.value })}
-                          className="w-full border rounded px-3 py-2 mt-1"
+                          className="w-full border rounded px-3 py-2 mt-1 text-black"
                         >
                           <option value="daily">Daily</option>
                           <option value="weekly">Weekly</option>
@@ -1937,7 +3898,7 @@ function CalendarContent() {
                       </div>
 
                       <div className="mb-3">
-                        <label className="text-sm">Every</label>
+                        <label className="text-sm text-black">Every</label>
                         <div className="flex items-center gap-2 mt-1">
                           <input
                             type="number"
@@ -1945,9 +3906,9 @@ function CalendarContent() {
                             max="99"
                             value={customRepeat.interval}
                             onChange={(e) => setCustomRepeat({ ...customRepeat, interval: parseInt(e.target.value) || 1 })}
-                            className="w-16 border rounded px-2 py-1 text-center"
+                            className="w-16 border rounded px-2 py-1 text-center text-black"
                           />
-                          <span className="text-sm text-gray-600">
+                          <span className="text-sm text-black">
                             {customRepeat.frequency === 'daily' ? 'day(s)' :
                              customRepeat.frequency === 'weekly' ? 'week(s)' :
                              customRepeat.frequency === 'monthly' ? 'month(s)' : 'year(s)'}
@@ -1957,7 +3918,7 @@ function CalendarContent() {
 
                       {customRepeat.frequency === 'weekly' && (
                         <div className="mb-3">
-                          <label className="text-sm">Repeat on:</label>
+                          <label className="text-sm text-black">Repeat on:</label>
                           <div className="flex gap-1 mt-2">
                             {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
                               <button
@@ -1982,7 +3943,7 @@ function CalendarContent() {
                         </div>
                       )}
 
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-black">
                         Events will repeat for up to 1 year from the start date.
                       </div>
                     </div>
@@ -1993,40 +3954,49 @@ function CalendarContent() {
             </div>
 
             <div className={`flex justify-end gap-2 ${showCustomRepeat ? 'mt-4 flex-shrink-0' : ''}`}>
-              <button className="px-4 py-2 bg-gray-200 rounded" onClick={() => { setShowModal(false); setDraft(DEFAULT_DRAFT); }}>Close</button>
+              <button className="px-4 py-2 bg-gray-200 rounded text-black" onClick={() => { setShowModal(false); setDraft(DEFAULT_DRAFT); }}>Close</button>
               <button className="px-4 py-2 bg-[#6B7280] text-white rounded" onClick={addEvent}>Add</button>
             </div>
           </div>
         </div>
       )}
 
-      {showEditModal && (
-        <div className="fixed inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-4 w-[92%] max-w-md">
+      {showEditModal && (() => {
+        const currentEvent = allEvents.find(e => e.id === editingId);
+        const isGoogleEvent = currentEvent?.source === 'google';
+        
+        return (
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 pb-20">
+          <div className="bg-white/95 backdrop-blur-xl rounded-xl shadow-2xl border-2 border-white/60 p-4 w-[92%] max-w-md">
             <div className="flex justify-between items-center mb-2">
-              <h3 className="font-semibold">Edit Event</h3>
-              <button className="text-sm" onClick={() => { setShowEditModal(false); setEditingId(null); }}>Close</button>
+              <h3 className="font-semibold text-black">{isGoogleEvent ? 'Edit Google Calendar Event' : 'Edit Event'}</h3>
+              <button className="text-sm text-black" onClick={() => { setShowEditModal(false); setEditingId(null); }}>Cancel</button>
             </div>
 
-            <label className="text-sm">Title</label>
-            <input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} className="w-full border rounded px-3 py-2 mb-3" />
+            <label className="text-sm text-black">Title</label>
+            <input 
+              value={draft.title} 
+              onChange={(e) => setDraft({ ...draft, title: e.target.value })} 
+              className="w-full border rounded px-3 py-2 mb-3 text-black"
+              placeholder="e.g., Product Development"
+            />
 
-            <label className="text-sm">Focus Area</label>
-            <select value={draft.area} onChange={(e) => setDraft({ ...draft, area: e.target.value })} className="w-full border rounded px-3 py-2 mb-3">
+            <label className="text-sm text-black">Focus Area</label>
+            <select value={draft.area} onChange={(e) => setDraft({ ...draft, area: e.target.value })} className="w-full border rounded px-3 py-2 mb-3 text-black">
               <option value="">(none)</option>
               {focusAreas.map(a => (<option key={a.label} value={a.label}>{a.label}</option>))}
             </select>
             <div className="flex items-center gap-2 mb-3">
               <div className="w-4 h-4 rounded-full border" style={{ background: getAreaColor(draft.area || '') }} />
-              <span className="text-xs text-gray-600">Color auto-updates from Focus Area</span>
+              <span className="text-xs text-black">Event color follows the Focus Area</span>
             </div>
 
-            <label className="text-sm">Date</label>
+            <label className="text-sm text-black">Date</label>
             <div className="relative mb-3">
               <div
                 role="button"
                 tabIndex={0}
-                className="w-full border rounded px-3 py-2 text-left bg-white cursor-pointer"
+                className="w-full border rounded px-3 py-2 text-left bg-white cursor-pointer text-black"
                 onClick={() => setShowEditDatePicker(prev => !prev)}
                 onKeyPress={e => { if (e.key === 'Enter' || e.key === ' ') setShowEditDatePicker(prev => !prev); }}
               >
@@ -2045,7 +4015,7 @@ function CalendarContent() {
 
             <div className="grid grid-cols-2 gap-2 mb-3 items-start overflow-hidden">
               <div className="pr-1 min-w-0">
-                <label className="text-sm">Start</label>
+                <label className="text-sm text-black">Start</label>
                 <input
                   type="time"
                   value={draft.start}
@@ -2054,14 +4024,14 @@ function CalendarContent() {
                     const newEnd = endFromStartAndDur(newStart, editDurMs);
                     setDraft((prev) => ({ ...prev, start: newStart, end: newEnd }));
                   }}
-                  className="w-full min-w-0 border rounded px-3 py-2 sm:max-w-full max-w-[160px]"
+                  className="w-full min-w-0 border rounded px-3 py-2 sm:max-w-full max-w-[160px] text-black"
                   min="00:00"
                   max="23:59"
                   style={{ width: '100%' }}
                 />
               </div>
               <div className="pl-1 min-w-0">
-                <label className="text-sm">End</label>
+                <label className="text-sm text-black">End</label>
                 <input
                   type="time"
                   value={draft.end}
@@ -2071,7 +4041,7 @@ function CalendarContent() {
                     if (dur > 0) setEditDurMs(dur);
                     setDraft((prev) => ({ ...prev, end: newEnd }));
                   }}
-                  className="w-full min-w-0 border rounded px-3 py-2 sm:max-w-full max-w-[160px]"
+                  className="w-full min-w-0 border rounded px-3 py-2 sm:max-w-full max-w-[160px] text-black"
                   min="00:00"
                   max="23:59"
                   style={{ width: '100%' }}
@@ -2079,37 +4049,49 @@ function CalendarContent() {
               </div>
             </div>
 
-            <label className="text-sm">Notes</label>
-            <textarea value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} className="w-full border rounded px-3 py-2 mb-4" rows={3} />
+            <label className="text-sm text-black">Notes</label>
+            <textarea value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} className="w-full border rounded px-3 py-2 mb-4 text-black" rows={3} placeholder="What will you accomplish during this timeframe?" />
 
-            <div className="flex justify-between items-center">
-              {(() => {
-                const currentEvent = events.find(e => e.id === editingId);
-                if (currentEvent && currentEvent.isRepeating) {
-                  return (
-                    <div className="flex gap-2">
-                      <button className="px-4 py-2 bg-red-500 text-white rounded text-xs leading-tight" onClick={() => deleteEvent(false)}>
-                        Delete This<br />Event
-                      </button>
-                      <button className="px-4 py-2 bg-red-600 text-white rounded text-xs leading-tight" onClick={() => deleteEvent(true)}>
-                        Delete Future<br />Events
-                      </button>
-                    </div>
-                  );
-                } else {
-                  return (
-                    <button className="px-4 py-2 bg-red-500 text-white rounded" onClick={deleteEvent}>Delete</button>
-                  );
-                }
-              })()}
-              <div className="flex gap-2">
-                <button className="px-4 py-2 bg-gray-200 rounded" onClick={() => { setShowEditModal(false); setEditingId(null); }}>Cancel</button>
+            {!isGoogleEvent && (
+              <div className="flex justify-between items-center">
+                <div className="flex gap-2">
+                  {(() => {
+                    const currentEvent = events.find(e => e.id === editingId);
+                    if (currentEvent && currentEvent.isRepeating) {
+                      return (
+                        <>
+                          <button className="px-4 py-2 bg-red-500 text-white rounded text-xs leading-tight" onClick={() => deleteEvent(false)}>
+                            Delete This<br />Event
+                          </button>
+                          <button className="px-4 py-2 bg-red-600 text-white rounded text-xs leading-tight" onClick={() => deleteEvent(true)}>
+                            Delete Future<br />Events
+                          </button>
+                        </>
+                      );
+                    } else {
+                      return (
+                        <button className="px-4 py-2 bg-red-500 text-white rounded" onClick={deleteEvent}>Delete</button>
+                      );
+                    }
+                  })()}
+                  <button className="px-4 py-2 bg-gray-200 rounded text-black" onClick={duplicateEvent}>Duplicate</button>
+                </div>
+                <div className="flex gap-2">
+                  <button className="px-4 py-2 bg-gray-200 rounded text-black" onClick={() => { setShowEditModal(false); setEditingId(null); }}>Cancel</button>
+                  <button className="px-4 py-2 bg-[#6B7280] text-white rounded" onClick={updateEvent}>Save</button>
+                </div>
+              </div>
+            )}
+            {isGoogleEvent && (
+              <div className="flex justify-end gap-2">
+                <button className="px-4 py-2 bg-gray-200 rounded text-black" onClick={() => { setShowEditModal(false); setEditingId(null); }}>Cancel</button>
                 <button className="px-4 py-2 bg-[#6B7280] text-white rounded" onClick={updateEvent}>Save</button>
               </div>
-            </div>
+            )}
           </div>
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 }

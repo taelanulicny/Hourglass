@@ -3,30 +3,6 @@
 import './globals.css';
 import { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import AiHelper from '../components/AiHelper';
-// Compute statistics for AI helper for a focus area and selected date
-function computeAiStats(focusArea, selectedDateYMD) {
-  const d = new Date(selectedDateYMD);
-  const daysAbbrev = ["Su","M","Tu","W","Th","F","Sa"];
-  const dayKey = daysAbbrev[d.getDay()];
-
-  const goal = Number(focusArea?.goal || 0);
-  const daySpent = Number(focusArea?.days?.[dayKey] || 0);
-  const leftToday = Math.max(0, goal - daySpent);
-
-  const totalWeek = Object.values(focusArea?.days || {}).reduce((s,v)=> s + (Number(v)||0), 0);
-
-  const start = new Date(d);
-  start.setDate(d.getDate() - ((d.getDay() + 6) % 7));
-  start.setHours(0,0,0,0);
-  const daysElapsed = Math.max(1, Math.floor((d - start)/86400000) + 1);
-  const dailyAverage = totalWeek / daysElapsed;
-
-  const weeklyGoal = goal * 7;
-
-  return { todaySpent: daySpent, leftToday, totalWeek, dailyAverage, weeklyGoal };
-}
-
 // --- small format helpers ---
 function fmt1(n){
   const v = Math.round((Number(n) || 0) * 10) / 10;
@@ -72,6 +48,65 @@ function formatHoursAndMinutes(decimalHours){
 // Normalize labels for matching (case/space/hyphen insensitive)
 function normalizeLabel(s){
   return (s || "").toString().trim().toLowerCase().replace(/[-_]+/g, " ");
+}
+
+// Load all events including Google Calendar events with focus areas
+function loadAllEventsWithGoogle() {
+  try {
+    // Load local events
+    const localEventsRaw = localStorage.getItem("hourglassEvents:v1") || localStorage.getItem("calendarEvents");
+    const localEvents = localEventsRaw ? safeJsonParse(localEventsRaw, []) : [];
+    
+    // Load Google events (stored by calendar page)
+    const googleEventsRaw = localStorage.getItem("googleEvents:v1");
+    const googleEvents = googleEventsRaw ? safeJsonParse(googleEventsRaw, []) : [];
+    
+    // Load Google event customizations
+    const customizationsRaw = localStorage.getItem("googleEventCustomizations:v1");
+    const customizations = customizationsRaw ? safeJsonParse(customizationsRaw, {}) : {};
+    
+    // Apply customizations to Google events and only include those with focus areas
+    const googleEventsWithAreas = googleEvents
+      .map(ev => {
+        const customization = customizations[ev.id];
+        if (customization && customization.area) {
+          // Get focus areas to determine color
+          const focusAreasRaw = localStorage.getItem("focusCategories");
+          const focusAreas = focusAreasRaw ? safeJsonParse(focusAreasRaw, []) : [];
+          const areaObj = focusAreas.find(a => normalizeLabel(a.label) === normalizeLabel(customization.area));
+          
+          return {
+            ...ev,
+            area: customization.area,
+            color: areaObj?.color || ev.color,
+            source: 'google', // Keep source marker
+          };
+        }
+        return null;
+      })
+      .filter(ev => ev !== null && ev.area); // Only include events with focus areas
+    
+    // Combine and deduplicate by ID
+    const allEvents = [...localEvents];
+    const localEventIds = new Set(localEvents.map(e => e.id));
+    
+    for (const googleEv of googleEventsWithAreas) {
+      if (!localEventIds.has(googleEv.id)) {
+        allEvents.push(googleEv);
+      }
+    }
+    
+    return allEvents;
+  } catch (e) {
+    console.warn('Failed to load all events:', e);
+    // Fallback to just local events
+    try {
+      const raw = localStorage.getItem("hourglassEvents:v1") || localStorage.getItem("calendarEvents");
+      return raw ? safeJsonParse(raw, []) : [];
+    } catch {
+      return [];
+    }
+  }
 }
 
 // Convert a hex color like "#7D7ACF" to an rgba string with given alpha
@@ -188,6 +223,246 @@ function ymd(date) {
 
 
 
+// Task Module Component
+function TaskModule({ focusAreaLabel, focusAreaColor = "#6B7280" }) {
+  const [tasks, setTasks] = useState([]);
+  const [editingId, setEditingId] = useState(null);
+  const [editingText, setEditingText] = useState('');
+  const [isAddingNew, setIsAddingNew] = useState(false);
+  const [newTaskText, setNewTaskText] = useState('');
+
+  // Task storage key with 1-year expiration
+  const getTaskStorageKey = (focusArea) => `tasks:${focusArea}:${new Date().getFullYear()}`;
+
+  // Load tasks from localStorage
+  useEffect(() => {
+    try {
+      const storageKey = getTaskStorageKey(focusAreaLabel);
+      const stored = localStorage.getItem(storageKey);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          setTasks(parsed);
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to load tasks:', error);
+    }
+  }, [focusAreaLabel]);
+
+  // Save tasks to localStorage
+  useEffect(() => {
+    try {
+      const storageKey = getTaskStorageKey(focusAreaLabel);
+      localStorage.setItem(storageKey, JSON.stringify(tasks));
+    } catch (error) {
+      console.warn('Failed to save tasks:', error);
+    }
+  }, [tasks, focusAreaLabel]);
+
+  // Generate unique ID for tasks
+  const generateTaskId = () => `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+  // Add new task
+  const addTask = (text) => {
+    if (!text.trim()) return;
+    
+    const newTask = {
+      id: generateTaskId(),
+      text: text.trim(),
+      completed: false,
+      completedDate: null,
+      createdAt: Date.now()
+    };
+    
+    setTasks(prev => [...prev, newTask]);
+    setNewTaskText('');
+    setIsAddingNew(false);
+  };
+
+  // Toggle task completion
+  const toggleTask = (taskId) => {
+    setTasks(prev => prev.map(task => {
+      if (task.id === taskId) {
+        const newCompleted = !task.completed;
+        return {
+          ...task,
+          completed: newCompleted,
+          completedDate: newCompleted ? new Date().toISOString().split('T')[0] : null
+        };
+      }
+      return task;
+    }));
+  };
+
+  // Start editing task
+  const startEditing = (taskId, currentText) => {
+    setEditingId(taskId);
+    setEditingText(currentText);
+  };
+
+  // Save edited task
+  const saveEdit = () => {
+    if (!editingText.trim()) return;
+    
+    setTasks(prev => prev.map(task => 
+      task.id === editingId 
+        ? { ...task, text: editingText.trim() }
+        : task
+    ));
+    
+    setEditingId(null);
+    setEditingText('');
+  };
+
+  // Cancel editing
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditingText('');
+  };
+
+  // Delete task
+  const deleteTask = (taskId) => {
+    setTasks(prev => prev.filter(task => task.id !== taskId));
+  };
+
+  // Handle key press for editing
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      if (editingId) {
+        saveEdit();
+      } else if (isAddingNew) {
+        addTask(newTaskText);
+      }
+    } else if (e.key === 'Escape') {
+      if (editingId) {
+        cancelEdit();
+      } else if (isAddingNew) {
+        setIsAddingNew(false);
+        setNewTaskText('');
+      }
+    }
+  };
+
+  // Sort tasks: completed tasks at top (most recent first), then incomplete tasks
+  const sortedTasks = [...tasks].sort((a, b) => {
+    if (a.completed && !b.completed) return -1;
+    if (!a.completed && b.completed) return 1;
+    if (a.completed && b.completed) {
+      return new Date(b.completedDate) - new Date(a.completedDate);
+    }
+    return a.createdAt - b.createdAt;
+  });
+
+  return (
+    <div className="rounded-2xl border-2 border-gray-200 bg-white p-3 mt-3">
+      <div className="text-sm text-gray-500 mb-2">Tasks</div>
+      
+      <div className="space-y-2">
+        {sortedTasks.map((task) => (
+          <div key={task.id} className="flex items-center gap-2 group">
+            {/* Checkbox */}
+            <button
+              onClick={() => toggleTask(task.id)}
+              className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                task.completed 
+                  ? 'text-white' 
+                  : 'hover:opacity-80'
+              }`}
+              style={{
+                backgroundColor: task.completed ? focusAreaColor : 'transparent',
+                borderColor: focusAreaColor
+              }}
+            >
+              {task.completed && (
+                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              )}
+            </button>
+
+            {/* Task Text */}
+            <div className="flex-1 min-w-0">
+              {editingId === task.id ? (
+                <input
+                  type="text"
+                  value={editingText}
+                  onChange={(e) => setEditingText(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                  onBlur={saveEdit}
+                  className="w-full text-sm border-none outline-none bg-transparent"
+                  autoFocus
+                />
+              ) : (
+                <button
+                  onClick={() => startEditing(task.id, task.text)}
+                  className={`text-sm text-left w-full ${
+                    task.completed 
+                      ? 'line-through text-gray-500' 
+                      : 'text-gray-900'
+                  }`}
+                >
+                  {task.text}
+                </button>
+              )}
+            </div>
+
+            {/* Delete Button */}
+            <button
+              onClick={() => deleteTask(task.id)}
+              className="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        ))}
+
+        {/* Add New Task */}
+        {isAddingNew ? (
+          <div className="flex items-center gap-2">
+            <div 
+              className="w-5 h-5 rounded border-2"
+              style={{ borderColor: focusAreaColor }}
+            ></div>
+            <input
+              type="text"
+              value={newTaskText}
+              onChange={(e) => setNewTaskText(e.target.value)}
+              onKeyDown={handleKeyPress}
+              onBlur={() => {
+                if (newTaskText.trim()) {
+                  addTask(newTaskText);
+                } else {
+                  setIsAddingNew(false);
+                  setNewTaskText('');
+                }
+              }}
+              placeholder="Add task"
+              className="flex-1 text-sm border-none outline-none bg-transparent text-gray-600"
+              autoFocus
+            />
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 text-gray-400">
+            <div 
+              className="w-5 h-5 rounded border-2"
+              style={{ borderColor: focusAreaColor }}
+            ></div>
+            <button
+              onClick={() => setIsAddingNew(true)}
+              className="text-sm hover:text-gray-600 transition-colors"
+            >
+              Add task
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // Component that uses search params (needs Suspense)
 function HomeContent() {
   const router = useRouter();
@@ -198,8 +473,10 @@ function HomeContent() {
 
 
   const [offset, setOffset] = useState(0);
+  
   const [isNextWeek, setIsNextWeek] = useState(false);
   const [selectedFocusArea, setSelectedFocusArea] = useState(null);
+  const [eventsUpdateTrigger, setEventsUpdateTrigger] = useState(0); // Trigger re-render when events update
   const MAX_WEEKS_BACK = 52;
   const MIN_OFFSET = -MAX_WEEKS_BACK * 7; // in days
   const MAX_FUTURE_DAYS = 7; // allow exactly one week forward
@@ -611,6 +888,48 @@ function HomeContent() {
     try { window.dispatchEvent(new Event("calendarEventsUpdated")); } catch {}
   }
 
+  // Copy focus areas from current week to next week
+  const handleCopyFocusAreasFromCurrentWeek = () => {
+    try {
+      // Get current week's focus areas
+      const currentWeekData = localStorage.getItem(STORAGE_PREFIX + currentWeekKey);
+      if (!currentWeekData) {
+        console.log("No focus areas found in current week");
+        return;
+      }
+
+      const currentWeekFocusAreas = JSON.parse(currentWeekData);
+      if (!Array.isArray(currentWeekFocusAreas) || currentWeekFocusAreas.length === 0) {
+        console.log("No focus areas to copy from current week");
+        return;
+      }
+
+      // Create clean copies of focus areas (reset time data but keep definitions)
+      const cleanFocusAreas = currentWeekFocusAreas.map(area => ({
+        ...area,
+        days: {}, // Reset days to empty object
+        timeSpent: 0, // Reset time spent
+        goal: area.goal || 0 // Keep the goal but reset to 0 if not set
+      }));
+
+      // Save to next week's storage
+      const nextWeekKey = weekKey(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
+      localStorage.setItem(STORAGE_PREFIX + nextWeekKey, JSON.stringify(cleanFocusAreas));
+
+      // If we're currently viewing the next week, update the display
+      if (viewWeekKey === nextWeekKey) {
+        setCategories(cleanFocusAreas);
+      }
+
+      console.log("Successfully copied focus areas from current week to next week");
+      
+      // Trigger a refresh of the current view
+      window.dispatchEvent(new Event("focusCategoriesUpdated"));
+    } catch (error) {
+      console.error("Failed to copy focus areas:", error);
+    }
+  };
+
   const daysOfWeek = ["M", "Tu", "W", "Th", "F", "Sa", "Su"];
   // Abbrev of today's weekday in the same format as daysOfWeek
   const todayAbbrev = ["Su","M","Tu","W","Th","F","Sa"][new Date().getDay()];
@@ -946,15 +1265,9 @@ function HomeContent() {
 
     // --- Timeline state and handlers ---
 
-    // Load events from localStorage
-    const allEvents = (() => {
-      try {
-        const raw = localStorage.getItem("hourglassEvents:v1") || localStorage.getItem("calendarEvents");
-        return raw ? safeJsonParse(raw, []) : [];
-      } catch {
-        return [];
-      }
-    })();
+    // Load events from localStorage (including Google events with focus areas)
+    // Use eventsUpdateTrigger to force recalculation when events are updated
+    const allEvents = loadAllEventsWithGoogle();
 
     // Filter for current focus area & month
     const filteredEvents = allEvents.filter(ev => {
@@ -1119,7 +1432,7 @@ function HomeContent() {
         <div className="flex flex-col gap-6 w-full max-w-md mx-auto pt-16">
           {/* Focus area module */}
           <div className="w-full flex flex-col gap-4">
-            <div className="bg-white rounded-xl shadow-md p-6">
+            <div className="bg-white/40 backdrop-blur-xl rounded-xl shadow-2xl border border-white/50 p-6">
               {/* Removed header: title/date nav */}
               <div className="flex items-center gap-6 w-full">
                 {/* Left: label + ring + small texts (same proportions as dashboard) */}
@@ -1316,10 +1629,10 @@ function HomeContent() {
                         />
                       </div>
                     </div>
-                    <div className="mt-3 flex gap-2">
+                    <div className="mt-3 grid grid-cols-2 gap-3">
                       <button
                         onClick={handleManualRemove}
-                        className="h-9 px-3 text-sm rounded border border-red-400 text-red-600 font-medium"
+                        className="h-9 px-3 text-sm rounded border border-red-400 text-red-600 font-medium flex items-center justify-center"
                       >
                         Remove
                       </button>
@@ -1335,28 +1648,8 @@ function HomeContent() {
                 </div>
 
 
-              {/* AI Helper - Chat Style UI */}
-              {/* AI Helper Component */}
-              <AiHelper
-                key={focusArea.label}
-                focusAreaId={focusArea.label}
-                focusContext={{
-                  name: focusArea.label,
-                  goal: focusArea.goal,
-                  weekLogged: (() => {
-                    const weekDays = ["M","Tu","W","Th","F","Sa","Su"];
-                    return weekDays.reduce(
-                      (sum, d) => sum + Number(focusArea?.days?.[d] || 0),
-                      0
-                    );
-                  })(),
-                  leftToday: (() => {
-                    const selectedDateYMD = selectedDateFA || selectedDate;
-                    const stats = computeAiStats(focusArea, selectedDateYMD);
-                    return stats.leftToday;
-                  })()
-                }}
-              />
+              {/* Tasks Module */}
+              <TaskModule focusAreaLabel={focusArea.label} focusAreaColor={areaColor} />
               
               {/* Data summary (match old slug) */}
               {(() => {
@@ -1409,8 +1702,8 @@ function HomeContent() {
                 </div>
               {/* Add Event Modal */}
               {showNewEventForm && (
-                <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-50">
-                  <div className="bg-white rounded-lg shadow-lg p-5 w-[90%] max-w-md">
+                <div className="fixed inset-0 backdrop-blur-sm bg-black/20 flex items-center justify-center z-50">
+                  <div className="bg-white/60 backdrop-blur-xl rounded-lg shadow-2xl border border-white/60 p-5 w-[90%] max-w-md">
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="text-lg font-semibold text-[#374151]">Plan Future Session</h3>
                       <button onClick={() => setShowNewEventForm(false)} className="text-sm text-gray-500">Close</button>
@@ -1669,22 +1962,23 @@ function HomeContent() {
           )}
         </div>
 
-        {/* Floating notes button for focus area view */}
+
+        {/* Floating action button for adding events */}
         <button
-          onClick={() => router.push('/notes')}
-          className="fixed bottom-20 right-4 bg-[#6B7280] text-white rounded-full w-12 h-12 flex items-center justify-center text-2xl shadow-md z-[10000]"
-          aria-label="Go to Notes"
+          onClick={() => router.push('/calendar?new=1')}
+          className="fixed bottom-24 right-4 w-14 h-14 rounded-full bg-slate-500/80 backdrop-blur-lg text-white flex items-center justify-center shadow-xl border border-white/20 z-50 hover:bg-slate-600/80 transition-all"
+          aria-label="Add Event"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
         </button>
 
-        {/* Bottom navigation: Dashboard | Calendar | Discover */}
+        {/* Bottom navigation: Dashboard | Calendar | Data */}
         <div className="fixed bottom-0 left-0 right-0 p-3 pb-7 z-[9999]">
           <div className="max-w-md mx-auto grid grid-cols-3 gap-3">
             <button
-              className="h-12 w-full rounded-2xl bg-white text-gray-700 font-medium border-2 border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
+              className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-semibold border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
               onClick={() => { setShowModal(false); setSelectedFocusArea(null); }}
               aria-current="page"
             >
@@ -1692,15 +1986,15 @@ function HomeContent() {
             </button>
             <button
               onClick={() => router.push('/calendar')}
-              className="h-12 w-full rounded-2xl bg-white text-gray-700 font-medium border-2 border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
+              className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-medium border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
             >
               Calendar
             </button>
             <button
-              onClick={() => router.push('/connect')}
-              className="h-12 w-full rounded-2xl bg-white text-gray-700 font-medium border-2 border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
+              onClick={() => router.push('/search')}
+              className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-medium border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
             >
-              Discover
+              Search
             </button>
           </div>
         </div>
@@ -1709,7 +2003,7 @@ function HomeContent() {
         <div className="fixed bottom-0 left-0 right-0 p-3 pb-7 z-[99999]">
           <div className="max-w-md mx-auto grid grid-cols-3 gap-3">
             <button
-              className="h-12 w-full rounded-2xl bg-white text-gray-700 font-medium border-2 border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
+              className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-semibold border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
               onClick={() => { setShowModal(false); setSelectedFocusArea(null); }}
               aria-current="page"
             >
@@ -1717,15 +2011,15 @@ function HomeContent() {
             </button>
             <button
               onClick={() => router.push('/calendar')}
-              className="h-12 w-full rounded-2xl bg-white text-gray-700 font-medium border-2 border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
+              className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-medium border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
             >
               Calendar
             </button>
             <button
-              onClick={() => router.push('/connect')}
-              className="h-12 w-full rounded-2xl bg-white text-gray-700 font-medium border-2 border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
+              onClick={() => router.push('/search')}
+              className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-medium border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
             >
-              Discover
+              Search
             </button>
           </div>
         </div>
@@ -1736,7 +2030,7 @@ function HomeContent() {
 
   return (
     <>
-            <div className="min-h-screen bg-white text-gray-900 pb-40 font-sans flex flex-col gap-6">
+            <div className="min-h-screen bg-gradient-to-br from-blue-100 via-purple-50 to-pink-50 text-gray-900 pb-40 font-sans flex flex-col gap-6 px-4">
       <header className="w-full pt-16 pb-3 px-4 flex justify-between items-center">
         <div className="flex items-center gap-2">
           <button
@@ -1771,7 +2065,7 @@ function HomeContent() {
             onClick={() => router.push('/settings')}
             title="Settings"
             aria-label="Settings"
-            className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors duration-200"
+            className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white/40 backdrop-blur-xl border border-white/50 text-gray-700 hover:bg-white/50 hover:text-gray-900 transition-all duration-200"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -1791,7 +2085,7 @@ function HomeContent() {
       </header>
 
 
-      <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+      <div className="bg-white/40 backdrop-blur-xl rounded-2xl p-6 shadow-2xl border border-white/50">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-gray-900">Focus Areas</h2>
           <div className={`text-sm whitespace-nowrap ${plannedToday > availableHours ? 'text-red-600' : 'text-gray-600'}`}>
@@ -1799,7 +2093,7 @@ function HomeContent() {
           </div>
         </div>
         {overByToday > 0 && (
-          <div className="rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm px-4 py-3 mb-4">
+          <div className="rounded-xl border border-red-200/30 bg-red-50/20 backdrop-blur-lg text-red-700 text-sm px-4 py-3 mb-4">
             Your focus area daily goals add up to {fmt1(plannedToday)}hrs (over by {fmt1(overByToday)}hrs). Please reduce one or more daily goals so the total is {availableHours}hrs or less.
           </div>
         )}
@@ -1838,7 +2132,7 @@ function HomeContent() {
                 const inThisWeek = todayLocal >= startOfWeek && todayLocal <= endOfWeek;
                 setSelectedDateFA(ymd(inThisWeek ? todayLocal : startOfWeek));
               }}
-              className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 w-full flex flex-row items-center gap-4 relative cursor-pointer hover:shadow-md transition-shadow duration-200"
+              className="bg-white/40 backdrop-blur-xl p-4 rounded-xl shadow-2xl border border-white/50 w-full flex flex-row items-center gap-4 relative cursor-pointer hover:shadow-2xl hover:bg-white/50 transition-all duration-200"
             >
               {canEditWeek && (
                 <button
@@ -1856,8 +2150,8 @@ function HomeContent() {
                   ⋯
                 </button>
               )}
-              <div className="flex flex-row items-center gap-5 w-full">
-                <div className="flex flex-col items-center w-28">
+              <div className="flex flex-row items-center gap-4 w-full min-w-0">
+                <div className="flex flex-col items-center w-28 flex-shrink-0">
                   <div
                     className={`${label.length > 12 ? 'text-xs' : 'text-sm'} font-bold text-gray-900 text-center`}
                   >
@@ -1915,7 +2209,7 @@ function HomeContent() {
                     Daily Goal = {fmt1(goal ?? 0)}{hrUnit(goal ?? 0)}
                   </div>
                 </div>
-                <div className="flex justify-center items-center gap-4 w-full py-3">
+                <div className="flex justify-center items-center gap-3 sm:gap-4 flex-1 min-w-0 pt-4 pb-3 overflow-hidden">
                   {daysOfWeek.map((day) => {
                     const spent = (days?.[day] ?? 0);
                     const goalHrs = Number(goal ?? 0);
@@ -1923,8 +2217,8 @@ function HomeContent() {
                     const pct = goalHrs > 0 ? Math.min(spent / goalHrs, 1) : 0;
                     const isOver = goalHrs > 0 && spent > goalHrs;
                     return (
-                      <div key={day} className="relative flex flex-col items-center">
-                        <div className="relative w-5 h-20 flex flex-col items-center justify-end">
+                      <div key={day} className="relative flex flex-col items-center flex-shrink-0">
+                        <div className="relative w-4 sm:w-5 h-20 flex flex-col items-center justify-end">
                           {/* static track: top cap (6), gap (1), bottom body (14) */}
                           <div className="absolute bottom-0 w-full h-full flex flex-col justify-end">
                             <div
@@ -1964,15 +2258,18 @@ function HomeContent() {
               {/* Show planning message for next week */}
               {isNextWeek && (
                 <div className="mb-2" aria-hidden="true" role="presentation">
-                  <div className="w-full rounded-xl bg-[#6B7280] text-white py-3 text-center font-medium shadow-sm select-none">
+                  <button 
+                    onClick={handleCopyFocusAreasFromCurrentWeek}
+                    className="w-full rounded-xl bg-[#6B7280] text-white py-3 text-center font-medium shadow-sm hover:bg-[#5B6B73] transition-colors duration-200"
+                  >
                     Continue working on last week&apos;s focus areas
-                  </div>
+                  </button>
                 </div>
               )}
               {/* Show the example card when there are no focus areas yet (CURRENT or FUTURE weeks) */}
               <div
                 onClick={() => { setFormError(""); setShowModal(true); }}
-                className="relative bg-white p-3 rounded-xl shadow-md w-full flex flex-row items-center gap-3 opacity-50 cursor-pointer"
+                className="relative bg-white/40 backdrop-blur-xl p-3 rounded-xl shadow-2xl border border-white/50 w-full flex flex-row items-center gap-3 opacity-50 cursor-pointer"
               >
                 <div className="flex flex-col items-center w-28">
                   <div className="text-sm font-semibold text-[#374151] text-center">Add a Focus Area</div>
@@ -2055,15 +2352,23 @@ function HomeContent() {
         </div>
       </div>
     </div>
-    {/* Bottom navigation: Dashboard | Calendar | Discover */}
+
+    {/* Floating action button for adding events */}
+    <button
+      onClick={() => router.push('/calendar?new=1')}
+      className="fixed bottom-24 right-4 w-14 h-14 rounded-full bg-slate-500/80 backdrop-blur-lg text-white flex items-center justify-center shadow-xl border border-white/20 z-50 hover:bg-slate-600/80 transition-all"
+      aria-label="Add Event"
+    >
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+      </svg>
+    </button>
+
+    {/* Bottom navigation: Dashboard | Calendar | Data */}
     <div className="fixed bottom-0 left-0 right-0 p-3 pb-7 z-[9999]">
       <div className="max-w-md mx-auto grid grid-cols-3 gap-3">
         <button
-          className={`h-12 w-full rounded-2xl font-medium border-2 transition-colors duration-200 shadow-sm ${
-            selectedFocusArea 
-              ? 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50' 
-              : 'bg-gray-900 text-white font-semibold shadow-lg border-transparent'
-          }`}
+          className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-semibold border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
           onClick={() => { setShowModal(false); setSelectedFocusArea(null); }}
           aria-current="page"
         >
@@ -2071,22 +2376,22 @@ function HomeContent() {
         </button>
         <button
           onClick={() => router.push('/calendar')}
-          className="h-12 w-full rounded-2xl bg-white text-gray-700 font-medium border-2 border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
+          className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-medium border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
         >
           Calendar
         </button>
         <button
-          onClick={() => router.push('/connect')}
-          className="h-12 w-full rounded-2xl bg-white text-gray-700 font-medium border-2 border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
+          onClick={() => router.push('/search')}
+          className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-medium border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
         >
-          Discover
+          Search
         </button>
       </div>
     </div>
     {/* Modal for adding a new focus area */}
     {showModal && (
       <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg shadow-lg p-6 w-[90%] max-w-md">
+        <div className="bg-white/60 backdrop-blur-xl rounded-lg shadow-2xl border border-white/60 p-6 w-[90%] max-w-md">
           <h2 className="text-lg font-bold mb-4 text-black">Add a New Focus Area</h2>
           <input
             type="text"
@@ -2187,7 +2492,7 @@ function HomeContent() {
     {/* Modal for renaming a focus area */}
     {renameTarget && (
       <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg shadow-lg p-6 w-[90%] max-w-md">
+        <div className="bg-white/60 backdrop-blur-xl rounded-lg shadow-2xl border border-white/60 p-6 w-[90%] max-w-md">
           <h2 className="text-lg font-bold mb-4 text-black">Edit Focus Area</h2>
           <p className="text-sm text-gray-600 mb-3">Changing the name or goal will update it everywhere, including today&apos;s dashboard, your calendar events, and saved notes.</p>
           
@@ -2297,7 +2602,7 @@ function HomeContent() {
     {/* Modal for confirming deletion of a focus area */}
     {deleteTarget && (
       <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg shadow-lg p-6 w-[90%] max-w-md">
+        <div className="bg-white/60 backdrop-blur-xl rounded-lg shadow-2xl border border-white/60 p-6 w-[90%] max-w-md">
           <h2 className="text-lg font-bold mb-4 text-black">Delete Focus Area</h2>
           <p className="mb-6 text-black">Are you sure you want to delete <strong>{deleteTarget}</strong>?</p>
           <div className="flex justify-end gap-3">
@@ -2345,14 +2650,15 @@ function HomeContent() {
       </div>
     )}
 
-    {/* Floating notes button for dashboard view */}
+
+    {/* Floating action button for adding events */}
     <button
-      onClick={() => router.push('/notes')}
-      className="fixed bottom-20 right-4 bg-[#6B7280] text-white rounded-full w-12 h-12 flex items-center justify-center text-2xl shadow-md z-[10000]"
-      aria-label="Go to Notes"
+      onClick={() => router.push('/calendar?new=1')}
+      className="fixed bottom-24 right-4 w-14 h-14 rounded-full bg-slate-500/80 backdrop-blur-lg text-white flex items-center justify-center shadow-xl border border-white/20 z-50 hover:bg-slate-600/80 transition-all"
+      aria-label="Add Event"
     >
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
       </svg>
     </button>
 
@@ -2360,7 +2666,7 @@ function HomeContent() {
     <div className="fixed bottom-0 left-0 right-0 p-3 pb-7 z-[99999]">
       <div className="max-w-md mx-auto grid grid-cols-3 gap-3">
         <button
-          className="h-12 w-full rounded-2xl bg-gray-900 text-white font-semibold shadow-lg"
+          className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-semibold border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
           onClick={() => { setShowModal(false); setSelectedFocusArea(null); }}
           aria-current="page"
         >
@@ -2368,15 +2674,15 @@ function HomeContent() {
         </button>
         <button
           onClick={() => router.push('/calendar')}
-          className="h-12 w-full rounded-2xl bg-white text-gray-700 font-medium border-2 border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
+          className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-medium border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
         >
           Calendar
         </button>
         <button
-          onClick={() => router.push('/connect')}
-          className="h-12 w-full rounded-2xl bg-white text-gray-700 font-medium border-2 border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
+          onClick={() => router.push('/search')}
+          className="h-12 w-full rounded-2xl bg-white/40 backdrop-blur-xl text-gray-700 font-medium border-2 border-white/50 hover:bg-white/50 transition-all duration-200 shadow-2xl"
         >
-          Discover
+          Search
         </button>
       </div>
     </div>

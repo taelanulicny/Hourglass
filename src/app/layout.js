@@ -2,9 +2,12 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import dynamic from "next/dynamic";
 
-// Dynamically import PWA components with SSR disabled
+// Dynamically import PWA components (client-side only)
 const PWAInstallPrompt = dynamic(() => import("../components/PWAInstallPrompt"), {
-  ssr: false,
+  loading: () => null
+});
+
+const SyncProvider = dynamic(() => import("../components/SyncProvider"), {
   loading: () => null
 });
 
@@ -31,8 +34,9 @@ export const metadata = {
 export const viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  // Allow zooming on iOS PWA to avoid focus issues
+  maximumScale: 5,
+  userScalable: true,
   themeColor: "#F9FAFB",
   viewportFit: "cover",
 };
@@ -75,6 +79,7 @@ export default function RootLayout({ children }) {
       <body
         className={`${inter.variable} antialiased`}
       >
+        <SyncProvider />
         {children}
         <PWAInstallPrompt />
       </body>
