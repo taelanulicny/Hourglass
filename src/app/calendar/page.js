@@ -2767,13 +2767,6 @@ function CalendarContent() {
                             className="relative border-l border-gray-300/60 overflow-visible"
                             style={{ touchAction: draggingId ? 'none' : undefined, userSelect: draggingId ? 'none' : undefined }}
                           >
-                            {/* Day header */}
-                            <div className="sticky top-0 z-10 bg-white/30 backdrop-blur-sm border-b border-gray-300/60 px-2 py-1 mb-0">
-                              <div className="text-xs font-semibold text-gray-900">
-                                {dayData.date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
-                              </div>
-                            </div>
-                            
                             {/* Hour slots */}
                             {HOURS.map((h) => (
                               <div
@@ -2800,7 +2793,7 @@ function CalendarContent() {
                             {showNowLine && (
                               <div
                                 className="pointer-events-none absolute inset-x-0 z-20"
-                                style={{ top: Math.max(0, Math.min(nowTopPx, (24 * pxPerHour) - 1)) + 32 + 'px' }}
+                                style={{ top: Math.max(0, Math.min(nowTopPx, (24 * pxPerHour) - 1)) + 'px' }}
                               >
                                 <svg
                                   width="14"
