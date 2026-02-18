@@ -2223,7 +2223,7 @@ function CalendarContent() {
                 >
                   <div className="text-[11px] px-2 py-1 leading-tight">
                     <div className="font-semibold truncate">{ev.title}</div>
-                    {ev.area && <div className="text-[10px] opacity-70 truncate">{ev.area}</div>}
+                    {ev.area && (ev.end - ev.start) >= 30 * 60 * 1000 && <div className="text-[10px] opacity-70 truncate">{ev.area}</div>}
                   </div>
                   
                         {/* Resize handles - all four corners */}
@@ -2737,7 +2737,7 @@ function CalendarContent() {
                                 >
                                   <div className="text-[11px] px-2 py-1 leading-tight">
                                     <div className="font-semibold truncate">{ev.title}</div>
-                                    {ev.area && <div className="text-[10px] opacity-70 truncate">{ev.area}</div>}
+                                    {ev.area && (ev.end - ev.start) >= 30 * 60 * 1000 && <div className="text-[10px] opacity-70 truncate">{ev.area}</div>}
                                   </div>
                                   
                                   {!draggingId && (
@@ -3204,7 +3204,7 @@ function CalendarContent() {
                                 >
                                   <div className="text-[11px] px-2 py-1 leading-tight">
                                     <div className="font-semibold truncate">{ev.title}</div>
-                                    {ev.area && <div className="text-[10px] opacity-70 truncate">{ev.area}</div>}
+                                    {ev.area && (ev.end - ev.start) >= 30 * 60 * 1000 && <div className="text-[10px] opacity-70 truncate">{ev.area}</div>}
                                   </div>
                                   
                                   {!draggingId && (
