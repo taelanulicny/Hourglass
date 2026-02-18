@@ -794,7 +794,7 @@ function SettingsContent() {
             </div>
             
             <div className="text-center text-sm text-gray-600">
-              Version 1.0.0
+              Version 1.0.1
             </div>
           </div>
         </section>
