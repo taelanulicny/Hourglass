@@ -2842,7 +2842,7 @@ function CalendarContent() {
                                   data-event-id={ev.id}
                                   className={`absolute rounded-md shadow calendar-event select-none ${draggingId === ev.id ? 'cursor-grabbing' : dragDelayActive && dragDelayEventId === ev.id ? 'cursor-wait' : resizingId === ev.id ? 'cursor-ns-resize' : 'cursor-grab'}`}
                                   style={{
-                                    top: (draggingId === ev.id && dragGhostTop != null ? dragGhostTop : Math.max(32, topPx + 32)) + 'px',
+                                    top: (draggingId === ev.id && dragGhostTop != null ? dragGhostTop : Math.max(0, topPx)) + 'px',
                                     height: Math.max(24, heightPx) + 'px',
                                     left: `${leftPercent}%`,
                                     width: `${widthPercent}%`,
@@ -2884,7 +2884,7 @@ function CalendarContent() {
                                       };
                                       const vs = new Date(Math.max(ev.start, dayData.dayStartMs));
                                       const topPxSeed = (vs.getHours() + vs.getMinutes() / 60) * pxPerHour;
-                                      setDragGhostTop(Math.max(32, topPxSeed + 32));
+                                      setDragGhostTop(Math.max(0, topPxSeed));
                                     }, 500);
                                   }}
                                   onMouseUp={(e) => {
