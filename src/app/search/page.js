@@ -272,8 +272,7 @@ export default function SearchPage() {
       return aMs - bMs;
     });
 
-    // Cap: past = 25, future = 50
-    if (timeFilter === "past") return filtered.slice(0, 25);
+    // Cap: past = 50, future = 50
     return filtered.slice(0, 50);
   }, [events, searchQuery, selectedFocusArea, timeFilter, isClient]);
 
@@ -285,12 +284,12 @@ export default function SearchPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 via-purple-50 to-pink-50 text-white pb-24">
-      {/* Fixed header */}
+      {/* Fixed header - same layout as calendar: back, centered title, date square, settings */}
       <div className="fixed top-0 left-0 right-0 z-50">
         <div className="bg-white/70 backdrop-blur-xl border-b border-white/30 shadow-lg" style={{ paddingTop: `${Math.max(insets.top, 44)}px` }}>
-          <header className="px-4 pt-4 pb-4 flex items-center justify-between">
+          <header className="px-4 pt-4 pb-4 flex items-center justify-between relative">
             <div className="flex items-center gap-2">
-              <button 
+              <button
                 onClick={() => router.back()}
                 className="text-gray-900 hover:opacity-70 transition-all duration-200 p-2"
                 aria-label="Back"
@@ -299,7 +298,30 @@ export default function SearchPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
-              <h1 className="font-semibold text-lg text-gray-900">Search Events</h1>
+            </div>
+            <div className="absolute left-1/2 transform -translate-x-1/2">
+              <h1 className="font-semibold text-lg text-gray-900 whitespace-nowrap">Search</h1>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => router.push('/calendar')}
+                title="Today"
+                aria-label="Today"
+                className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white/20 backdrop-blur-lg border border-white/20 shadow-lg text-gray-900 hover:bg-white/30 transition-all duration-200 font-semibold text-sm"
+              >
+                {today.getDate()}
+              </button>
+              <button
+                onClick={() => router.push('/settings')}
+                title="Settings"
+                aria-label="Settings"
+                className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white/20 backdrop-blur-lg border border-white/20 shadow-lg text-gray-900 hover:bg-white/30 transition-all duration-200"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                  <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              </button>
             </div>
           </header>
         </div>
