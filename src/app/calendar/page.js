@@ -363,6 +363,9 @@ function CalendarContent() {
   // View mode state (Day, Week, Month)
   const [currentView, setCurrentView] = useState('Month');
 
+  // 3-day view: offset from "today" for the end of the 3-day window. 0 = window ends today, 1 = ends yesterday, etc.
+  const [threeDayEndOffset, setThreeDayEndOffset] = useState(0);
+
   // Selected day (for modals/editing)
   const [selectedDate, setSelectedDate] = useState(null);
   useEffect(() => {
@@ -855,6 +858,19 @@ function CalendarContent() {
       weekday: "short", month: "long", day: "numeric"
     });
   }, [selectedDate]);
+
+  // 3-day view: [day1, day2, day3] where day3 is today - threeDayEndOffset (0 = ends today)
+  const threeDayDates = useMemo(() => {
+    const end = new Date(today);
+    end.setDate(today.getDate() - threeDayEndOffset);
+    end.setHours(0, 0, 0, 0);
+    const day3 = end;
+    const day2 = new Date(end);
+    day2.setDate(end.getDate() - 1);
+    const day1 = new Date(end);
+    day1.setDate(end.getDate() - 2);
+    return [day1, day2, day3];
+  }, [today, threeDayEndOffset]);
 
   // --- Refs for horizontal day strip scroll ---
   const stripRef = useRef(null);
@@ -1996,15 +2012,29 @@ function CalendarContent() {
           </button>
             </>
           ) : currentView === '3 Day' ? (
-            <div className="font-semibold text-base text-gray-900 whitespace-nowrap">
-              {(() => {
-                const startDate = new Date(today);
-                startDate.setDate(today.getDate() - 2);
-                const endDate = new Date(today);
-                const fmt = (d) => d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-                return `${fmt(startDate)} → ${fmt(endDate)}`;
-              })()}
-            </div>
+            <>
+              <button
+                className="text-lg px-2 text-gray-900 hover:text-gray-700"
+                aria-label="Previous 3 days"
+                onClick={() => setThreeDayEndOffset((o) => o + 1)}
+              >
+                ‹
+              </button>
+              <div className="font-semibold text-base text-gray-900 whitespace-nowrap">
+                {(() => {
+                  const fmt = (d) => d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+                  return `${fmt(threeDayDates[0])} → ${fmt(threeDayDates[2])}`;
+                })()}
+              </div>
+              <button
+                className={`text-lg px-2 ${threeDayEndOffset <= 0 ? 'opacity-30 cursor-not-allowed' : 'text-gray-900 hover:text-gray-700'}`}
+                aria-label="Next 3 days"
+                onClick={() => setThreeDayEndOffset((o) => Math.max(0, o - 1))}
+                disabled={threeDayEndOffset <= 0}
+              >
+                ›
+              </button>
+            </>
           ) : (
             <>
               <button 
@@ -2038,6 +2068,9 @@ function CalendarContent() {
               setSelectedDate(todayDate);
               if (currentView === 'Month') {
                 setViewMonth(monthStart(todayDate));
+              }
+              if (currentView === '3 Day') {
+                setThreeDayEndOffset(0);
               }
             }}
             title="Go to today"
@@ -2653,19 +2686,10 @@ function CalendarContent() {
         </div>
         </div>
       ) : currentView === '3 Day' ? (
-        /* 3 Day view: today - 2, today - 1, today (left to right) */
+        /* 3 Day view: navigable window of 3 days (‹/› in header) */
         <div className="flex-1 overflow-y-auto px-4 scroll-smooth" style={{ paddingTop: `${Math.max(insets.top, 44) + 80}px` }}>
-          {/* Calculate the 3 days (2 days ago, yesterday, today) */}
           {(() => {
-            const day1 = new Date(today);
-            day1.setDate(day1.getDate() - 2);
-            day1.setHours(0, 0, 0, 0);
-            const day2 = new Date(today);
-            day2.setDate(day2.getDate() - 1);
-            day2.setHours(0, 0, 0, 0);
-            const day3 = new Date(today);
-            day3.setHours(0, 0, 0, 0);
-            const threeDays = [day1, day2, day3];
+            const threeDays = threeDayDates;
             
             // Calculate day boundaries for each day
             const daysData = threeDays.map(day => {
@@ -2957,16 +2981,7 @@ function CalendarContent() {
                   <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl p-4">
                     <h2 className="text-lg font-semibold text-gray-900 mb-4">3 Day Data Split</h2>
                     {(() => {
-                      // Same 3 days as view: today - 2, today - 1, today
-                      const day1 = new Date(today);
-                      day1.setDate(day1.getDate() - 2);
-                      day1.setHours(0, 0, 0, 0);
-                      const day2 = new Date(today);
-                      day2.setDate(day2.getDate() - 1);
-                      day2.setHours(0, 0, 0, 0);
-                      const day3 = new Date(today);
-                      day3.setHours(0, 0, 0, 0);
-                      const threeDays = [day1, day2, day3];
+                      const threeDays = threeDayDates;
                       
                       const normalizeLabel = (label) => (label || '').trim().toLowerCase();
                       
