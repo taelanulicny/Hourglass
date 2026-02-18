@@ -879,6 +879,8 @@ function CalendarContent() {
   // Refs to help scroll the day grid to the current time
   const gridRootRef = useRef(null);
   const dayColRef = useRef(null);
+  // Scroll container for Day/3 Day/Week so we can position 5am under the header
+  const scrollContainerRef = useRef(null);
   
   // Ref for focus area rings horizontal scrolling
   const focusRingsRef = useRef(null);
@@ -935,6 +937,18 @@ function CalendarContent() {
       }, 100);
     }
   }, [focusAreas]);
+
+  // When showing Day, 3 Day, or Week view, scroll so 5am is right under the header
+  useEffect(() => {
+    if (currentView !== 'Day' && currentView !== '3 Day' && currentView !== 'Week') return;
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const scrollTo5am = 5 * 64; // pxPerHour is 64
+    const raf = requestAnimationFrame(() => {
+      el.scrollTop = scrollTo5am;
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [currentView]);
 
   // Modal state for new event (showModal/showEditModal/draft declared above)
   const [editingId, setEditingId] = useState(null);
@@ -2228,7 +2242,7 @@ function CalendarContent() {
       {/* Calendar view area */}
       {currentView === 'Day' ? (
         /* Day view */
-        <div className="flex-1 overflow-y-auto px-4 scroll-smooth" style={{ paddingTop: `${Math.max(insets.top, 44) + 80}px` }}>
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-4 scroll-smooth" style={{ paddingTop: `${Math.max(insets.top, 44) + 80}px` }}>
           {/* Day info header */}
           {selectedDate && eventsForSelected.length === 0 && (
             <div className="mb-4">
@@ -2687,7 +2701,7 @@ function CalendarContent() {
         </div>
       ) : currentView === '3 Day' ? (
         /* 3 Day view: navigable window of 3 days (‹/› in header) */
-        <div className="flex-1 overflow-y-auto px-4 scroll-smooth" style={{ paddingTop: `${Math.max(insets.top, 44) + 80}px` }}>
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-4 scroll-smooth" style={{ paddingTop: `${Math.max(insets.top, 44) + 80}px` }}>
           {(() => {
             const threeDays = threeDayDates;
             
@@ -3134,7 +3148,7 @@ function CalendarContent() {
         </div>
       ) : currentView === 'Week' ? (
         /* Week view */
-        <div className="flex-1 overflow-y-auto px-4 scroll-smooth" style={{ paddingTop: `${Math.max(insets.top, 44) + 80}px` }}>
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-4 scroll-smooth" style={{ paddingTop: `${Math.max(insets.top, 44) + 80}px` }}>
           {/* Calculate the 7 days of the week */}
           {(() => {
             if (!selectedDate) return null;
