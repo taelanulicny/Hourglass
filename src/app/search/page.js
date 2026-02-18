@@ -200,7 +200,7 @@ export default function SearchPage() {
   const [focusAreas, setFocusAreas] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFocusArea, setSelectedFocusArea] = useState("all");
-  const [timeFilter, setTimeFilter] = useState("all"); // all, past, future
+  const [timeFilter, setTimeFilter] = useState("future"); // past | future (no "all")
 
   useEffect(() => {
     setIsClient(true);
@@ -238,68 +238,43 @@ export default function SearchPage() {
     };
   }, [isClient]);
 
-  // Filter and search events
+  // Filter and search events: past = events before now (cap 25); future = events after now (cap 50)
   const filteredEvents = useMemo(() => {
     if (!isClient) return [];
-    
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
+    const nowMs = Date.now();
+
     let filtered = events.filter(ev => {
-      const evStart = new Date(ev.start);
-      const evDate = new Date(evStart);
-      evDate.setHours(0, 0, 0, 0);
-      
-      // Time filter (past/future/all)
-      if (timeFilter === "past" && evDate >= today) return false;
-      if (timeFilter === "future" && evDate < today) return false;
-      
-      // Focus area filter
+      const evStartMs = ev.start != null ? new Date(ev.start).getTime() : 0;
+
+      // Time filter: strict current date+time
+      if (timeFilter === "past" && evStartMs >= nowMs) return false;
+      if (timeFilter === "future" && evStartMs <= nowMs) return false;
+
+      // Focus area filter (unchanged)
       if (selectedFocusArea !== "all" && ev.area !== selectedFocusArea) return false;
-      
+
       // Search query filter
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
         const title = (ev.title || "").toLowerCase();
         const notes = (ev.notes || "").toLowerCase();
         const area = (ev.area || "").toLowerCase();
-        
-        if (!title.includes(query) && !notes.includes(query) && !area.includes(query)) {
-          return false;
-        }
+        if (!title.includes(query) && !notes.includes(query) && !area.includes(query)) return false;
       }
-      
       return true;
     });
-    
-    // Sort by date (most recent first for past, soonest first for future)
+
+    // Sort: past = most recent first; future = soonest first
     filtered.sort((a, b) => {
-      const dateA = new Date(a.start);
-      const dateB = new Date(b.start);
-      if (timeFilter === "past") {
-        return dateB - dateA; // Most recent first
-      } else if (timeFilter === "future") {
-        return dateA - dateB; // Soonest first
-      } else {
-        // All: past events first (most recent), then future events (soonest)
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const dateAOnly = new Date(dateA);
-        dateAOnly.setHours(0, 0, 0, 0);
-        const dateBOnly = new Date(dateB);
-        dateBOnly.setHours(0, 0, 0, 0);
-        
-        const aIsPast = dateAOnly < today;
-        const bIsPast = dateBOnly < today;
-        
-        if (aIsPast && !bIsPast) return -1; // Past before future
-        if (!aIsPast && bIsPast) return 1; // Future after past
-        if (aIsPast && bIsPast) return dateB - dateA; // Most recent past first
-        return dateA - dateB; // Soonest future first
-      }
+      const aMs = a.start != null ? new Date(a.start).getTime() : 0;
+      const bMs = b.start != null ? new Date(b.start).getTime() : 0;
+      if (timeFilter === "past") return bMs - aMs;
+      return aMs - bMs;
     });
-    
-    return filtered;
+
+    // Cap: past = 25, future = 50
+    if (timeFilter === "past") return filtered.slice(0, 25);
+    return filtered.slice(0, 50);
   }, [events, searchQuery, selectedFocusArea, timeFilter, isClient]);
 
   const today = useMemo(() => {
@@ -359,18 +334,8 @@ export default function SearchPage() {
 
             {/* Filters */}
             <div className="mb-4 flex gap-2 flex-wrap">
-              {/* Time filter */}
+              {/* Time filter: Past | Future only */}
               <div className="flex gap-2 bg-white/90 backdrop-blur-lg rounded-xl p-2 border border-white/30 shadow-lg">
-                <button
-                  onClick={() => setTimeFilter("all")}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                    timeFilter === "all"
-                      ? "bg-slate-500 text-white"
-                      : "text-gray-700 hover:bg-white/50"
-                  }`}
-                >
-                  All
-                </button>
                 <button
                   onClick={() => setTimeFilter("past")}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
@@ -419,9 +384,11 @@ export default function SearchPage() {
             {filteredEvents.length === 0 ? (
               <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl p-6 text-center">
                 <p className="text-gray-700">
-                  {searchQuery.trim() || selectedFocusArea !== "all" || timeFilter !== "all"
+                  {searchQuery.trim() || selectedFocusArea !== "all"
                     ? "No events match your search criteria."
-                    : "No events found. Add events from the calendar."}
+                    : timeFilter === "past"
+                      ? "No past events found."
+                      : "No upcoming events found. Add events from the calendar."}
                 </p>
               </div>
             ) : (
