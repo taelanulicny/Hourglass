@@ -938,14 +938,21 @@ function CalendarContent() {
     }
   }, [focusAreas]);
 
-  // When showing Day, 3 Day, or Week view, scroll so 5am is right under the header
+  // When showing Day view: scroll so current time has 3 hours above it. When 3 Day or Week: 5am under header.
   useEffect(() => {
     if (currentView !== 'Day' && currentView !== '3 Day' && currentView !== 'Week') return;
     const el = scrollContainerRef.current;
     if (!el) return;
-    const scrollTo5am = 5 * 64; // pxPerHour is 64
+    const pxPerHourVal = 64;
     const raf = requestAnimationFrame(() => {
-      el.scrollTop = scrollTo5am;
+      if (currentView === 'Day') {
+        const now = new Date();
+        const hoursSinceMidnight = now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
+        const scrollTop = Math.max(0, (hoursSinceMidnight - 3) * pxPerHourVal);
+        el.scrollTop = scrollTop;
+      } else {
+        el.scrollTop = 5 * pxPerHourVal;
+      }
     });
     return () => cancelAnimationFrame(raf);
   }, [currentView]);
