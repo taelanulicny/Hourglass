@@ -2494,7 +2494,7 @@ function CalendarContent() {
                                 />
                                 <span className="text-xs text-gray-900">{area.label}</span>
                                 <span className="text-xs text-gray-600 ml-auto">
-                                  {Math.round(area.actualTimeLogged * 10) / 10}/{Math.round(area.dailyPlanned)}
+                                  {fmt1(area.actualTimeLogged)}/{fmt1(area.dailyPlanned)}
                                 </span>
                               </div>
                             ))
@@ -2955,7 +2955,7 @@ function CalendarContent() {
                                       />
                                       <span className="text-xs text-gray-900">{area.label}</span>
                                       <span className="text-xs text-gray-600 ml-auto">
-                                        {Math.round(area.actualTimeLogged * 10) / 10}/{Math.round(area.threeDayGoal)}
+                                        {fmt1(area.actualTimeLogged)}/{fmt1(area.threeDayGoal)}
                                       </span>
                                     </div>
                                   ))
@@ -3419,7 +3419,7 @@ function CalendarContent() {
                                       />
                                       <span className="text-xs text-gray-900">{area.label}</span>
                                       <span className="text-xs text-gray-600 ml-auto">
-                                        {Math.round(area.actualTimeLogged * 10) / 10}/{Math.round(area.weeklyGoal)}
+                                        {fmt1(area.actualTimeLogged)}/{fmt1(area.weeklyGoal)}
                                       </span>
                                     </div>
                                   ))
@@ -3690,7 +3690,7 @@ function CalendarContent() {
                            />
                            <span className="text-xs text-gray-900">{area.label}</span>
                            <span className="text-xs text-gray-600 ml-auto">
-                             {Math.round(area.actualTimeLogged)}/{Math.round(area.monthlyPlanned)}
+                             {fmt1(area.actualTimeLogged)}/{fmt1(area.monthlyPlanned)}
                            </span>
                     </div>
                        ))
