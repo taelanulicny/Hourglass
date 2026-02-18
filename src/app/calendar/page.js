@@ -254,6 +254,39 @@ function loadFocusAreasForDate(dateLike) {
   return loadFocusAreasSafe();
 }
 
+// Update a focus area's logged hours for a given day (add or subtract). Saves week snapshot and optionally live.
+function updateFocusAreaDayHours(dateLike, areaLabel, dayAbbrev, deltaHours) {
+  const weekMonday = startOfWeekMon(dateLike);
+  const weekKey = ymd(weekMonday);
+  const storageKey = `focusCategories:week:${weekKey}`;
+  let list = [];
+  try {
+    const raw = localStorage.getItem(storageKey);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) list = parsed;
+    }
+  } catch {}
+  if (list.length === 0) list = loadFocusAreasSafe();
+  const normalizeLabel = (l) => (l || '').trim().toLowerCase();
+  const areaIndex = list.findIndex((a) => normalizeLabel(a.label) === normalizeLabel(areaLabel));
+  if (areaIndex === -1) return;
+  const area = list[areaIndex];
+  const prevDays = { ...(area.days || {}) };
+  const prevVal = Number(prevDays[dayAbbrev]) || 0;
+  const nextVal = Math.max(0, prevVal + deltaHours);
+  if (nextVal === 0) delete prevDays[dayAbbrev];
+  else prevDays[dayAbbrev] = Math.round(nextVal * 10) / 10;
+  const updated = list.slice();
+  updated[areaIndex] = { ...area, days: prevDays };
+  localStorage.setItem(storageKey, JSON.stringify(updated));
+  const todayMonday = startOfWeekMon(new Date());
+  if (weekKey === ymd(todayMonday)) {
+    localStorage.setItem("focusCategories", JSON.stringify(updated));
+    try { window.dispatchEvent(new Event("focusCategoriesUpdated")); } catch (_) {}
+  }
+}
+
 // ---- Mini month picker (no external deps) -------------------------------
 function formatLongYMD(ymdStr){
   const d = parseYMD(ymdStr);
@@ -1179,6 +1212,86 @@ function CalendarContent() {
     setEvents(next);
     setShowEditModal(false);
     setEditingId(null);
+  };
+
+  const logEventTimeToDashboard = () => {
+    if (!editingId) return;
+    const currentEvent = allEvents.find((e) => e.id === editingId);
+    if (!currentEvent) return;
+    const areaLabel = (draft.area || currentEvent.area || '').trim();
+    if (!areaLabel) return;
+    const durationHours = (currentEvent.end - currentEvent.start) / (60 * 60 * 1000);
+    const eventDateMs = currentEvent.start;
+    const eventDate = new Date(eventDateMs);
+    const dayAbbrev = DAYS[eventDate.getDay()];
+    updateFocusAreaDayHours(eventDateMs, areaLabel, dayAbbrev, durationHours);
+    if (currentEvent.source === 'google') {
+      setGoogleEventCustomizations((prev) => ({
+        ...prev,
+        [editingId]: {
+          ...(prev[editingId] || {}),
+          area: areaLabel,
+          loggedToDashboard: true,
+          loggedAmount: durationHours,
+          loggedDayAbbrev: dayAbbrev,
+          loggedEventDateMs: eventDateMs,
+        },
+      }));
+    } else {
+      setEvents((prev) =>
+        prev.map((ev) =>
+          ev.id === editingId
+            ? {
+                ...ev,
+                loggedToDashboard: true,
+                loggedAmount: durationHours,
+                loggedDayAbbrev: dayAbbrev,
+                loggedEventDateMs: eventDateMs,
+              }
+            : ev
+        )
+      );
+    }
+  };
+
+  const undoLogEventTime = () => {
+    if (!editingId) return;
+    const currentEvent = allEvents.find((e) => e.id === editingId);
+    if (!currentEvent) return;
+    const isGoogle = currentEvent.source === 'google';
+    const cust = isGoogle ? googleEventCustomizations[editingId] : null;
+    const logged = isGoogle ? cust?.loggedToDashboard : currentEvent.loggedToDashboard;
+    const amount = isGoogle ? cust?.loggedAmount : currentEvent.loggedAmount;
+    const dayAbbrev = isGoogle ? cust?.loggedDayAbbrev : currentEvent.loggedDayAbbrev;
+    const dateMs = isGoogle ? cust?.loggedEventDateMs : currentEvent.loggedEventDateMs;
+    const areaLabel = (draft.area || currentEvent.area || '').trim();
+    if (!logged || amount == null || !dayAbbrev || !areaLabel) return;
+    const weekDate = dateMs != null ? dateMs : currentEvent.start;
+    updateFocusAreaDayHours(weekDate, areaLabel, dayAbbrev, -amount);
+    if (isGoogle) {
+      setGoogleEventCustomizations((prev) => {
+        const next = { ...prev };
+        const cur = next[editingId] ? { ...next[editingId] } : {};
+        delete cur.loggedToDashboard;
+        delete cur.loggedAmount;
+        delete cur.loggedDayAbbrev;
+        delete cur.loggedEventDateMs;
+        if (Object.keys(cur).length === 0) delete next[editingId];
+        else next[editingId] = cur;
+        return next;
+      });
+    } else {
+      setEvents((prev) =>
+        prev.map((ev) =>
+          ev.id === editingId
+            ? (() => {
+                const { loggedToDashboard, loggedAmount, loggedDayAbbrev, loggedEventDateMs: _d, ...rest } = ev;
+                return rest;
+              })()
+            : ev
+        )
+      );
+    }
   };
 
   const deleteEvent = (deleteAllFuture = false) => {
@@ -4051,6 +4164,21 @@ function CalendarContent() {
 
             <label className="text-sm text-black">Notes</label>
             <textarea value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} className="w-full border rounded px-3 py-2 mb-4 text-black" rows={3} placeholder="What will you accomplish during this timeframe?" />
+
+            {(draft.area || currentEvent?.area) && (
+              <div className="mb-4">
+                {currentEvent?.loggedToDashboard || (currentEvent?.source === 'google' && googleEventCustomizations[editingId]?.loggedToDashboard) ? (
+                  <button type="button" onClick={undoLogEventTime} className="w-full px-4 py-2 bg-amber-100 text-amber-800 rounded font-medium hover:bg-amber-200 transition-colors">
+                    Undo logged event time
+                  </button>
+                ) : (
+                  <button type="button" onClick={logEventTimeToDashboard} className="w-full px-4 py-2 bg-[#6B7280] text-white rounded font-medium hover:bg-[#7A8F9A] transition-colors">
+                    Log event time
+                  </button>
+                )}
+                <p className="text-xs text-gray-500 mt-1">Add this event&apos;s duration to the focus area on the dashboard for this day.</p>
+              </div>
+            )}
 
             {!isGoogleEvent && (
               <div className="flex justify-between items-center">
