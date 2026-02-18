@@ -386,8 +386,15 @@ function CalendarContent() {
         }
       }
     };
+    const onFocusCategoriesUpdated = () => {
+      if (selectedDate) setFocusAreas(loadFocusAreasForDate(selectedDate));
+    };
     window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
+    window.addEventListener("focusCategoriesUpdated", onFocusCategoriesUpdated);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("focusCategoriesUpdated", onFocusCategoriesUpdated);
+    };
   }, [selectedDate]);
 
   // Load visible focus areas from localStorage (for calendar views)
@@ -1252,6 +1259,7 @@ function CalendarContent() {
         )
       );
     }
+    setFocusAreas(loadFocusAreasForDate(selectedDate));
   };
 
   const undoLogEventTime = () => {
@@ -1292,6 +1300,7 @@ function CalendarContent() {
         )
       );
     }
+    setFocusAreas(loadFocusAreasForDate(selectedDate));
   };
 
   const deleteEvent = (deleteAllFuture = false) => {
