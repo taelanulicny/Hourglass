@@ -1995,6 +1995,16 @@ function CalendarContent() {
             ›
           </button>
             </>
+          ) : currentView === '3 Day' ? (
+            <div className="font-semibold text-base text-gray-900 whitespace-nowrap">
+              {(() => {
+                const startDate = new Date(today);
+                startDate.setDate(today.getDate() - 2);
+                const endDate = new Date(today);
+                const fmt = (d) => d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+                return `${fmt(startDate)} → ${fmt(endDate)}`;
+              })()}
+            </div>
           ) : (
             <>
               <button 
