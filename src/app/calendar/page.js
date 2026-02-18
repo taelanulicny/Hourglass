@@ -2643,19 +2643,18 @@ function CalendarContent() {
         </div>
         </div>
       ) : currentView === '3 Day' ? (
-        /* 3 Day view */
+        /* 3 Day view: today - 2, today - 1, today (left to right) */
         <div className="flex-1 overflow-y-auto px-4 scroll-smooth" style={{ paddingTop: `${Math.max(insets.top, 44) + 80}px` }}>
-          {/* Calculate the 3 days */}
+          {/* Calculate the 3 days (2 days ago, yesterday, today) */}
           {(() => {
-            if (!selectedDate) return null;
-            
-            const day1 = new Date(selectedDate);
+            const day1 = new Date(today);
+            day1.setDate(day1.getDate() - 2);
             day1.setHours(0, 0, 0, 0);
-            const day2 = new Date(day1);
-            day2.setDate(day2.getDate() + 1);
-            const day3 = new Date(day1);
-            day3.setDate(day3.getDate() + 2);
-            
+            const day2 = new Date(today);
+            day2.setDate(day2.getDate() - 1);
+            day2.setHours(0, 0, 0, 0);
+            const day3 = new Date(today);
+            day3.setHours(0, 0, 0, 0);
             const threeDays = [day1, day2, day3];
             
             // Calculate day boundaries for each day
@@ -2948,13 +2947,15 @@ function CalendarContent() {
                   <div className="bg-white/20 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl p-4">
                     <h2 className="text-lg font-semibold text-gray-900 mb-4">3 Day Data Split</h2>
                     {(() => {
-                      // Calculate 3 day totals for the selected 3 days
-                      const day1 = selectedDate ? new Date(selectedDate) : new Date();
+                      // Same 3 days as view: today - 2, today - 1, today
+                      const day1 = new Date(today);
+                      day1.setDate(day1.getDate() - 2);
                       day1.setHours(0, 0, 0, 0);
-                      const day2 = new Date(day1);
-                      day2.setDate(day2.getDate() + 1);
-                      const day3 = new Date(day1);
-                      day3.setDate(day3.getDate() + 2);
+                      const day2 = new Date(today);
+                      day2.setDate(day2.getDate() - 1);
+                      day2.setHours(0, 0, 0, 0);
+                      const day3 = new Date(today);
+                      day3.setHours(0, 0, 0, 0);
                       const threeDays = [day1, day2, day3];
                       
                       const normalizeLabel = (label) => (label || '').trim().toLowerCase();
