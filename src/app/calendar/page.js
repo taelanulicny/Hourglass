@@ -1406,6 +1406,7 @@ function CalendarContent() {
     lastEndMs: null,
     moved: false,
   });
+  const justResizedOrDraggedRef = useRef(false);
 
   // Helper function to start resize from a handle
   const startResize = (ev, handle, clientY) => {
@@ -1535,6 +1536,7 @@ function CalendarContent() {
       if (!moved || finalStart == null) return;
       const finalEnd = finalStart + dur;
       setEvents((prev) => prev.map((x) => (x.id === draggingId ? { ...x, start: finalStart, end: finalEnd } : x)));
+      justResizedOrDraggedRef.current = true;
     };
 
     window.addEventListener('mousemove', onMove, { passive: false });
@@ -1610,6 +1612,7 @@ function CalendarContent() {
       
       if (moved && finalStart != null && finalEnd != null) {
         setEvents((prev) => prev.map((x) => (x.id === resizingId ? { ...x, start: finalStart, end: finalEnd } : x)));
+        justResizedOrDraggedRef.current = true;
       }
     };
 
@@ -2341,7 +2344,7 @@ function CalendarContent() {
                       setDragDelayEventId(null);
                     }
                   }}
-                  onClick={(e) => { if (dragRef.current.moved || resizeRef.current.moved) { if (e.cancelable) e.preventDefault(); e.stopPropagation(); } else { openEdit(ev); } }}
+                  onClick={(e) => { if (dragRef.current.moved || resizeRef.current.moved || justResizedOrDraggedRef.current) { justResizedOrDraggedRef.current = false; if (e.cancelable) e.preventDefault(); e.stopPropagation(); } else { openEdit(ev); } }}
                 >
                   <div className="text-[11px] px-2 py-1 leading-tight">
                     <div className="font-semibold truncate">{ev.title}</div>
@@ -2855,7 +2858,7 @@ function CalendarContent() {
                                       setDragDelayEventId(null);
                                     }
                                   }}
-                                  onClick={(e) => { if (dragRef.current.moved || resizeRef.current.moved) { if (e.cancelable) e.preventDefault(); e.stopPropagation(); } else { openEdit(ev); } }}
+                                  onClick={(e) => { if (dragRef.current.moved || resizeRef.current.moved || justResizedOrDraggedRef.current) { justResizedOrDraggedRef.current = false; if (e.cancelable) e.preventDefault(); e.stopPropagation(); } else { openEdit(ev); } }}
                                 >
                                   <div className="text-[11px] px-2 py-1 leading-tight">
                                     <div className="font-semibold truncate">{ev.title}</div>
@@ -3322,7 +3325,7 @@ function CalendarContent() {
                                       setDragDelayEventId(null);
                                     }
                                   }}
-                                  onClick={(e) => { if (dragRef.current.moved || resizeRef.current.moved) { if (e.cancelable) e.preventDefault(); e.stopPropagation(); } else { openEdit(ev); } }}
+                                  onClick={(e) => { if (dragRef.current.moved || resizeRef.current.moved || justResizedOrDraggedRef.current) { justResizedOrDraggedRef.current = false; if (e.cancelable) e.preventDefault(); e.stopPropagation(); } else { openEdit(ev); } }}
                                 >
                                   <div className="text-[11px] px-2 py-1 leading-tight">
                                     <div className="font-semibold truncate">{ev.title}</div>
