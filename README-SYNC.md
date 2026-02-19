@@ -20,7 +20,8 @@ This app supports cross-device sync of all your data (focus areas, events, setti
 2. Create a new project
 3. Go to SQL Editor and run the SQL from `supabase-setup.sql`
 4. If you use **Sign in with Apple**, also run `supabase-migration-apple-sync.sql` in the SQL Editor.
-5. Go to Settings > API and copy:
+5. For **near-instant sync** across devices, run `supabase-realtime-enable.sql` in the SQL Editor (adds `user_data` to Realtime).
+6. Go to Settings > API and copy:
    - Project URL (for `NEXT_PUBLIC_SUPABASE_URL`)
    - Service Role Key (for `SUPABASE_SERVICE_ROLE_KEY`) - **Keep this secret!**
 

@@ -40,7 +40,7 @@ async function debouncedSync() {
     } finally {
       isSyncing = false;
     }
-  }, 2000);
+  }, 1000); // 1s debounce so uploads happen quickly for near-instant sync on other devices
 }
 
 /**

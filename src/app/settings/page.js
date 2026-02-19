@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { syncData } from '@/lib/sync';
+import { syncData, uploadData, downloadData, applySyncedData } from '@/lib/sync';
 import { supabase } from '@/lib/supabaseClient';
 
 function SettingsContent() {
@@ -34,6 +34,8 @@ function SettingsContent() {
   // Sign in with Apple (Supabase Auth)
   const [appleUser, setAppleUser] = useState(null);
   const [appleLoading, setAppleLoading] = useState(false);
+  const [syncMessage, setSyncMessage] = useState(null);
+  const [syncLoading, setSyncLoading] = useState(false);
 
   // Check Google Calendar connection status
   const checkGoogleConnection = useCallback(async () => {
@@ -75,6 +77,42 @@ function SettingsContent() {
       alert(err?.message || 'Sign in failed. Please try again.');
     } finally {
       setAppleLoading(false);
+    }
+  };
+
+  const handleUploadToCloud = async () => {
+    if (!appleUser) return;
+    setSyncLoading(true);
+    setSyncMessage(null);
+    try {
+      await uploadData();
+      setSyncMessage('Data uploaded to cloud.');
+      setTimeout(() => setSyncMessage(null), 3000);
+    } catch (err) {
+      setSyncMessage(err?.message || 'Upload failed.');
+    } finally {
+      setSyncLoading(false);
+    }
+  };
+
+  const handleDownloadFromCloud = async () => {
+    if (!appleUser) return;
+    setSyncLoading(true);
+    setSyncMessage(null);
+    try {
+      const data = await downloadData();
+      if (data) {
+        applySyncedData(data);
+        setSyncMessage('Data downloaded. Reloading…');
+        setTimeout(() => window.location.reload(), 800);
+      } else {
+        setSyncMessage('No data on cloud yet.');
+        setTimeout(() => setSyncMessage(null), 3000);
+      }
+    } catch (err) {
+      setSyncMessage(err?.message || 'Download failed.');
+    } finally {
+      setSyncLoading(false);
     }
   };
 
@@ -159,16 +197,17 @@ function SettingsContent() {
     return () => subscription?.unsubscribe();
   }, []);
 
-  // After OAuth redirect, Supabase puts tokens in the URL hash; clean URL and pull cloud data
+  // After OAuth redirect: sync first (while hash is still in URL so session is set), then clean URL and reload
   useEffect(() => {
     if (typeof window === 'undefined' || !window.location.hash) return;
     const hash = window.location.hash;
     if (hash.includes('access_token') || hash.includes('refresh_token')) {
-      router.replace('/settings', { scroll: false });
       syncData('server').then(() => {
+        router.replace('/settings', { scroll: false });
         window.location.reload();
       }).catch((err) => {
         console.error('Sync after Apple sign-in:', err);
+        router.replace('/settings', { scroll: false });
       });
     }
   }, [router]);
@@ -595,13 +634,34 @@ function SettingsContent() {
                 </div>
               </div>
               {appleUser ? (
-                <button
-                  onClick={signOutApple}
-                  disabled={appleLoading}
-                  className="px-4 py-2 text-sm font-medium text-red-600 border border-red-200 rounded-xl hover:bg-red-50 transition-colors disabled:opacity-50"
-                >
-                  {appleLoading ? 'Signing out...' : 'Sign out'}
-                </button>
+                <div className="flex flex-col gap-2 items-end">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleUploadToCloud}
+                      disabled={syncLoading}
+                      className="px-3 py-1.5 text-xs font-medium text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                    >
+                      {syncLoading ? '…' : 'Upload to cloud'}
+                    </button>
+                    <button
+                      onClick={handleDownloadFromCloud}
+                      disabled={syncLoading}
+                      className="px-3 py-1.5 text-xs font-medium text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                    >
+                      {syncLoading ? '…' : 'Download from cloud'}
+                    </button>
+                    <button
+                      onClick={signOutApple}
+                      disabled={appleLoading}
+                      className="px-3 py-1.5 text-xs font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 disabled:opacity-50"
+                    >
+                      {appleLoading ? '…' : 'Sign out'}
+                    </button>
+                  </div>
+                  {syncMessage && (
+                    <span className="text-xs text-gray-600">{syncMessage}</span>
+                  )}
+                </div>
               ) : (
                 <button
                   onClick={signInWithApple}
