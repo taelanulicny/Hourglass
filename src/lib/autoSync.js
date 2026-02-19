@@ -4,7 +4,7 @@ let syncTimeout = null;
 let isSyncing = false;
 
 /**
- * Returns true if user is signed in with a provider that has sync (Apple or Google).
+ * Returns true if user is signed in with Apple (Supabase).
  */
 async function hasSyncAuth() {
   try {
@@ -13,9 +13,7 @@ async function hasSyncAuth() {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) return true;
     }
-    const response = await fetch('/api/auth/google/status');
-    const data = await response.json();
-    return data.connected === true;
+    return false;
   } catch {
     return false;
   }
@@ -55,11 +53,8 @@ export function initAutoSync() {
       e.key.startsWith('hourglassEvents') ||
       e.key.startsWith('calendarEvents') ||
       e.key === 'focusCategories' ||
-      e.key.startsWith('googleEventCustomizations') ||
       e.key === 'sleepHours' ||
       e.key === 'miscHours' ||
-      e.key === 'userName' ||
-      e.key === 'profilePicture' ||
       e.key.startsWith('focusAreas:week:') ||
       e.key.startsWith('week:') ||
       e.key.startsWith('notes:') ||
@@ -79,11 +74,8 @@ export function initAutoSync() {
       key.startsWith('hourglassEvents') ||
       key.startsWith('calendarEvents') ||
       key === 'focusCategories' ||
-      key.startsWith('googleEventCustomizations') ||
       key === 'sleepHours' ||
       key === 'miscHours' ||
-      key === 'userName' ||
-      key === 'profilePicture' ||
       key.startsWith('focusAreas:week:') ||
       key.startsWith('week:') ||
       key.startsWith('notes:') ||
@@ -103,11 +95,8 @@ export function initAutoSync() {
       key.startsWith('hourglassEvents') ||
       key.startsWith('calendarEvents') ||
       key === 'focusCategories' ||
-      key.startsWith('googleEventCustomizations') ||
       key === 'sleepHours' ||
       key === 'miscHours' ||
-      key === 'userName' ||
-      key === 'profilePicture' ||
       key.startsWith('focusAreas:week:') ||
       key.startsWith('week:') ||
       key.startsWith('notes:') ||

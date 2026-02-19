@@ -475,41 +475,6 @@ function CalendarContent() {
   const [events, setEvents] = useState([]);
   const [eventsLoaded, setEventsLoaded] = useState(false);
 
-  // Google Calendar integration state
-  const [googleConnected, setGoogleConnected] = useState(false);
-  const [googleEvents, setGoogleEvents] = useState([]);
-  const [googleLoading, setGoogleLoading] = useState(false);
-  const [googleError, setGoogleError] = useState(null);
-  
-  // Store Google event customizations (focus areas, etc.) in localStorage
-  const GOOGLE_EVENT_CUSTOMIZATIONS_KEY = "googleEventCustomizations:v1";
-  const [googleEventCustomizations, setGoogleEventCustomizations] = useState({});
-  
-  // Load Google event customizations on mount
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(GOOGLE_EVENT_CUSTOMIZATIONS_KEY);
-      if (saved) {
-        setGoogleEventCustomizations(JSON.parse(saved));
-      }
-    } catch (e) {
-      console.warn('Failed to load Google event customizations:', e);
-    }
-  }, []);
-  
-  // Save Google event customizations when they change
-  useEffect(() => {
-    try {
-      localStorage.setItem(GOOGLE_EVENT_CUSTOMIZATIONS_KEY, JSON.stringify(googleEventCustomizations));
-      // Trigger event update so other pages can refresh
-      try {
-        window.dispatchEvent(new Event('calendarEventsUpdated'));
-      } catch {}
-    } catch (e) {
-      console.warn('Failed to save Google event customizations:', e);
-    }
-  }, [googleEventCustomizations]);
-
   // Load once on mount (avoid clobbering existing storage with empty array). Merge from any legacy key.
   useEffect(() => {
     try {
@@ -626,158 +591,8 @@ function CalendarContent() {
     });
   }, [selectedDate]);
 
-  // Check Google Calendar connection status
-  const checkGoogleConnection = useCallback(async () => {
-    try {
-      const response = await fetch('/api/auth/google/status');
-      const data = await response.json();
-      setGoogleConnected(data.connected || false);
-      return data.connected || false;
-    } catch (error) {
-      console.error('Error checking Google connection:', error);
-      setGoogleConnected(false);
-      return false;
-    }
-  }, []);
-
-  // Fetch Google Calendar events
-  const fetchGoogleEvents = useCallback(async (startDate, endDate) => {
-    if (!googleConnected) {
-      setGoogleEvents([]);
-      return;
-    }
-
-    setGoogleLoading(true);
-    setGoogleError(null);
-
-    try {
-      // Calculate date range based on view
-      const timeMin = new Date(startDate);
-      timeMin.setHours(0, 0, 0, 0);
-      
-      const timeMax = new Date(endDate);
-      timeMax.setHours(23, 59, 59, 999);
-
-      console.log('Fetching Google Calendar events:', {
-        timeMin: timeMin.toISOString(),
-        timeMax: timeMax.toISOString()
-      });
-
-      const response = await fetch(
-        `/api/calendar/google/events?timeMin=${timeMin.toISOString()}&timeMax=${timeMax.toISOString()}`
-      );
-
-      console.log('Google Calendar API response status:', response.status);
-
-      if (response.status === 401) {
-        // Not authenticated, disconnect
-        setGoogleConnected(false);
-        setGoogleEvents([]);
-        return;
-      }
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('Google Calendar API error:', {
-          status: response.status,
-          statusText: response.statusText,
-          error: errorData
-        });
-        throw new Error(errorData.error || errorData.details || 'Failed to fetch Google Calendar events');
-      }
-
-      const data = await response.json();
-      console.log('Google Calendar events received:', data.events?.length || 0, 'events');
-      setGoogleEvents(data.events || []);
-      
-      // Also store in localStorage for other pages to access
-      try {
-        localStorage.setItem('googleEvents:v1', JSON.stringify(data.events || []));
-      } catch (e) {
-        console.warn('Failed to store Google events in localStorage:', e);
-      }
-    } catch (error) {
-      console.error('Error fetching Google Calendar events:', error);
-      setGoogleError(error.message);
-      setGoogleEvents([]);
-    } finally {
-      setGoogleLoading(false);
-    }
-  }, [googleConnected]);
-
-  // Check connection status on mount
-  useEffect(() => {
-    if (!isClient) return;
-    checkGoogleConnection();
-  }, [isClient, checkGoogleConnection]);
-
-  // Fetch Google events when connected and date range changes
-  useEffect(() => {
-    if (!isClient || !googleConnected) return;
-
-    // Calculate date range for current view
-    let startDate, endDate;
-    
-    if (currentView === 'Day' && selectedDate) {
-      startDate = new Date(selectedDate);
-      endDate = new Date(selectedDate);
-    } else if (currentView === '3 Day' && selectedDate) {
-      startDate = new Date(selectedDate);
-      endDate = new Date(selectedDate);
-      endDate.setDate(endDate.getDate() + 2);
-    } else if (currentView === 'Week' && selectedDate) {
-      const weekStart = startOfWeek(selectedDate);
-      startDate = new Date(weekStart);
-      endDate = new Date(weekStart);
-      endDate.setDate(endDate.getDate() + 6);
-    } else if (currentView === 'Month') {
-      // For month view, use viewMonth if available, otherwise use selectedDate
-      const monthStartDate = viewMonth || (selectedDate ? monthStart(selectedDate) : monthStart(new Date()));
-      startDate = new Date(monthStartDate);
-      const monthEnd = new Date(monthStartDate);
-      monthEnd.setMonth(monthEnd.getMonth() + 1);
-      monthEnd.setDate(0); // Last day of month
-      endDate = monthEnd;
-    } else {
-      // Default to current month if nothing else is set
-      const today = new Date();
-      startDate = monthStart(today);
-      const monthEnd = new Date(startDate);
-      monthEnd.setMonth(monthEnd.getMonth() + 1);
-      monthEnd.setDate(0);
-      endDate = monthEnd;
-    }
-
-    console.log('Triggering Google Calendar fetch for view:', currentView, {
-      startDate: startDate.toISOString(),
-      endDate: endDate.toISOString(),
-      googleConnected,
-      viewMonth: viewMonth?.toISOString(),
-      selectedDate: selectedDate?.toISOString()
-    });
-
-    fetchGoogleEvents(startDate, endDate);
-  }, [isClient, googleConnected, currentView, selectedDate, viewMonth, fetchGoogleEvents]);
-
-
-  // Merge local and Google events for display, applying customizations
-  const allEvents = useMemo(() => {
-    // Filter out Google events that might conflict with local events
-    const localEventIds = new Set(events.map(e => e.id));
-    const googleEventsFiltered = googleEvents.map(ev => {
-      // Apply customizations (focus area, color) if they exist
-      const customization = googleEventCustomizations[ev.id];
-      if (customization) {
-        return {
-          ...ev,
-          area: customization.area || ev.area,
-          color: customization.area ? getAreaColor(customization.area) : ev.color,
-        };
-      }
-      return ev;
-    }).filter(e => !localEventIds.has(e.id));
-    return [...events, ...googleEventsFiltered];
-  }, [events, googleEvents, googleEventCustomizations]);
+  // All events (local only; Google Calendar integration removed)
+  const allEvents = events;
 
   // Auto-open Add modal when arriving with ?new=1 (prefill date & focus)
   useEffect(() => {
@@ -1131,15 +946,10 @@ function CalendarContent() {
 
   const openEdit = (ev) => {
     setEditingId(ev.id);
-    const isGoogleEvent = ev.source === 'google';
-    
-    // For Google events, get customization if it exists
-    const customization = isGoogleEvent ? googleEventCustomizations[ev.id] : null;
-    
     setEditDurMs(Math.max(0, (ev.end || 0) - (ev.start || 0)) || 60 * 60 * 1000);
     setDraft({
       title: ev.title || '',
-      area: customization?.area || ev.area || '',
+      area: ev.area || '',
       dateYMD: ymd(new Date(ev.start)),
       start: msToHHMM(ev.start),
       end: msToHHMM(ev.end),
@@ -1151,85 +961,6 @@ function CalendarContent() {
   const updateEvent = async () => {
     if (!editingId) return;
     
-    // Check if this is a Google event
-    const currentEvent = allEvents.find(e => e.id === editingId);
-    const isGoogleEvent = currentEvent?.source === 'google';
-    
-    if (isGoogleEvent) {
-      // For Google events, update both the Google Calendar event and local customizations
-      try {
-        const base = parseYMD(draft.dateYMD || ymd(selectedDate));
-        const mk = (hms) => {
-          const [h, m] = hms.split(':').map(Number);
-          const t = new Date(base);
-          t.setHours(h, m, 0, 0);
-          return t.getTime();
-        };
-        const startMs = mk(draft.start);
-        let endMs = mk(draft.end);
-        if (endMs <= startMs) endMs += 24 * 60 * 60 * 1000; // crosses midnight
-
-        // Update the Google Calendar event
-        // Convert milliseconds to ISO strings with timezone
-        const startDate = new Date(startMs);
-        const endDate = new Date(endMs);
-        
-        const response = await fetch('/api/calendar/google/events/update', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            eventId: editingId,
-            title: draft.title || draft.area || currentEvent.title,
-            start: startDate.toISOString(),
-            end: endDate.toISOString(),
-            description: draft.notes || '',
-          }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          const errorMessage = errorData.details || errorData.error || `HTTP ${response.status}: ${response.statusText}`;
-          
-          // Check for permission errors
-          if (response.status === 403 || errorData.code === 403) {
-            throw new Error('Permission denied. Please disconnect and reconnect Google Calendar to grant write permissions.');
-          }
-          
-          throw new Error(errorMessage);
-        }
-
-        // Save focus area customization locally
-        if (draft.area) {
-          setGoogleEventCustomizations(prev => ({
-            ...prev,
-            [editingId]: {
-              area: draft.area || '',
-            }
-          }));
-        }
-
-        // Refresh Google events to get the updated data
-        // Trigger a refetch by updating the date range
-        if (viewMonth) {
-          const startDate = new Date(viewMonth);
-          const monthEnd = new Date(viewMonth);
-          monthEnd.setMonth(monthEnd.getMonth() + 1);
-          monthEnd.setDate(0);
-          fetchGoogleEvents(startDate, monthEnd);
-        }
-
-        setShowEditModal(false);
-        setEditingId(null);
-      } catch (error) {
-        console.error('Error updating Google Calendar event:', error);
-        alert(`Failed to update Google Calendar event: ${error.message}`);
-      }
-      return;
-    }
-    
-    // For local events, update normally
     const base = parseYMD(draft.dateYMD || ymd(selectedDate));
     const mk = (hms) => {
       const [h, m] = hms.split(':').map(Number);
@@ -1269,33 +1000,19 @@ function CalendarContent() {
     const eventDate = new Date(eventDateMs);
     const dayAbbrev = DAYS[eventDate.getDay()];
     updateFocusAreaDayHours(eventDateMs, areaLabel, dayAbbrev, durationHours);
-    if (currentEvent.source === 'google') {
-      setGoogleEventCustomizations((prev) => ({
-        ...prev,
-        [editingId]: {
-          ...(prev[editingId] || {}),
-          area: areaLabel,
-          loggedToDashboard: true,
-          loggedAmount: durationHours,
-          loggedDayAbbrev: dayAbbrev,
-          loggedEventDateMs: eventDateMs,
-        },
-      }));
-    } else {
-      setEvents((prev) =>
-        prev.map((ev) =>
-          ev.id === editingId
-            ? {
-                ...ev,
-                loggedToDashboard: true,
-                loggedAmount: durationHours,
-                loggedDayAbbrev: dayAbbrev,
-                loggedEventDateMs: eventDateMs,
-              }
-            : ev
-        )
-      );
-    }
+    setEvents((prev) =>
+      prev.map((ev) =>
+        ev.id === editingId
+          ? {
+              ...ev,
+              loggedToDashboard: true,
+              loggedAmount: durationHours,
+              loggedDayAbbrev: dayAbbrev,
+              loggedEventDateMs: eventDateMs,
+            }
+          : ev
+      )
+    );
     setFocusAreas(loadFocusAreasForDate(selectedDate));
   };
 
@@ -1303,40 +1020,24 @@ function CalendarContent() {
     if (!editingId) return;
     const currentEvent = allEvents.find((e) => e.id === editingId);
     if (!currentEvent) return;
-    const isGoogle = currentEvent.source === 'google';
-    const cust = isGoogle ? googleEventCustomizations[editingId] : null;
-    const logged = isGoogle ? cust?.loggedToDashboard : currentEvent.loggedToDashboard;
-    const amount = isGoogle ? cust?.loggedAmount : currentEvent.loggedAmount;
-    const dayAbbrev = isGoogle ? cust?.loggedDayAbbrev : currentEvent.loggedDayAbbrev;
-    const dateMs = isGoogle ? cust?.loggedEventDateMs : currentEvent.loggedEventDateMs;
+    const logged = currentEvent.loggedToDashboard;
+    const amount = currentEvent.loggedAmount;
+    const dayAbbrev = currentEvent.loggedDayAbbrev;
+    const dateMs = currentEvent.loggedEventDateMs;
     const areaLabel = (draft.area || currentEvent.area || '').trim();
     if (!logged || amount == null || !dayAbbrev || !areaLabel) return;
     const weekDate = dateMs != null ? dateMs : currentEvent.start;
     updateFocusAreaDayHours(weekDate, areaLabel, dayAbbrev, -amount);
-    if (isGoogle) {
-      setGoogleEventCustomizations((prev) => {
-        const next = { ...prev };
-        const cur = next[editingId] ? { ...next[editingId] } : {};
-        delete cur.loggedToDashboard;
-        delete cur.loggedAmount;
-        delete cur.loggedDayAbbrev;
-        delete cur.loggedEventDateMs;
-        if (Object.keys(cur).length === 0) delete next[editingId];
-        else next[editingId] = cur;
-        return next;
-      });
-    } else {
-      setEvents((prev) =>
-        prev.map((ev) =>
-          ev.id === editingId
-            ? (() => {
-                const { loggedToDashboard, loggedAmount, loggedDayAbbrev, loggedEventDateMs: _d, ...rest } = ev;
-                return rest;
-              })()
-            : ev
-        )
-      );
-    }
+    setEvents((prev) =>
+      prev.map((ev) =>
+        ev.id === editingId
+          ? (() => {
+              const { loggedToDashboard, loggedAmount, loggedDayAbbrev, loggedEventDateMs: _d, ...rest } = ev;
+              return rest;
+            })()
+          : ev
+      )
+    );
     setFocusAreas(loadFocusAreasForDate(selectedDate));
   };
 
@@ -1345,11 +1046,6 @@ function CalendarContent() {
     
     const currentEvent = events.find(e => e.id === editingId);
     if (!currentEvent) return;
-    
-    // Don't allow deleting Google Calendar events
-    if (currentEvent.source === 'google') {
-      return;
-    }
     
     let next;
     if (deleteAllFuture && currentEvent.isRepeating) {
@@ -4128,13 +3824,11 @@ function CalendarContent() {
 
       {showEditModal && (() => {
         const currentEvent = allEvents.find(e => e.id === editingId);
-        const isGoogleEvent = currentEvent?.source === 'google';
-        
         return (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 pb-20">
           <div className="bg-white/95 backdrop-blur-xl rounded-xl shadow-2xl border-2 border-white/60 p-4 w-[92%] max-w-md">
             <div className="flex justify-between items-center mb-2">
-              <h3 className="font-semibold text-black">{isGoogleEvent ? 'Edit Google Calendar Event' : 'Edit Event'}</h3>
+              <h3 className="font-semibold text-black">Edit Event</h3>
               <button className="text-sm text-black" onClick={() => { setShowEditModal(false); setEditingId(null); }}>Cancel</button>
             </div>
 
@@ -4219,7 +3913,7 @@ function CalendarContent() {
 
             {(draft.area || currentEvent?.area) && (
               <div className="mb-4">
-                {currentEvent?.loggedToDashboard || (currentEvent?.source === 'google' && googleEventCustomizations[editingId]?.loggedToDashboard) ? (
+                {currentEvent?.loggedToDashboard ? (
                   <button type="button" onClick={undoLogEventTime} className="w-full px-4 py-2 bg-amber-100 text-amber-800 rounded font-medium hover:bg-amber-200 transition-colors">
                     Undo logged event time
                   </button>
@@ -4232,42 +3926,34 @@ function CalendarContent() {
               </div>
             )}
 
-            {!isGoogleEvent && (
-              <div className="flex justify-between items-center">
-                <div className="flex gap-2">
-                  {(() => {
-                    const currentEvent = events.find(e => e.id === editingId);
-                    if (currentEvent && currentEvent.isRepeating) {
-                      return (
-                        <>
-                          <button className="px-4 py-2 bg-red-500 text-white rounded text-xs leading-tight" onClick={() => deleteEvent(false)}>
-                            Delete This<br />Event
-                          </button>
-                          <button className="px-4 py-2 bg-red-600 text-white rounded text-xs leading-tight" onClick={() => deleteEvent(true)}>
-                            Delete Future<br />Events
-                          </button>
-                        </>
-                      );
-                    } else {
-                      return (
-                        <button className="px-4 py-2 bg-red-500 text-white rounded" onClick={deleteEvent}>Delete</button>
-                      );
-                    }
-                  })()}
-                  <button className="px-4 py-2 bg-gray-200 rounded text-black" onClick={duplicateEvent}>Duplicate</button>
-                </div>
-                <div className="flex gap-2">
-                  <button className="px-4 py-2 bg-gray-200 rounded text-black" onClick={() => { setShowEditModal(false); setEditingId(null); }}>Cancel</button>
-                  <button className="px-4 py-2 bg-[#6B7280] text-white rounded" onClick={updateEvent}>Save</button>
-                </div>
+            <div className="flex justify-between items-center">
+              <div className="flex gap-2">
+                {(() => {
+                  const currentEvent = events.find(e => e.id === editingId);
+                  if (currentEvent && currentEvent.isRepeating) {
+                    return (
+                      <>
+                        <button className="px-4 py-2 bg-red-500 text-white rounded text-xs leading-tight" onClick={() => deleteEvent(false)}>
+                          Delete This<br />Event
+                        </button>
+                        <button className="px-4 py-2 bg-red-600 text-white rounded text-xs leading-tight" onClick={() => deleteEvent(true)}>
+                          Delete Future<br />Events
+                        </button>
+                      </>
+                    );
+                  } else {
+                    return (
+                      <button className="px-4 py-2 bg-red-500 text-white rounded" onClick={deleteEvent}>Delete</button>
+                    );
+                  }
+                })()}
+                <button className="px-4 py-2 bg-gray-200 rounded text-black" onClick={duplicateEvent}>Duplicate</button>
               </div>
-            )}
-            {isGoogleEvent && (
-              <div className="flex justify-end gap-2">
+              <div className="flex gap-2">
                 <button className="px-4 py-2 bg-gray-200 rounded text-black" onClick={() => { setShowEditModal(false); setEditingId(null); }}>Cancel</button>
                 <button className="px-4 py-2 bg-[#6B7280] text-white rounded" onClick={updateEvent}>Save</button>
               </div>
-            )}
+            </div>
           </div>
         </div>
         );

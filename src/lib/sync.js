@@ -29,14 +29,9 @@ export function collectAllAppData() {
       hourglassEvents: localStorage.getItem('hourglassEvents:v1'),
       calendarEvents: localStorage.getItem('calendarEvents'),
       
-      // Google event customizations
-      googleEventCustomizations: localStorage.getItem('googleEventCustomizations:v1'),
-      
       // User settings
       sleepHours: localStorage.getItem('sleepHours'),
       miscHours: localStorage.getItem('miscHours'),
-      userName: localStorage.getItem('userName'),
-      profilePicture: localStorage.getItem('profilePicture'),
       timeFormat: localStorage.getItem('timeFormat'),
       weekStart: localStorage.getItem('weekStart'),
       
@@ -113,11 +108,6 @@ export function applySyncedData(syncedData) {
       localStorage.setItem('calendarEvents', syncedData.calendarEvents);
     }
 
-    // Apply Google event customizations
-    if (syncedData.googleEventCustomizations) {
-      localStorage.setItem('googleEventCustomizations:v1', syncedData.googleEventCustomizations);
-    }
-
     // Apply user settings
     if (syncedData.sleepHours !== undefined) {
       if (syncedData.sleepHours) {
@@ -132,12 +122,6 @@ export function applySyncedData(syncedData) {
       } else {
         localStorage.removeItem('miscHours');
       }
-    }
-    if (syncedData.userName) {
-      localStorage.setItem('userName', syncedData.userName);
-    }
-    if (syncedData.profilePicture) {
-      localStorage.setItem('profilePicture', syncedData.profilePicture);
     }
     if (syncedData.timeFormat) {
       localStorage.setItem('timeFormat', syncedData.timeFormat);
