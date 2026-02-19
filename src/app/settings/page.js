@@ -244,57 +244,58 @@ function SettingsContent() {
           </div>
           <div className="p-6 space-y-4">
             {/* Sign in with Apple */}
-            <div className="flex items-center justify-between p-4 border border-gray-200 rounded-xl">
+            <div className="w-full min-w-0 p-4 border border-gray-200 rounded-xl">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 flex-shrink-0 bg-black rounded-lg flex items-center justify-center">
                   <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-1.25 1.62-2.56 3.22-4.32 4.64zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
                   </svg>
                 </div>
-                <div className="text-left">
+                <div className="min-w-0 flex-1">
                   <div className="font-medium text-gray-900">Sign in with Apple</div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-gray-600 truncate">
                     {appleUser ? `Signed in${appleUser.email ? ` as ${appleUser.email}` : ''}` : 'Sign in to sync your data across devices'}
                   </div>
                 </div>
+                {!appleUser && (
+                  <button
+                    onClick={signInWithApple}
+                    disabled={appleLoading}
+                    className="flex-shrink-0 px-4 py-2 text-sm font-medium text-gray-800 bg-black text-white rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50"
+                  >
+                    {appleLoading ? 'Redirecting...' : 'Sign in'}
+                  </button>
+                )}
               </div>
-              {appleUser ? (
-                <div className="flex flex-col gap-2 items-end">
-                  <div className="flex gap-2">
+              {appleUser && (
+                <div className="mt-4 w-full min-w-0">
+                  <div className="grid grid-cols-3 gap-2 w-full">
                     <button
                       onClick={handleUploadToCloud}
                       disabled={syncLoading}
-                      className="px-3 py-1.5 text-xs font-medium text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                      className="min-w-0 px-2 py-2.5 text-xs font-medium text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 truncate"
                     >
                       {syncLoading ? '…' : 'Upload to cloud'}
                     </button>
                     <button
                       onClick={handleDownloadFromCloud}
                       disabled={syncLoading}
-                      className="px-3 py-1.5 text-xs font-medium text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                      className="min-w-0 px-2 py-2.5 text-xs font-medium text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 truncate"
                     >
                       {syncLoading ? '…' : 'Download from cloud'}
                     </button>
                     <button
                       onClick={signOutApple}
                       disabled={appleLoading}
-                      className="px-3 py-1.5 text-xs font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 disabled:opacity-50"
+                      className="min-w-0 px-2 py-2.5 text-xs font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 disabled:opacity-50 truncate"
                     >
                       {appleLoading ? '…' : 'Sign out'}
                     </button>
                   </div>
                   {syncMessage && (
-                    <span className="text-xs text-gray-600">{syncMessage}</span>
+                    <p className="mt-2 text-xs text-gray-600 truncate">{syncMessage}</p>
                   )}
                 </div>
-              ) : (
-                <button
-                  onClick={signInWithApple}
-                  disabled={appleLoading}
-                  className="px-4 py-2 text-sm font-medium text-gray-800 bg-black text-white rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50"
-                >
-                  {appleLoading ? 'Redirecting...' : 'Sign in'}
-                </button>
               )}
             </div>
           </div>
