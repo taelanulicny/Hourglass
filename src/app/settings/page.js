@@ -153,40 +153,52 @@ function SettingsContent() {
     window.dispatchEvent(new CustomEvent('miscHoursChanged', { detail: value }));
   };
 
-  const handleExportData = () => {
-    // Export logic will go here
-    alert('Export functionality coming soon!');
-  };
-
-  const handleBackupData = () => {
-    // Backup logic will go here
-    alert('Backup functionality coming soon!');
-  };
-
-  const handleResetData = () => {
-    if (confirm('Are you sure you want to reset all app data? This cannot be undone.')) {
-      // Reset logic will go here
-      alert('Reset functionality coming soon!');
+  const handleResetData = async () => {
+    const alsoCloud = appleUser
+      ? ' This will also clear your data from the cloud for this account.'
+      : '';
+    if (!confirm(`Are you sure you want to reset all app data? This cannot be undone.${alsoCloud}`)) {
+      return;
     }
-  };
-
-  const handleClearAIHistory = () => {
-    if (confirm('Are you sure you want to delete all AI conversation history? This cannot be undone.')) {
-      try {
-        // Get all localStorage keys that start with 'aiHistory:'
-        const keys = Object.keys(localStorage);
-        const aiHistoryKeys = keys.filter(key => key.startsWith('aiHistory:'));
-        
-        // Delete all AI history keys
-        aiHistoryKeys.forEach(key => {
-          localStorage.removeItem(key);
-        });
-        
-        alert(`Successfully deleted ${aiHistoryKeys.length} AI conversation histories.`);
-      } catch (error) {
-        console.error('Error clearing AI history:', error);
-        alert('Error clearing AI history. Please try again.');
+    try {
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key) continue;
+        if (
+          key === 'focusCategories' ||
+          key === 'hourglassEvents:v1' ||
+          key === 'calendarEvents' ||
+          key === 'calendar-items' ||
+          key === 'events' ||
+          key === 'sleepHours' ||
+          key === 'miscHours' ||
+          key === 'timeFormat' ||
+          key === 'weekStart' ||
+          key === 'lastProcessedWeekKey' ||
+          key === 'calendar:visibleFocusAreas' ||
+          key.startsWith('focusAreas:week:') ||
+          key.startsWith('week:') ||
+          key.startsWith('notes:') ||
+          key.startsWith('eventNotes:')
+        ) {
+          keysToRemove.push(key);
+        }
       }
+      keysToRemove.forEach(k => localStorage.removeItem(k));
+      if (appleUser) {
+        try {
+          await uploadData();
+        } catch (e) {
+          console.error('Error clearing cloud data:', e);
+          alert('Local data cleared. Cloud update failed — other devices may still have old data.');
+        }
+      }
+      alert('App data cleared. The app will reload.');
+      window.location.reload();
+    } catch (e) {
+      console.error('Error resetting app data:', e);
+      alert('Something went wrong. Please try again.');
     }
   };
 
@@ -385,7 +397,7 @@ function SettingsContent() {
 
 
 
-        {/* AI Data Management Section */}
+        {/* App Maintenance Section */}
         <section className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100">
             <h2 className="text-lg font-semibold text-gray-900">App Maintenance</h2>
@@ -410,26 +422,6 @@ function SettingsContent() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>
-            
-            <button
-              onClick={handleClearAIHistory}
-              className="w-full flex items-center justify-between p-4 border border-orange-200 rounded-xl hover:bg-orange-50 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </div>
-                <div className="text-left">
-                  <div className="font-medium text-orange-900">Clear AI History</div>
-                  <div className="text-sm text-orange-600">Delete all AI conversation histories</div>
-                </div>
-              </div>
-              <svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
           </div>
         </section>
 
@@ -439,46 +431,6 @@ function SettingsContent() {
             <h2 className="text-lg font-semibold text-gray-900">Data Management</h2>
           </div>
           <div className="p-6 space-y-4">
-            <button
-              onClick={handleExportData}
-              className="w-full flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
-                <div className="text-left">
-                  <div className="font-medium text-gray-900">Export Data</div>
-                  <div className="text-sm text-gray-600">Download your focus area data</div>
-                </div>
-              </div>
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-
-            <button
-              onClick={handleBackupData}
-              className="w-full flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                  </svg>
-                </div>
-                <div className="text-left">
-                  <div className="font-medium text-gray-900">Backup Data</div>
-                  <div className="text-sm text-gray-600">Save your data locally</div>
-                </div>
-              </div>
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-
             <button
               onClick={handleResetData}
               className="w-full flex items-center justify-between p-4 border border-red-200 rounded-xl hover:bg-red-50 transition-colors"
