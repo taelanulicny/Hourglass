@@ -22,6 +22,24 @@ function decrypt(encrypted) {
   }
 }
 
+/**
+ * Get user id from Supabase Auth JWT (Sign in with Apple).
+ * Returns { userId, useSupabaseId } or { userId: null, useSupabaseId: false }.
+ */
+async function getSupabaseUserId(request) {
+  if (!supabase) return { userId: null, useSupabaseId: false };
+  const authHeader = request.headers.get('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) return { userId: null, useSupabaseId: false };
+  const token = authHeader.slice(7);
+  try {
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error || !user?.id) return { userId: null, useSupabaseId: false };
+    return { userId: user.id, useSupabaseId: true };
+  } catch {
+    return { userId: null, useSupabaseId: false };
+  }
+}
+
 async function getGoogleUserId() {
   const cookieStore = await cookies();
   
@@ -122,10 +140,13 @@ async function getGoogleUserId() {
 }
 
 // GET - Fetch user data
-export async function GET() {
+export async function GET(request) {
   try {
-    const userId = await getGoogleUserId();
-    
+    const { userId: supabaseUserId, useSupabaseId } = await getSupabaseUserId(request);
+    const googleUserId = await getGoogleUserId();
+    const userId = supabaseUserId || googleUserId;
+    const useSupabase = !!useSupabaseId;
+
     if (!userId) {
       return NextResponse.json(
         { error: 'Not authenticated' },
@@ -134,12 +155,9 @@ export async function GET() {
     }
 
     if (supabase) {
-      // Use Supabase
-      const { data, error } = await supabase
-        .from('user_data')
-        .select('*')
-        .eq('google_user_id', userId)
-        .single();
+      const { data, error } = useSupabase
+        ? await supabase.from('user_data').select('*').eq('supabase_user_id', userId).single()
+        : await supabase.from('user_data').select('*').eq('google_user_id', userId).single();
 
       if (error && error.code !== 'PGRST116') { // PGRST116 = not found
         console.error('Supabase error:', error);
@@ -172,8 +190,11 @@ export async function GET() {
 // POST - Save user data
 export async function POST(request) {
   try {
-    const userId = await getGoogleUserId();
-    
+    const { userId: supabaseUserId, useSupabaseId } = await getSupabaseUserId(request);
+    const googleUserId = await getGoogleUserId();
+    const userId = supabaseUserId || googleUserId;
+    const useSupabase = !!useSupabaseId;
+
     if (!userId) {
       return NextResponse.json(
         { error: 'Not authenticated' },
@@ -192,15 +213,19 @@ export async function POST(request) {
     }
 
     if (supabase) {
-      // Use Supabase - upsert (insert or update)
+      const row = {
+        data,
+        updated_at: new Date().toISOString(),
+      };
+      if (useSupabase) {
+        row.supabase_user_id = userId;
+      } else {
+        row.google_user_id = userId;
+      }
       const { error } = await supabase
         .from('user_data')
-        .upsert({
-          google_user_id: userId,
-          data: data,
-          updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'google_user_id'
+        .upsert(row, {
+          onConflict: useSupabase ? 'supabase_user_id' : 'google_user_id',
         });
 
       if (error) {

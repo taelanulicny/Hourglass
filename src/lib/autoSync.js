@@ -4,39 +4,43 @@ let syncTimeout = null;
 let isSyncing = false;
 
 /**
+ * Returns true if user is signed in with a provider that has sync (Apple or Google).
+ */
+async function hasSyncAuth() {
+  try {
+    const { supabase } = await import('@/lib/supabaseClient');
+    if (supabase) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) return true;
+    }
+    const response = await fetch('/api/auth/google/status');
+    const data = await response.json();
+    return data.connected === true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Debounced sync function - waits for changes to settle before syncing
  */
 async function debouncedSync() {
-  // Clear existing timeout
-  if (syncTimeout) {
-    clearTimeout(syncTimeout);
-  }
+  if (syncTimeout) clearTimeout(syncTimeout);
 
-  // Set new timeout - sync after 2 seconds of no changes
   syncTimeout = setTimeout(async () => {
     if (isSyncing) return;
-    
     try {
-      // Check if Google Calendar is connected
-      const response = await fetch('/api/auth/google/status');
-      const data = await response.json();
-      
-      if (!data.connected) {
-        // Not connected, skip sync
-        return;
-      }
-
+      if (!(await hasSyncAuth())) return;
       isSyncing = true;
       const { uploadData } = await import('./sync');
       await uploadData();
       console.log('Auto-sync completed');
     } catch (error) {
       console.error('Auto-sync error:', error);
-      // Don't show error to user - auto-sync should be silent
     } finally {
       isSyncing = false;
     }
-  }, 2000); // Wait 2 seconds after last change
+  }, 2000);
 }
 
 /**

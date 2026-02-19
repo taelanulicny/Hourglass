@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { syncData } from '@/lib/sync';
+import { supabase } from '@/lib/supabaseClient';
 
 function SettingsContent() {
   const router = useRouter();
@@ -30,6 +31,10 @@ function SettingsContent() {
   const [googleConnected, setGoogleConnected] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
+  // Sign in with Apple (Supabase Auth)
+  const [appleUser, setAppleUser] = useState(null);
+  const [appleLoading, setAppleLoading] = useState(false);
+
   // Check Google Calendar connection status
   const checkGoogleConnection = useCallback(async () => {
     try {
@@ -47,6 +52,44 @@ function SettingsContent() {
   // Connect to Google Calendar
   const connectGoogleCalendar = () => {
     window.location.href = '/api/auth/google/authorize';
+  };
+
+  // Sign in with Apple
+  const signInWithApple = async () => {
+    if (!supabase) {
+      alert('Sign in is not configured. Check your environment variables.');
+      return;
+    }
+    setAppleLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'apple',
+        options: {
+          redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/settings` : undefined,
+        },
+      });
+      if (error) throw error;
+      // Redirect happens via OAuth; no need to update state here
+    } catch (err) {
+      console.error('Sign in with Apple error:', err);
+      alert(err?.message || 'Sign in failed. Please try again.');
+    } finally {
+      setAppleLoading(false);
+    }
+  };
+
+  // Sign out from Apple
+  const signOutApple = async () => {
+    if (!supabase) return;
+    setAppleLoading(true);
+    try {
+      await supabase.auth.signOut();
+      setAppleUser(null);
+    } catch (err) {
+      console.error('Sign out error:', err);
+    } finally {
+      setAppleLoading(false);
+    }
   };
 
   // Disconnect from Google Calendar
@@ -101,6 +144,34 @@ function SettingsContent() {
     // Check Google Calendar connection status
     checkGoogleConnection();
   }, [checkGoogleConnection]);
+
+  // Supabase Auth: session and OAuth callback
+  useEffect(() => {
+    if (!supabase) return;
+    const getSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setAppleUser(session?.user ?? null);
+    };
+    getSession();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setAppleUser(session?.user ?? null);
+    });
+    return () => subscription?.unsubscribe();
+  }, []);
+
+  // After OAuth redirect, Supabase puts tokens in the URL hash; clean URL and pull cloud data
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.location.hash) return;
+    const hash = window.location.hash;
+    if (hash.includes('access_token') || hash.includes('refresh_token')) {
+      router.replace('/settings', { scroll: false });
+      syncData('server').then(() => {
+        window.location.reload();
+      }).catch((err) => {
+        console.error('Sync after Apple sign-in:', err);
+      });
+    }
+  }, [router]);
 
   // Handle OAuth callback - automatically sync data when connecting
   useEffect(() => {
@@ -508,6 +579,40 @@ function SettingsContent() {
             <h2 className="text-lg font-semibold text-gray-900">Integrations</h2>
           </div>
           <div className="p-6 space-y-4">
+            {/* Sign in with Apple */}
+            <div className="flex items-center justify-between p-4 border border-gray-200 rounded-xl">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-1.25 1.62-2.56 3.22-4.32 4.64zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <div className="font-medium text-gray-900">Sign in with Apple</div>
+                  <div className="text-sm text-gray-600">
+                    {appleUser ? `Signed in${appleUser.email ? ` as ${appleUser.email}` : ''}` : 'Sign in to sync your data across devices'}
+                  </div>
+                </div>
+              </div>
+              {appleUser ? (
+                <button
+                  onClick={signOutApple}
+                  disabled={appleLoading}
+                  className="px-4 py-2 text-sm font-medium text-red-600 border border-red-200 rounded-xl hover:bg-red-50 transition-colors disabled:opacity-50"
+                >
+                  {appleLoading ? 'Signing out...' : 'Sign out'}
+                </button>
+              ) : (
+                <button
+                  onClick={signInWithApple}
+                  disabled={appleLoading}
+                  className="px-4 py-2 text-sm font-medium text-gray-800 bg-black text-white rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50"
+                >
+                  {appleLoading ? 'Redirecting...' : 'Sign in'}
+                </button>
+              )}
+            </div>
+
             <div className="flex items-center justify-between p-4 border border-gray-200 rounded-xl">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">

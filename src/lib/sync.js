@@ -1,5 +1,21 @@
 // Sync utility functions for cross-device data synchronization
 
+import { supabase } from '@/lib/supabaseClient';
+
+/**
+ * Get auth headers for sync API (Supabase JWT when signed in with Apple)
+ */
+async function getSyncAuthHeaders() {
+  const headers = { 'Content-Type': 'application/json' };
+  if (supabase) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      headers['Authorization'] = `Bearer ${session.access_token}`;
+    }
+  }
+  return headers;
+}
+
 /**
  * Collect all app data from localStorage
  */
@@ -180,11 +196,10 @@ export async function uploadData() {
       throw new Error('Failed to collect data');
     }
 
+    const headers = await getSyncAuthHeaders();
     const response = await fetch('/api/sync/data', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({ data }),
     });
 
@@ -205,7 +220,8 @@ export async function uploadData() {
  */
 export async function downloadData() {
   try {
-    const response = await fetch('/api/sync/data');
+    const headers = await getSyncAuthHeaders();
+    const response = await fetch('/api/sync/data', { headers });
     
     if (!response.ok) {
       if (response.status === 401) {
