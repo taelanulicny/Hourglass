@@ -2491,8 +2491,8 @@ function HomeContent() {
     )}
     {/* Modal for renaming a focus area */}
     {renameTarget && (
-      <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-50">
-        <div className="bg-white/60 backdrop-blur-xl rounded-lg shadow-2xl border border-white/60 p-6 w-[90%] max-w-md">
+      <div className="fixed inset-0 backdrop-blur-md bg-white/70 flex items-center justify-center z-50">
+        <div className="bg-white/95 backdrop-blur-xl rounded-lg shadow-2xl border border-gray-200 p-6 w-[90%] max-w-md">
           <h2 className="text-lg font-bold mb-4 text-black">Edit Focus Area</h2>
           <p className="text-sm text-gray-600 mb-3">Changing the name or goal will update it everywhere, including today&apos;s dashboard, your calendar events, and saved notes.</p>
           
